@@ -7,7 +7,7 @@ const SAMBALS = [
   "Tahai Biasa",
   "Pusu Biasa",
   "Udang Biasa",
-  "Padas Manis",
+  "Pedas Manis",
   "Padas Padas",
   "Lada Padi",
 ];
@@ -22,12 +22,29 @@ function pricePerPack(sambals: string[]) {
   return sambals.length === 3 ? 1.5 : 1;
 }
 
+function getEarliestPickupDate() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Brunei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "00";
+  const year = Number(part("year"));
+  const month = Number(part("month"));
+  const day = Number(part("day"));
+  const hour = Number(part("hour"));
+  const date = new Date(Date.UTC(year, month - 1, day + (hour >= 17 ? 1 : 0)));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
 export default function Home() {
+  const earliestPickupDate = getEarliestPickupDate();
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const [date, setDate] = useState(
-    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })
-  );
+  const [date, setDate] = useState(() => getEarliestPickupDate());
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
@@ -187,7 +204,7 @@ export default function Home() {
         <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama" />
 
         <label style={{ display: "block", fontWeight: 600, margin: "14px 0 6px" }}>Tarikh ambil</label>
-        <input style={inputStyle} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <input style={inputStyle} type="date" min={earliestPickupDate} value={date} onChange={(e) => setDate(e.target.value)} />
 
         <label style={{ display: "block", fontWeight: 600, margin: "14px 0 6px" }}>Waktu ambil</label>
         <select style={inputStyle} value={time} onChange={(e) => setTime(e.target.value)}>
