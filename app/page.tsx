@@ -128,7 +128,7 @@ export default function Home() {
     <main className="container">
       <header className="hero">
         <h1>Nasi Katok 3 Abdul</h1>
-        <p>Pilih menu dan waktu ambil.</p>
+        <p>Sila isikan order biskita.</p>
       </header>
 
       <section className="card">
@@ -154,10 +154,28 @@ export default function Home() {
         <h2>2. Pilihan sambal</h2>
         <p className="muted">Pilih 1 hingga 3 jenis sambal bagi setiap pesanan.</p>
         <div className="menu-grid">
-          {SAMBALS.map((sambal) => <label className="choice" key={sambal}>
-            <input type="checkbox" checked={selected.includes(sambal)} onChange={() => toggleSambal(sambal)} />
-            <span>{sambal}</span>
-          </label>)}
+          {SAMBALS.map((sambal) => {
+            const isSelected = selected.includes(sambal);
+            return <button
+              type="button"
+              key={sambal}
+              className="choice"
+              aria-pressed={isSelected}
+              onClick={() => toggleSambal(sambal)}
+              style={{
+                cursor: "pointer",
+                border: isSelected ? "2px solid #176342" : "1px solid #d4d9d5",
+                background: isSelected ? "#e8f4ed" : "#fff",
+                color: "#1d2922",
+                textAlign: "left",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                font: "inherit",
+                fontWeight: isSelected ? 700 : 500,
+                minHeight: "52px",
+              }}
+            >{sambal}</button>;
+          })}
         </div>
         <label>Kuantiti</label>
         <div className="quantity-row">
@@ -165,8 +183,8 @@ export default function Home() {
           <input type="number" min={1} max={100} value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(100, Number(event.target.value) || 1)))} />
           <button type="button" className="secondary" disabled={quantity >= 100} onClick={() => setQuantity((value) => Math.min(100, value + 1))}>+</button>
         </div>
-        <div className="summary-line"><span>Harga sebungkus</span><strong>{money(linePrice(selected))}</strong></div>
-        <div className="summary-line"><span>Jumlah</span><strong>{money(linePrice(selected) * quantity)}</strong></div>
+        <div className="summary-line" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: "16px" }}><span style={{ textAlign: "left" }}>Harga sebungkus</span><strong style={{ marginLeft: "auto", textAlign: "right" }}>{money(linePrice(selected))}</strong></div>
+        <div className="summary-line" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: "16px" }}><span style={{ textAlign: "left" }}>Jumlah</span><strong style={{ marginLeft: "auto", textAlign: "right" }}>{money(linePrice(selected) * quantity)}</strong></div>
         <button type="button" className="primary" onClick={addLine}>＋ Tambah pesanan</button>
         <button type="button" className="secondary wide" onClick={() => continueTo("addons")}>Teruskan ke Add Ons</button>
         <button type="button" className="secondary wide" onClick={() => continueTo("review")}>Sahkan tanpa Add Ons</button>
