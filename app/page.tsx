@@ -7,7 +7,7 @@ const SAMBALS = [
   "Tahai Biasa",
   "Pusu Biasa",
   "Udang Biasa",
-  "Pedas Manis",
+  "Padas Manis",
   "Padas Padas",
   "Lada Padi",
 ];
@@ -51,8 +51,8 @@ export default function Home() {
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
   const [message, setMessage] = useState("");
-  const [chickenQuantity, setChickenQuantity] = useState(0);
-  const [riceQuantity, setRiceQuantity] = useState(0);
+  const [chickenQuantity, setChickenQuantity] = useState("");
+  const [riceQuantity, setRiceQuantity] = useState("");
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
   const [extraType, setExtraType] = useState("Tahai Biasa");
   const [extraPrice, setExtraPrice] = useState("0.50");
@@ -61,7 +61,7 @@ export default function Home() {
     () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals), 0),
     [lines]
   );
-  const addonTotal = chickenQuantity + riceQuantity * Number(riceUnitPrice) + Number(extraPrice);
+  const addonTotal = Number(chickenQuantity || 0) + Number(riceQuantity || 0) * Number(riceUnitPrice) + Number(extraPrice);
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
@@ -134,7 +134,7 @@ export default function Home() {
     const addonLines = [
       ...(chickenQuantity > 0 ? [`Ayam Goreng × ${chickenQuantity} — ${money(chickenQuantity)}`] : []),
       ...(riceQuantity > 0 ? [`Nasi Putih × ${riceQuantity} (${money(Number(riceUnitPrice))}/unit) — ${money(riceQuantity * Number(riceUnitPrice))}`] : []),
-      `Sambal tambahan: ${extraType} — ${money(Number(extraPrice))}`,
+      `Sambal ${extraType} — ${money(Number(extraPrice))}`,
     ];
     const messageText = [
       "*PESANAN NASI KATOK 3 ABDUL*",
@@ -312,12 +312,12 @@ export default function Home() {
           <h2 style={{ marginTop: 0 }}>3. Add Ons</h2>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 84px", gap: 10, alignItems: "center", margin: "12px 0" }}>
             <label htmlFor="chickenQty">Ayam Goreng — $1.00 setiap satu</label>
-            <input id="chickenQty" type="number" min={0} max={100} value={chickenQuantity} onChange={(e) => setChickenQuantity(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} style={inputStyle} />
+            <input id="chickenQty" type="number" min={0} max={100} value={chickenQuantity} onChange={(e) => setChickenQuantity(e.target.value === "" ? "" : String(Math.max(0, Math.min(100, Number(e.target.value) || 0))))} style={inputStyle} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 100px 84px", gap: 8, alignItems: "center", margin: "12px 0" }}>
             <label htmlFor="riceQty">Nasi Putih</label>
             <select aria-label="Harga nasi putih" style={inputStyle} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}><option value="0.50">$0.50</option><option value="1.00">$1.00</option></select>
-            <input id="riceQty" aria-label="Kuantiti nasi putih" type="number" min={0} max={100} value={riceQuantity} onChange={(e) => setRiceQuantity(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} style={inputStyle} />
+            <input id="riceQty" aria-label="Kuantiti nasi putih" type="number" min={0} max={100} value={riceQuantity} onChange={(e) => setRiceQuantity(e.target.value === "" ? "" : String(Math.max(0, Math.min(100, Number(e.target.value) || 0))))} style={inputStyle} />
           </div>
           <div style={{ borderTop: "1px solid #e6e9e7", paddingTop: 12, marginTop: 12 }}>
             <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>Add On's (Sambal)</label>
@@ -340,7 +340,11 @@ export default function Home() {
           <h3>Pesanan</h3>
           {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
           <p><strong>Subtotal:</strong> {money(subtotal)}</p>
-          <p><strong>Add Ons:</strong> {money(addonTotal)}</p>
+          <p><strong>Add Ons:</strong></p>
+          {chickenQuantity > 0 && <p>Ayam Goreng × {chickenQuantity} — {money(chickenQuantity)}</p>}
+          {riceQuantity > 0 && <p>Nasi Putih × {riceQuantity} ({money(Number(riceUnitPrice))}/unit) — {money(riceQuantity * Number(riceUnitPrice))}</p>}
+          <p>Sambal {extraType} — {money(Number(extraPrice))}</p>
+          <p><strong>Jumlah Add Ons:</strong> {money(addonTotal)}</p>
           <h2 style={{ display: "flex", justifyContent: "space-between" }}><span>Jumlah</span><span>{money(total)}</span></h2>
           <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>Kembali edit</button>
           <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#176443", color: "#fff" }}>Sahkan pesanan</button>
