@@ -1,12 +1,209 @@
 "use client";
-import { useMemo, useState } from "react";
-const SAMBALS=["Biasa","Tahai Biasa","Pusu Biasa","Udang Biasa","Pedas Manis","Padas Padas","Lada Padi"];
-type Line={id:number;sambals:string[];quantity:number}; const money=(n:number)=>`$${n.toFixed(2)}`;
-export default function Home(){const [branch,setBranch]=useState("Telisai"),[name,setName]=useState(""),[date,setDate]=useState(new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Brunei"})),[time,setTime]=useState(""),[selected,setSelected]=useState<string[]>([]),[quantity,setQuantity]=useState(0),[lines,setLines]=useState<Line[]>([]),[stage,setStage]=useState<"order"|"addons"|"review"|"done">("order"),[chicken,setChicken]=useState(0),[rice,setRice]=useState(0),[extraType,setExtraType]=useState("Biasa"),[extraPrice,setExtraPrice]=useState("0.50"),[noAddons,setNoAddons]=useState(true),[message,setMessage]=useState("");
-const subtotal=lines.reduce((s,l)=>s+l.quantity*(l.sambals.length===3?1.5:1),0), total=subtotal+(noAddons?0:chicken+rice*.5+Number(extraPrice));
-const slots=useMemo(()=>{const now=new Date(), today=now.toLocaleDateString("en-CA",{timeZone:"Asia/Brunei"}), start=new Date(`${date}T10:00:00`), end=new Date(`${date}T17:00:00`), arr:string[]=[];for(let t=start;t<=end;t=new Date(t.getTime()+1800000)){if(date!==today||t.getTime()-now.getTime()>=1800000)arr.push(t.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true}));}return arr;},[date]);
-function addLine(){if(!selected.length||quantity<1){setMessage("Pilih 1–3 jenis sambal dan kuantiti 1–100.");return;}setLines([...lines,{id:Date.now(),sambals:selected,quantity}]);setSelected([]);setQuantity(0);setMessage("Pesanan ditambah.");}
-function proceed(next:"addons"|"review"){if(!name.trim()||!time||!lines.length){setMessage("Lengkapkan nama, waktu ambil dan sekurang-kurangnya satu pesanan.");return;}setMessage("");setStage(next);}
-async function confirm(){try{const r=await fetch("/api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({branch,name,pickupDate:date,pickupTime:time,lines,total})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Ralat pesanan");setStage("done");setMessage("Pesanan ujian diterima. Belum disimpan atau dihantar ke WhatsApp.");}catch(e){setMessage(e instanceof Error?e.message:"Ralat");}}
-return <main className="container"><header className="hero"><h1>Nasi Katok 3 Abdul</h1><p>Sila isikan untuk order biskita.</p></header>{stage==="order"&&<><section className="card"><h2>1. Maklumat pelanggan</h2><label>Cawangan</label><select value={branch} onChange={e=>setBranch(e.target.value)}><option>Rimba</option><option>Telisai</option></select><label>Nama pelanggan</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Nama pelanggan"/><div className="row"><div><label>Tarikh ambil</label><input type="date" value={date} min={new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Brunei"})} onChange={e=>{setDate(e.target.value);setTime("");}}/></div><div><label>Waktu ambil</label><select value={time} onChange={e=>setTime(e.target.value)}><option value="">Pilih waktu ambil</option>{slots.map(s=><option key={s}>{s}</option>)}</select></div></div><p className="muted">Waktu operasi: 10.00 pagi–5.00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</p></section><section className="card"><h2>2. Pilihan sambal</h2><div className="menu-grid">{SAMBALS.map(s=><label className="menu-option" key={s}><input type="checkbox" checked={selected.includes(s)} disabled={!selected.includes(s)&&selected.length>=3} onChange={e=>setSelected(e.target.checked?[...selected,s]:selected.filter(x=>x!==s))}/>{s}</label>)}</div><label>Kuantiti</label><div className="qty"><button disabled={quantity===0} onClick={()=>setQuantity(Math.max(0,quantity-1))}>−</button><input type="number" min="0" max="100" value={quantity} onChange={e=>setQuantity(Math.max(0,Math.min(100,Math.floor(Number(e.target.value)||0))))}/><button disabled={quantity===100} onClick={()=>setQuantity(Math.min(100,quantity+1))}>+</button></div><div className="line"><span>Harga sebungkus</span><b>{money(selected.length===3?1.5:selected.length?1:0)}</b></div><div className="line"><span>Jumlah</span><b>{money(quantity*(selected.length===3?1.5:selected.length?1:0))}</b></div><button className="primary" onClick={addLine}>➕ Tambah pesanan</button><button className="secondary" onClick={()=>proceed("addons")}>Teruskan ke tambahan</button><button className="secondary" onClick={()=>{setNoAddons(true);proceed("review")}}>Sahkan tanpa tambahan</button></section><section className="card"><h2>3. Pesanan anda</h2>{lines.length?lines.map((l,i)=><div className="line" key={l.id}><span>{i+1}. {l.sambals.join(" + ")} × {l.quantity}<button className="secondary" onClick={()=>setLines(lines.filter(x=>x.id!==l.id))}>Buang</button></span><b>{money(l.quantity*(l.sambals.length===3?1.5:1))}</b></div>):<p className="muted">Belum ada item.</p>}<div className="line"><b>Subtotal</b><b className="total">{money(subtotal)}</b></div></section></>}{stage==="addons"&&<section className="card"><h2>Tambahan</h2><label>Ayam goreng ($1.00 setiap satu)</label><input type="number" min="0" max="100" value={chicken} onChange={e=>setChicken(Math.max(0,Math.min(100,Number(e.target.value)||0)))}/><label>Nasi putih ($0.50 setiap satu)</label><input type="number" min="0" max="100" value={rice} onChange={e=>setRice(Math.max(0,Math.min(100,Number(e.target.value)||0)))}/><label>Sambal tambahan</label><div className="row"><select value={extraType} onChange={e=>setExtraType(e.target.value)}>{SAMBALS.map(s=><option key={s}>{s}</option>)}</select><select value={extraPrice} onChange={e=>setExtraPrice(e.target.value)}>{Array.from({length:10},(_,i)=>(i+1)*.5).map(v=><option key={v} value={v.toFixed(2)}>{money(v)}</option>)}</select></div><button className="secondary" onClick={()=>{setNoAddons(true);setStage("review")}}>Tidak, terima kasih</button><button className="primary" onClick={()=>{setNoAddons(false);setStage("review")}}>Semak pesanan</button></section>}{stage==="review"&&<section className="card"><h2>Semak pesanan</h2><p><b>Cawangan:</b> {branch}<br/><b>Nama:</b> {name}<br/><b>Tarikh ambil:</b> {date}<br/><b>Waktu ambil:</b> {time}</p>{lines.map(l=><div className="line" key={l.id}><span>{l.sambals.join(" + ")} × {l.quantity}</span><b>{money(l.quantity*(l.sambals.length===3?1.5:1))}</b></div>)}{!noAddons&&<><div className="line"><span>Ayam goreng × {chicken}</span><b>{money(chicken)}</b></div><div className="line"><span>Nasi putih × {rice}</span><b>{money(rice*.5)}</b></div><div className="line"><span>Sambal tambahan — {extraType}</span><b>{money(Number(extraPrice))}</b></div></>}<div className="line"><b>Jumlah</b><b className="total">{money(total)}</b></div><button className="primary" onClick={confirm}>Sahkan Pesanan</button><button className="secondary" onClick={()=>setStage("order")}>Edit pesanan</button></section>}{stage==="done"&&<section className="card"><h2>Ujian selesai</h2><p>{message}</p></section>}{message&&<p className="card" role="status">{message}</p>}</main>}
 
+import { useMemo, useState } from "react";
+
+type OrderLine = { id: number; sambals: string[]; quantity: number };
+
+const SAMBALS = [
+  "Biasa",
+  "Tahai Biasa",
+  "Pusu Biasa",
+  "Udang Biasa",
+  "Pedas Manis",
+  "Padas Padas",
+  "Lada Padi",
+];
+
+const money = (amount: number) => `$${amount.toFixed(2)}`;
+const linePrice = (sambals: string[]) => (sambals.length === 3 ? 1.5 : sambals.length > 0 ? 1 : 0);
+
+export default function Home() {
+  const [branch, setBranch] = useState("Rimba");
+  const [name, setName] = useState("");
+  const [date, setDate] = useState(new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" }));
+  const [time, setTime] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const [lines, setLines] = useState<OrderLine[]>([]);
+  const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
+  const [chicken, setChicken] = useState(0);
+  const [whiteRice, setWhiteRice] = useState(0);
+  const [extraType, setExtraType] = useState("Biasa");
+  const [extraPrice, setExtraPrice] = useState(0.5);
+  const [extraQty, setExtraQty] = useState(0);
+  const [message, setMessage] = useState("");
+
+  const subtotal = useMemo(
+    () => lines.reduce((sum, line) => sum + linePrice(line.sambals) * line.quantity, 0),
+    [lines]
+  );
+  const addonTotal = chicken * 1 + whiteRice * 0.5 + extraQty * extraPrice;
+  const total = subtotal + addonTotal;
+
+  function toggleSambal(sambal: string) {
+    setMessage("");
+    setSelected((current) => {
+      if (current.includes(sambal)) return current.filter((item) => item !== sambal);
+      if (current.length >= 3) {
+        setMessage("Pilih maksimum 3 jenis sambal.");
+        return current;
+      }
+      return [...current, sambal];
+    });
+  }
+
+  function addLine() {
+    if (selected.length < 1) {
+      setMessage("Pilih sekurang-kurangnya satu jenis sambal.");
+      return;
+    }
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      setMessage("Masukkan kuantiti antara 1 hingga 100.");
+      return;
+    }
+    setLines((current) => [...current, { id: Date.now(), sambals: [...selected], quantity }]);
+    setSelected([]);
+    setQuantity(1);
+    setMessage("Pesanan ditambah.");
+  }
+
+  function continueTo(next: "addons" | "review") {
+    if (!name.trim()) {
+      setMessage("Sila masukkan nama pelanggan.");
+      setStage("order");
+      return;
+    }
+    if (!date || !time) {
+      setMessage("Sila pilih tarikh dan waktu ambil.");
+      setStage("order");
+      return;
+    }
+    if (lines.length === 0) {
+      setMessage("Sila tambah sekurang-kurangnya satu pesanan.");
+      setStage("order");
+      return;
+    }
+    setMessage("");
+    setStage(next);
+  }
+
+  async function confirmOrder() {
+    const payload = {
+      branch,
+      name: name.trim(),
+      pickupDate: date,
+      pickupTime: time,
+      lines,
+      addons: { chicken, whiteRice, extraSambal: { type: extraType, unitPrice: extraPrice, quantity: extraQty } },
+      subtotal,
+      addonTotal,
+      total,
+    };
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        setMessage("Semakan selesai, tetapi pesanan belum dapat disimpan. Sila cuba lagi.");
+        return;
+      }
+    } catch {
+      setMessage("Pesanan belum dapat disimpan. Sila cuba lagi.");
+      return;
+    }
+    setStage("done");
+    setMessage("Pesanan disahkan.");
+  }
+
+  const times = Array.from({ length: 15 }, (_, index) => {
+    const minutes = 10 * 60 + (index + 1) * 30;
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }).filter((slot) => slot <= "17:00");
+
+  return (
+    <main className="container">
+      <header className="hero">
+        <h1>Nasi Katok 3 Abdul</h1>
+        <p>Pilih menu dan waktu ambil.</p>
+      </header>
+
+      <section className="card">
+        <h2>1. Maklumat pelanggan</h2>
+        <label>Cawangan</label>
+        <select value={branch} onChange={(event) => setBranch(event.target.value)}>
+          <option>Rimba</option>
+          <option>Telisai</option>
+        </select>
+        <label>Nama pelanggan</label>
+        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nama pelanggan" />
+        <label>Tarikh ambil</label>
+        <input type="date" value={date} min={new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })} onChange={(event) => { setDate(event.target.value); setTime(""); }} />
+        <label>Waktu ambil</label>
+        <select value={time} onChange={(event) => setTime(event.target.value)}>
+          <option value="">Pilih waktu ambil</option>
+          {times.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+        </select>
+        <p className="muted">Waktu operasi: 10.00 pagi–5.00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</p>
+      </section>
+
+      {stage === "order" && <section className="card">
+        <h2>2. Pilihan sambal</h2>
+        <p className="muted">Pilih 1 hingga 3 jenis sambal bagi setiap pesanan.</p>
+        <div className="menu-grid">
+          {SAMBALS.map((sambal) => <label className="choice" key={sambal}>
+            <input type="checkbox" checked={selected.includes(sambal)} onChange={() => toggleSambal(sambal)} />
+            <span>{sambal}</span>
+          </label>)}
+        </div>
+        <label>Kuantiti</label>
+        <div className="quantity-row">
+          <button type="button" className="secondary" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button>
+          <input type="number" min={1} max={100} value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(100, Number(event.target.value) || 1)))} />
+          <button type="button" className="secondary" disabled={quantity >= 100} onClick={() => setQuantity((value) => Math.min(100, value + 1))}>+</button>
+        </div>
+        <div className="summary-line"><span>Harga sebungkus</span><strong>{money(linePrice(selected))}</strong></div>
+        <div className="summary-line"><span>Jumlah</span><strong>{money(linePrice(selected) * quantity)}</strong></div>
+        <button type="button" className="primary" onClick={addLine}>＋ Tambah pesanan</button>
+        <button type="button" className="secondary wide" onClick={() => continueTo("addons")}>Teruskan ke Add Ons</button>
+        <button type="button" className="secondary wide" onClick={() => continueTo("review")}>Sahkan tanpa Add Ons</button>
+      </section>}
+
+      {lines.length > 0 && <section className="card">
+        <h2>{stage === "order" ? "3. Pesanan anda" : "Ringkasan pesanan"}</h2>
+        {lines.map((line, index) => <div className="order-line" key={line.id}>
+          <div><span>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span><strong>{money(linePrice(line.sambals) * line.quantity)}</strong></div>
+          <button type="button" className="secondary" onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))}>Buang</button>
+        </div>)}
+        <div className="summary-line total-line"><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
+      </section>}
+
+      {stage === "addons" && <section className="card">
+        <h2>3. Add Ons</h2>
+        <p className="muted">Pilih tambahan jika perlu.</p>
+        <div className="addon-row"><label>Ayam Goreng ({money(1)} seunit)</label><div className="quantity-row"><button type="button" className="secondary" disabled={chicken === 0} onClick={() => setChicken((v) => Math.max(0, v - 1))}>−</button><span>{chicken}</span><button type="button" className="secondary" onClick={() => setChicken((v) => Math.min(100, v + 1))}>+</button></div></div>
+        <div className="addon-row"><label>Nasi Putih ({money(0.5)} seunit)</label><div className="quantity-row"><button type="button" className="secondary" disabled={whiteRice === 0} onClick={() => setWhiteRice((v) => Math.max(0, v - 1))}>−</button><span>{whiteRice}</span><button type="button" className="secondary" onClick={() => setWhiteRice((v) => Math.min(100, v + 1))}>+</button></div></div>
+        <div className="addon-row"><label>Extra Sambal</label><select value={extraType} onChange={(event) => setExtraType(event.target.value)}>{SAMBALS.map((sambal) => <option key={sambal}>{sambal}</option>)}</select><label>Harga seunit</label><select value={extraPrice} onChange={(event) => setExtraPrice(Number(event.target.value))}>{Array.from({ length: 10 }, (_, i) => (i + 1) * 0.5).map((price) => <option key={price} value={price}>{money(price)}</option>)}</select><div className="quantity-row"><button type="button" className="secondary" disabled={extraQty === 0} onClick={() => setExtraQty((v) => Math.max(0, v - 1))}>−</button><span>{extraQty}</span><button type="button" className="secondary" onClick={() => setExtraQty((v) => Math.min(100, v + 1))}>+</button></div></div>
+        <div className="summary-line"><span>Subtotal</span><strong>{money(subtotal)}</strong></div><div className="summary-line"><span>Jumlah Add Ons</span><strong>{money(addonTotal)}</strong></div><div className="summary-line total-line"><span>Jumlah keseluruhan</span><strong>{money(total)}</strong></div>
+        <button type="button" className="primary" onClick={() => setStage("review")}>Teruskan ke semakan</button>
+        <button type="button" className="secondary wide" onClick={() => { setChicken(0); setWhiteRice(0); setExtraQty(0); setStage("review"); }}>Tiada Add Ons</button>
+        <button type="button" className="secondary wide" onClick={() => setStage("order")}>Kembali ke pesanan</button>
+      </section>}
+
+      {stage === "review" && <section className="card">
+        <h2>Semak pesanan</h2>
+        <p><strong>Cawangan:</strong> {branch}</p><p><strong>Nama:</strong> {name}</p><p><strong>Tarikh ambil:</strong> {date}</p><p><strong>Waktu ambil:</strong> {time}</p>
+        <p><strong>Subtotal:</strong> {money(subtotal)}</p><p><strong>Add Ons:</strong> {money(addonTotal)}</p><h2>Jumlah: {money(total)}</h2>
+        <button type="button" className="primary" onClick={confirmOrder}>Sahkan pesanan</button>
+        <button type="button" className="secondary wide" onClick={() => setStage("addons")}>Edit Add Ons</button>
+        <button type="button" className="secondary wide" onClick={() => setStage("order")}>Edit pesanan</button>
+      </section>}
+
+      {stage === "done" && <section className="card"><h2>Pesanan disahkan</h2><p>Terima kasih, {name}. Sila hubungi cawangan untuk mengesahkan penerimaan pesanan.</p><p><strong>Jumlah:</strong> {money(total)}</p></section>}
+      {message && <p className="notice" role="status">{message}</p>}
+    </main>
+  );
+}
