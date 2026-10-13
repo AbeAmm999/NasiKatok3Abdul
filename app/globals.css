@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+:root { color-scheme: light; }
+body { margin: 0; background: #f5f6f4; color: #172018; font-family: Arial, Helvetica, sans-serif; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+.container { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+.hero { background: #153d2b; color: white; padding: 24px; border-radius: 18px; }
+.hero h1 { margin: 0 0 8px; font-size: 27px; }
+.hero p { margin: 0; color: #dbe9df; line-height: 1.5; }
+.card { background: white; border: 1px solid #e0e5df; border-radius: 16px; padding: 18px; margin-top: 16px; }
+h2 { font-size: 19px; margin: 0 0 14px; }
+label { display: block; font-size: 14px; font-weight: 700; margin: 12px 0 6px; }
+input, select { width: 100%; padding: 12px; border: 1px solid #cbd4ca; border-radius: 10px; background: white; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.menu-option { display: flex; gap: 8px; align-items: center; border: 1px solid #d9e0d7; padding: 10px; border-radius: 10px; font-weight: 500; }
+.menu-option input { width: auto; }
+.qty { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; align-items: center; }
+.qty button { height: 44px; border: 1px solid #cad5c9; border-radius: 10px; background: #f4f7f3; font-size: 22px; }
+.primary { width: 100%; background: #17653d; color: white; border: 0; border-radius: 11px; padding: 14px; font-weight: 700; margin-top: 12px; }
+.secondary { width: 100%; background: white; color: #17653d; border: 1px solid #17653d; border-radius: 11px; padding: 12px; font-weight: 700; margin-top: 8px; }
+.line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #edf0ec; }
+.muted { color: #657166; font-size: 13px; line-height: 1.5; }
+.total { font-size: 22px; font-weight: 800; }
+.notice { background: #fff7df; border: 1px solid #f0d98c; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
+@media (max-width: 480px) { .row { grid-template-columns: 1fr; } .menu-grid { grid-template-columns: 1fr; } .container { padding: 14px 12px 32px; } .hero h1 { font-size: 23px; } }
