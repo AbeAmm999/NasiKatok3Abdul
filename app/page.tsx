@@ -7,7 +7,7 @@ const SAMBALS = [
   "Tahai Biasa",
   "Pusu Biasa",
   "Udang Biasa",
-  "Pedas Manis",
+  "Padas Manis",
   "Padas Padas",
   "Lada Padi",
 ];
