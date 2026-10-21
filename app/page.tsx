@@ -22,46 +22,30 @@ function pricePerPack(sambals: string[]) {
   return sambals.length === 3 ? 1.5 : 1;
 }
 
-function getEarliestPickupDate() {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Brunei",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "00";
-  const year = Number(part("year"));
-  const month = Number(part("month"));
-  const day = Number(part("day"));
-  const hour = Number(part("hour"));
-  const date = new Date(Date.UTC(year, month - 1, day + (hour >= 17 ? 1 : 0)));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
-}
-
 export default function Home() {
-  const earliestPickupDate = getEarliestPickupDate();
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const [date, setDate] = useState(() => getEarliestPickupDate());
+  const [date, setDate] = useState(
+    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })
+  );
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
   const [message, setMessage] = useState("");
-  const [chickenQuantity, setChickenQuantity] = useState("");
-  const [riceQuantity, setRiceQuantity] = useState("");
+  const [chickenQuantity, setChickenQuantity] = useState(0);
+  const [riceQuantity, setRiceQuantity] = useState(0);
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
   const [extraType, setExtraType] = useState("Tahai Biasa");
   const [extraPrice, setExtraPrice] = useState("0.50");
+  const [extraSambalEnabled, setExtraSambalEnabled] = useState(false);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals), 0),
     [lines]
   );
-  const addonTotal = Number(chickenQuantity || 0) + Number(riceQuantity || 0) * Number(riceUnitPrice) + Number(extraPrice);
+  const addonTotal = chickenQuantity + riceQuantity * Number(riceUnitPrice) + (extraSambalEnabled ? Number(extraPrice) : 0);
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
@@ -81,7 +65,7 @@ export default function Home() {
     setSelected((current) => {
       if (current.includes(sambal)) return current.filter((item) => item !== sambal);
       if (current.length >= 3) {
-        setMessage("Pilih maksimum 3 jenis sambal bagi setiap pesanan.");
+        setMessage("Maksimum 3 jenis sambal boleh dipilih.");
         return current;
       }
       return [...current, sambal];
@@ -90,7 +74,7 @@ export default function Home() {
 
   function addLine() {
     if (selected.length < 1 || selected.length > 3) {
-      setMessage("Sila pilih 1 hingga 3 jenis sambal.");
+      setMessage("Sila pilih sekurang-kurangnya 1 jenis sambal (maksimum 3).");
       return;
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
@@ -132,9 +116,9 @@ export default function Home() {
       `${index + 1}. ${line.sambals.join(" + ")} × ${line.quantity} — ${money(line.quantity * pricePerPack(line.sambals))}`
     );
     const addonLines = [
-      ...(Number(chickenQuantity || 0) > 0 ? [`Ayam Goreng × ${chickenQuantity} — ${money(Number(chickenQuantity || 0))}`] : []),
-      ...(Number(riceQuantity || 0) > 0 ? [`Nasi Putih × ${riceQuantity} (${money(Number(riceUnitPrice))}/unit) — ${money(Number(riceQuantity || 0) * Number(riceUnitPrice))}`] : []),
-      `Sambal ${extraType} — ${money(Number(extraPrice))}`,
+      ...(chickenQuantity > 0 ? [`Ayam Goreng × ${chickenQuantity} — ${money(chickenQuantity)}`] : []),
+      ...(riceQuantity > 0 ? [`Nasi Putih × ${riceQuantity} (${money(Number(riceUnitPrice))}/unit) — ${money(riceQuantity * Number(riceUnitPrice))}`] : []),
+
     ];
     const messageText = [
       "*PESANAN NASI KATOK 3 ABDUL*",
@@ -150,6 +134,7 @@ export default function Home() {
       "",
       "*Add On's:*",
       ...addonLines,
+      ...(extraSambalEnabled ? [`Sambal tambahan: ${extraType} — ${money(Number(extraPrice))}`] : []),
       `Jumlah Add On's: ${money(addonTotal)}`,
       "",
       `*JUMLAH KESELURUHAN: ${money(total)}*`,
@@ -163,12 +148,24 @@ export default function Home() {
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
+  const sectionTitleStyle: React.CSSProperties = {
+    margin: "0 0 16px", padding: "12px 14px", borderRadius: 12,
+    color: "#fff8e7", background: "linear-gradient(105deg, #003b24, #075537)",
+    border: "1px solid #c9a441", fontSize: 20,
+    backgroundImage: "radial-gradient(circle at 95% 20%, rgba(201,164,65,.18), transparent 28%), linear-gradient(105deg, #003b24, #075537)",
+  };
+
+  const noticeStyle: React.CSSProperties = {
+    background: "#fff8df", border: "1px solid #e4c46b", borderRadius: 12,
+    padding: 14, marginBottom: 16, color: "#173f30", lineHeight: 1.5,
+  };
+
   const buttonStyle: React.CSSProperties = {
-    border: "1px solid #cbd5cf",
+    border: "1px solid #d7c17b",
     borderRadius: 12,
     padding: "12px 10px",
     background: "#fff",
-    color: "#173f30",
+    color: "#123d2a",
     fontWeight: 600,
     fontSize: 15,
     minHeight: 48,
@@ -186,14 +183,24 @@ export default function Home() {
   };
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: 16, color: "#1f2924" }}>
-      <header style={{ background: "#154734", color: "#fff", borderRadius: 20, padding: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28 }}>Nasi Katok 3 Abdul</h1>
-        <p style={{ margin: "8px 0 0", fontSize: 17 }}>Sila isikan order biskita.</p>
+    <main style={{ maxWidth: 900, margin: "0 auto", padding: 12, color: "#173326", background: "#ffffff", minHeight: "100vh", fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #ffffff; }
+        input, select, button { font: inherit; }
+        button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #d5b24c; outline-offset: 2px; }
+        @media (min-width: 760px) { .nk3-main-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } }
+      `}</style>
+      <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
+        <img src="/nasi-katok-banner.png" alt="Nasi Katok 3 Abdul" style={{ display: "block", width: "100%", height: "auto", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+        <div style={{ padding: "10px 16px", textAlign: "center", background: "linear-gradient(90deg, #003b24, #075537, #003b24)", borderTop: "1px solid #c9a441" }}>
+          <strong style={{ fontSize: 17, letterSpacing: 1 }}>NASI KATOK 3 ABDUL</strong>
+          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>Sila isikan order biskita.</p>
+        </div>
       </header>
 
-      <section style={{ background: "#fff", border: "1px solid #e1e5e2", borderRadius: 18, padding: 20, marginTop: 16 }}>
-        <h2 style={{ marginTop: 0 }}>1. Maklumat pelanggan</h2>
+      <section style={{ background: "#fff", border: "1px solid #e2d8b9", borderRadius: 16, padding: 16, marginTop: 14, boxShadow: "0 4px 14px rgba(0,59,36,.06)" }}>
+        <h2 style={sectionTitleStyle}>📍 1. Maklumat pelanggan</h2>
         <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Cawangan</label>
         <select style={inputStyle} value={branch} onChange={(e) => setBranch(e.target.value)}>
           <option>Rimba</option>
@@ -204,7 +211,7 @@ export default function Home() {
         <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama" />
 
         <label style={{ display: "block", fontWeight: 600, margin: "14px 0 6px" }}>Tarikh ambil</label>
-        <input style={inputStyle} type="date" min={earliestPickupDate} value={date} onChange={(e) => setDate(e.target.value)} />
+        <input style={inputStyle} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
         <label style={{ display: "block", fontWeight: 600, margin: "14px 0 6px" }}>Waktu ambil</label>
         <select style={inputStyle} value={time} onChange={(e) => setTime(e.target.value)}>
@@ -218,9 +225,15 @@ export default function Home() {
 
       {stage === "order" && (
         <>
-          <section style={{ background: "#fff", border: "1px solid #e1e5e2", borderRadius: 18, padding: 20, marginTop: 16 }}>
-            <h2 style={{ marginTop: 0 }}>2. Pilihan sambal</h2>
-            <p style={{ marginTop: 0, color: "#4c5a52" }}>Pilih sehingga 3 jenis sambal bagi setiap pesanan.</p>
+          <section style={{ background: "#fff", border: "1px solid #e2d8b9", borderRadius: 16, padding: 16, marginTop: 14, boxShadow: "0 4px 14px rgba(0,59,36,.06)" }}>
+            <h2 style={sectionTitleStyle}>🌶️ 2. Pilihan sambal</h2>
+            <div style={noticeStyle}>
+              <strong>Campuran sambal:</strong>
+              <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
+                <li>Untuk campur, hanya boleh pilih 2 jenis sambal.</li>
+                <li>Jika ingin 3 jenis sambal atau lebih, caj tambahan <strong style={{ color: "#b42318" }}>$0.50</strong> dikenakan untuk setiap 1 jenis sambal selepas 2 pilihan.</li>
+              </ul>
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
               {SAMBALS.map((sambal) => {
                 const isSelected = selected.includes(sambal);
@@ -234,8 +247,9 @@ export default function Home() {
                       ...buttonStyle,
                       padding: "12px 6px",
                       minHeight: 58,
-                      border: isSelected ? "2px solid #176443" : "1px solid #d4dbd6",
-                      background: isSelected ? "#24513f" : "#fff",
+                      border: isSelected ? "2px solid #c9a441" : "1px solid #d8d8d2",
+                      background: isSelected ? "#075537" : "#fff",
+                      color: isSelected ? "#fff8e7" : "#123d2a",
                       fontWeight: isSelected ? 700 : 500,
                       overflowWrap: "anywhere",
                     }}
@@ -260,7 +274,7 @@ export default function Home() {
                 />
                 <button type="button" style={{ ...buttonStyle, minHeight: 44, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
               </div>
-              <button type="button" onClick={addLine} style={{ ...buttonStyle, minHeight: 44, flex: "0 0 auto", padding: "10px 18px", background: "#176443", color: "#fff", borderColor: "#176443" }}>＋ Add</button>
+              <button type="button" onClick={addLine} style={{ ...buttonStyle, minHeight: 44, flex: "0 0 auto", padding: "10px 18px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ Add</button>
             </div>
 
             <div style={{ marginTop: 16, display: "grid", gap: 8 }}>
@@ -300,7 +314,7 @@ export default function Home() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 16 }}>
               <button type="button" onClick={() => continueTo("addons")} style={{ ...buttonStyle, flex: "1 1 0", minWidth: 0, padding: "12px 8px" }}>Add On's</button>
-              <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, flex: "1 1 0", minWidth: 0, padding: "12px 8px", background: "#176443", color: "#fff", borderColor: "#176443" }}>Confirm Order!</button>
+              <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, flex: "1 1 0", minWidth: 0, padding: "12px 8px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Confirm Order!</button>
             </div>
             {message && <p role="status" style={{ marginBottom: 0, color: "#a33b2b" }}>{message}</p>}
           </section>
@@ -308,60 +322,51 @@ export default function Home() {
       )}
 
       {stage === "addons" && (
-        <section style={{ background: "#fff", border: "1px solid #e1e5e2", borderRadius: 18, padding: 16, marginTop: 16 }}>
-          <h2 style={{ marginTop: 0 }}>3. Add Ons</h2>
+        <section style={{ background: "#fff", border: "1px solid #e2d8b9", borderRadius: 16, padding: 16, marginTop: 14, boxShadow: "0 4px 14px rgba(0,59,36,.06)" }}>
+          <h2 style={sectionTitleStyle}>🛍️ 3. Add On's</h2>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 84px", gap: 10, alignItems: "center", margin: "12px 0" }}>
             <label htmlFor="chickenQty">Ayam Goreng — $1.00 setiap satu</label>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button type="button" aria-label="Kurangkan ayam goreng" onClick={() => setChickenQuantity(String(Math.max(0, Number(chickenQuantity || 0) - 1)))} style={{ ...buttonStyle, padding: "8px 10px", minWidth: 30 }}>−</button>
-              <input id="chickenQty" type="number" min={0} max={100} value={chickenQuantity} onChange={(e) => setChickenQuantity(e.target.value === "" ? "" : String(Math.max(0, Math.min(100, Number(e.target.value) || 0))))} style={{ ...inputStyle, textAlign: "center", minWidth: 0, width: 42, padding: "10px 2px" }} />
-              <button type="button" aria-label="Tambah ayam goreng" onClick={() => setChickenQuantity(String(Math.min(100, Number(chickenQuantity || 0) + 1)))} style={{ ...buttonStyle, padding: "8px 10px", minWidth: 30 }}>+</button>
-            </div>
+            <input id="chickenQty" type="number" min={0} max={100} value={chickenQuantity} onChange={(e) => setChickenQuantity(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} style={inputStyle} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 100px 84px", gap: 8, alignItems: "center", margin: "12px 0" }}>
             <label htmlFor="riceQty">Nasi Putih</label>
             <select aria-label="Harga nasi putih" style={inputStyle} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}><option value="0.50">$0.50</option><option value="1.00">$1.00</option></select>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button type="button" aria-label="Kurangkan nasi putih" onClick={() => setRiceQuantity(String(Math.max(0, Number(riceQuantity || 0) - 1)))} style={{ ...buttonStyle, padding: "8px 10px", minWidth: 30 }}>−</button>
-              <input id="riceQty" aria-label="Kuantiti nasi putih" type="number" min={0} max={100} value={riceQuantity} onChange={(e) => setRiceQuantity(e.target.value === "" ? "" : String(Math.max(0, Math.min(100, Number(e.target.value) || 0))))} style={{ ...inputStyle, textAlign: "center", minWidth: 0, width: 42, padding: "10px 2px" }} />
-              <button type="button" aria-label="Tambah nasi putih" onClick={() => setRiceQuantity(String(Math.min(100, Number(riceQuantity || 0) + 1)))} style={{ ...buttonStyle, padding: "8px 10px", minWidth: 30 }}>+</button>
-            </div>
+            <input id="riceQty" aria-label="Kuantiti nasi putih" type="number" min={0} max={100} value={riceQuantity} onChange={(e) => setRiceQuantity(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} style={inputStyle} />
           </div>
           <div style={{ borderTop: "1px solid #e6e9e7", paddingTop: 12, marginTop: 12 }}>
-            <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>Add On's (Sambal)</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, fontWeight: 600 }}>
+              <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> Tambah sambal ekstra
+            </label>
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>Jenis sambal</label>
             <select style={inputStyle} value={extraType} onChange={(e) => setExtraType(e.target.value)}>{SAMBALS.map((item) => <option key={item}>{item}</option>)}</select>
             <label style={{ display: "block", margin: "10px 0 6px", fontWeight: 600 }}>Harga sambal tambahan</label>
             <select style={inputStyle} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>{Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}</select>
-            <p style={{ color: "#68756d", fontSize: 13, marginBottom: 0 }}>Sambal tambahan menggunakan harga sahaja, tanpa kuantiti.</p>
+            <p style={{ color: "#68756d", fontSize: 13, marginBottom: 0 }}>Caj sambal ekstra hanya dikira jika pilihan ini ditandakan.</p>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}><strong>Jumlah Add Ons</strong><strong>{money(addonTotal)}</strong></div>
-          <button type="button" onClick={() => setStage("review")} style={{ ...buttonStyle, width: "100%", marginTop: 14, background: "#176443", color: "#fff" }}>Semak pesanan</button>
+          <button type="button" onClick={() => setStage("review")} style={{ ...buttonStyle, width: "100%", marginTop: 14, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Semak pesanan</button>
         </section>
       )}
 
       {stage === "review" && (
-        <section style={{ background: "#fff", border: "1px solid #e1e5e2", borderRadius: 18, padding: 20, marginTop: 16 }}>
-          <h2 style={{ marginTop: 0 }}>Semak pesanan</h2>
+        <section style={{ background: "#fff", border: "1px solid #e2d8b9", borderRadius: 16, padding: 16, marginTop: 14, boxShadow: "0 4px 14px rgba(0,59,36,.06)" }}>
+          <h2 style={sectionTitleStyle}>📋 Semak pesanan</h2>
           <p><strong>Nama:</strong> {name}</p>
           <p><strong>Cawangan:</strong> {branch}</p>
           <p><strong>Tarikh dan waktu:</strong> {date} · {time}</p>
           <h3>Pesanan</h3>
           {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
           <p><strong>Subtotal:</strong> {money(subtotal)}</p>
-          <p><strong>Add Ons:</strong></p>
-          {Number(chickenQuantity || 0) > 0 && <p>Ayam Goreng × {chickenQuantity} — {money(Number(chickenQuantity || 0))}</p>}
-          {Number(riceQuantity || 0) > 0 && <p>Nasi Putih × {riceQuantity} ({money(Number(riceUnitPrice))}/unit) — {money(Number(riceQuantity || 0) * Number(riceUnitPrice))}</p>}
-          <p>Sambal {extraType} — {money(Number(extraPrice))}</p>
-          <p><strong>Jumlah Add Ons:</strong> {money(addonTotal)}</p>
+          <p><strong>Add Ons:</strong> {money(addonTotal)}</p>
           <h2 style={{ display: "flex", justifyContent: "space-between" }}><span>Jumlah</span><span>{money(total)}</span></h2>
           <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>Kembali edit</button>
-          <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#176443", color: "#fff" }}>Sahkan pesanan</button>
+          <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Sahkan pesanan</button>
         </section>
       )}
 
       {stage === "done" && (
-        <section style={{ background: "#fff", border: "1px solid #e1e5e2", borderRadius: 18, padding: 20, marginTop: 16 }}>
-          <h2>Ringkasan pesanan</h2>
+        <section style={{ background: "#fff", border: "1px solid #e2d8b9", borderRadius: 16, padding: 16, marginTop: 14, boxShadow: "0 4px 14px rgba(0,59,36,.06)" }}>
+          <h2 style={sectionTitleStyle}>✅ Ringkasan pesanan</h2>
           <p>{message}</p>
           <p><strong>{name}</strong> · {branch}</p>
           <p>{date} · {time}</p>
