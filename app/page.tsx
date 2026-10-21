@@ -280,7 +280,7 @@ export default function Home() {
         }}
       >
         <img
-          src="/nasikatok-banner.png"
+          src="/nasi-katok-banner.png"
           alt="Nasi Katok 3 Abdul"
           style={{ display: "block", width: "100%", height: "auto" }}
         />
