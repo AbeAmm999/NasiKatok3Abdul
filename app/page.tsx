@@ -19,7 +19,9 @@ function money(value: number) {
 }
 
 function pricePerPack(sambals: string[]) {
-  return sambals.length === 3 ? 1.5 : 1;
+  const count = sambals.length;
+  if (count <= 2) return 1;
+  return 1 + (count - 2) * 0.5;
 }
 
 const imagePaths = {
@@ -98,8 +100,8 @@ export default function Home() {
     setMessage("");
     setSelected((current) => {
       if (current.includes(sambal)) return current.filter((item) => item !== sambal);
-      if (current.length >= 3) {
-        setMessage("Maksimum 3 jenis sambal boleh dipilih.");
+      if (current.length >= SAMBALS.length) {
+        setMessage("Semua jenis sambal telah dipilih.");
         return current;
       }
       return [...current, sambal];
@@ -107,8 +109,8 @@ export default function Home() {
   }
 
   function addLine() {
-    if (selected.length < 1 || selected.length > 3) {
-      setMessage("Sila pilih sekurang-kurangnya 1 jenis sambal (maksimum 3).");
+    if (selected.length < 1) {
+      setMessage("Sila pilih sekurang-kurangnya 1 jenis sambal.");
       return;
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
@@ -362,9 +364,8 @@ export default function Home() {
               <div style={noticeStyle}>
                 <strong>Campuran sambal:</strong>
                 <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
-                  <li>Pilih 1 hingga 3 jenis sambal bagi setiap pesanan.</li>
                   <li>1 atau 2 jenis sambal: $1.00 sebungkus.</li>
-                  <li>3 jenis sambal: $1.50 sebungkus.</li>
+                  <li>3 jenis sambal atau lebih: caj tambahan $0.50 bagi setiap jenis sambal selepas 2 pilihan.</li>
                 </ul>
               </div>
               <div className="nk3-sambal-grid">
@@ -388,8 +389,8 @@ export default function Home() {
               </div>
 
               <div className="nk3-total-box">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Harga sebungkus</span><strong>{money(selected.length === 3 ? 1.5 : 1)}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>Jumlah pilihan semasa</span><strong>{money(quantity * (selected.length === 3 ? 1.5 : 1))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Harga sebungkus</span><strong>{money(pricePerPack(selected))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>Jumlah pilihan semasa</span><strong>{money(quantity * pricePerPack(selected))}</strong></div>
               </div>
 
               <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
