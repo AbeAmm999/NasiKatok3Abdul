@@ -465,9 +465,30 @@ export default function Home() {
                 </div>
               </div>
 
-              <button type="button" onClick={() => { setChickenQuantity(0); setRiceQuantity(0); setExtraSambalEnabled(false); setStage("review"); }} style={{ ...buttonStyle, width: "100%", marginTop: 8 }}>No, Thanks! / Teruskan</button>
-              <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>Jumlah Add On's</strong><strong>{money(addonTotal)}</strong></div>
-              <button type="button" onClick={() => setStage("review")} style={{ ...buttonStyle, width: "100%", marginTop: 10, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Semak pesanan</button>
+              <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <strong>Jumlah Add On's</strong><strong>{money(addonTotal)}</strong>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChickenQuantity(0);
+                    setRiceQuantity(0);
+                    setExtraSambalEnabled(false);
+                    setStage("review");
+                  }}
+                  style={{ ...buttonStyle, width: "100%", padding: "12px 8px" }}
+                >
+                  No Thanks!
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStage("review")}
+                  style={{ ...buttonStyle, width: "100%", padding: "12px 8px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}
+                >
+                  Confirm Add On
+                </button>
+              </div>
             </section>
           )}
 
