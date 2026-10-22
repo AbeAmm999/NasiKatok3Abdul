@@ -1,179 +1,37 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
 
 const SAMBALS = [
-  { name: "Biasa Manis", image: "/images/sambal-biasa-manis.jpg" },
-  { name: "Tahai Biasa", image: "/images/sambal-tahai.jpg" },
-  { name: "Pusu Biasa", image: "/images/sambal-pusu.jpg" },
-  { name: "Udang Biasa", image: "/images/sambal-udang.jpg" },
-  { name: "Padas Manis", image: "/images/sambal-padas-manis.jpg" },
-  { name: "Padas Padas", image: "/images/sambal-padas.jpg" },
-  { name: "Lada Padi", image: "/images/sambal-lada-padi.jpg" },
+  "Biasa Manis",
+  "Tahai Biasa",
+  "Pusu Biasa",
+  "Udang Biasa",
+  "Padas Manis",
+  "Padas Padas",
+  "Lada Padi",
 ];
 
-const ADDONS = {
-  chicken: {
-    name: "Ayam Goreng",
-    image: "/images/ayam-goreng.jpg",
-    price: 1.0,
-  },
-  rice: {
-    name: "Nasi Putih",
-    image: "/images/nasi-putih.jpg",
-  },
-  sambal: {
-    name: "Extra Sambal",
-    image: "/images/extra-sambal.jpg",
-  },
-};
-
-const BRANCHES = [
-  {
-    name: "Rimba",
-    image: "/images/rimba.jpg",
-    address: "Cawangan Rimba",
-  },
-  {
-    name: "Telisai",
-    image: "/images/telisai.jpg",
-    address: "Cawangan Telisai",
-  },
-];
-
-type OrderLine = {
-  id: number;
-  sambals: string[];
-  quantity: number;
-};
+type OrderLine = { id: number; sambals: string[]; quantity: number };
 
 function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
 function pricePerPack(sambals: string[]) {
-  return sambals.length === 3 ? 1.5 : 1.0;
+  return sambals.length === 3 ? 1.5 : 1;
 }
 
-function todayBrunei() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Brunei",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
+const imagePaths = {
+  banner: "/nasi-katok-banner.png",
+  rimba: "/images/rimba.jpg",
+  telisai: "/images/telisai.jpg",
+  chicken: "/images/ayam-goreng.jpg",
+  rice: "/images/nasi-putih.jpg",
+  sambal: "/images/extra-sambal.jpg",
+};
 
-  const get = (type: string) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-
-  return `${get("year")}-${get("month")}-${get("day")}`;
-}
-
-function currentBruneiMinutes() {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Brunei",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-
-  const hour = Number(
-    parts.find((part) => part.type === "hour")?.value ?? 0
-  );
-
-  const minute = Number(
-    parts.find((part) => part.type === "minute")?.value ?? 0
-  );
-
-  return hour * 60 + minute;
-}
-
-function displayDate(date: string) {
-  if (!date) return "-";
-
-  const [year, month, day] = date.split("-").map(Number);
-
-  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(
-    "en-GB",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      timeZone: "UTC",
-    }
-  );
-}
-
-function formatTime(minutes: number) {
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
-  const displayHour = hour % 12 || 12;
-  const suffix = hour < 12 ? "pagi" : "petang";
-
-  return `${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`;
-}
-
-function QuantityControl({
-  value,
-  onChange,
-  min = 0,
-  max = 100,
-}: {
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-}) {
-  return (
-    <div className="quantity-control">
-      <button
-        type="button"
-        aria-label="Kurangkan kuantiti"
-        disabled={value <= min}
-        onClick={() => onChange(Math.max(min, value - 1))}
-      >
-        −
-      </button>
-
-      <input
-        aria-label="Kuantiti"
-        type="number"
-        inputMode="numeric"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => {
-          const raw = event.target.value;
-
-          if (raw === "") {
-            onChange(min);
-            return;
-          }
-
-          const parsed = Number(raw);
-
-          if (Number.isFinite(parsed)) {
-            onChange(
-              Math.max(min, Math.min(max, Math.floor(parsed)))
-            );
-          }
-        }}
-      />
-
-      <button
-        type="button"
-        aria-label="Tambah kuantiti"
-        disabled={value >= max}
-        onClick={() => onChange(Math.min(max, value + 1))}
-      >
-        +
-      </button>
-    </div>
-  );
-}
-
-function FoodImage({
+function Photo({
   src,
   alt,
   className = "",
@@ -182,190 +40,107 @@ function FoodImage({
   alt: string;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
-
   return (
-    <div className={`food-image ${className}`}>
-      {!failed ? (
-        <img
-          src={src}
-          alt={alt}
-          loading="lazy"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <div className="image-placeholder" aria-label={alt}>
-          <span>🍽️</span>
-          <small>{alt}</small>
-        </div>
-      )}
-    </div>
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading="lazy"
+      onError={(event) => {
+        event.currentTarget.style.visibility = "hidden";
+      }}
+    />
   );
 }
 
 export default function Home() {
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const [date, setDate] = useState(todayBrunei);
+  const [date, setDate] = useState(
+    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })
+  );
   const [time, setTime] = useState("");
-
   const [selected, setSelected] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
-
-  const [stage, setStage] = useState<
-    "order" | "addons" | "review" | "done"
-  >("order");
-
+  const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
   const [message, setMessage] = useState("");
-
   const [chickenQuantity, setChickenQuantity] = useState(0);
   const [riceQuantity, setRiceQuantity] = useState(0);
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
-
-  const [extraType, setExtraType] = useState("Biasa Manis");
+  const [extraType, setExtraType] = useState("Tahai Biasa");
   const [extraPrice, setExtraPrice] = useState("0.50");
   const [extraSambalEnabled, setExtraSambalEnabled] = useState(false);
 
   const subtotal = useMemo(
-    () =>
-      lines.reduce(
-        (sum, line) =>
-          sum + line.quantity * pricePerPack(line.sambals),
-        0
-      ),
+    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals), 0),
     [lines]
   );
-
   const addonTotal =
-    chickenQuantity * ADDONS.chicken.price +
+    chickenQuantity +
     riceQuantity * Number(riceUnitPrice) +
     (extraSambalEnabled ? Number(extraPrice) : 0);
-
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
-    const slots: { value: number; label: string }[] = [];
-
-    const today = todayBrunei();
-    const minimumTime =
-      date === today ? currentBruneiMinutes() + 30 : 10 * 60;
-
+    const slots: string[] = [];
     for (let mins = 10 * 60; mins <= 16 * 60 + 30; mins += 30) {
-      if (mins >= minimumTime) {
-        slots.push({
-          value: mins,
-          label: formatTime(mins),
-        });
-      }
+      const hour = Math.floor(mins / 60);
+      const minute = mins % 60;
+      const suffix = hour < 12 ? "pagi" : "petang";
+      const displayHour = hour % 12 || 12;
+      slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
-
     return slots;
-  }, [date]);
-
-  function handleDateChange(nextDate: string) {
-    setDate(nextDate);
-    setTime("");
-    setMessage("");
-  }
+  }, []);
 
   function toggleSambal(sambal: string) {
     setMessage("");
-
     setSelected((current) => {
-      if (current.includes(sambal)) {
-        return current.filter((item) => item !== sambal);
-      }
-
+      if (current.includes(sambal)) return current.filter((item) => item !== sambal);
       if (current.length >= 3) {
-        setMessage("Maksimum 3 jenis sambal sahaja.");
+        setMessage("Maksimum 3 jenis sambal boleh dipilih.");
         return current;
       }
-
       return [...current, sambal];
     });
   }
 
   function addLine() {
     if (selected.length < 1 || selected.length > 3) {
-      setMessage("Sila pilih 1 hingga 3 jenis sambal.");
+      setMessage("Sila pilih sekurang-kurangnya 1 jenis sambal (maksimum 3).");
       return;
     }
-
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-      setMessage("Kuantiti mestilah antara 1 hingga 100.");
+      setMessage("Masukkan kuantiti antara 1 hingga 100.");
       return;
     }
-
     setLines((current) => [
       ...current,
-      {
-        id: Date.now(),
-        sambals: [...selected],
-        quantity,
-      },
+      { id: Date.now(), sambals: [...selected], quantity },
     ]);
-
     setSelected([]);
     setQuantity(1);
-    setMessage("Pesanan berjaya ditambah.");
+    setMessage("Pesanan ditambah.");
   }
 
   function continueTo(next: "addons" | "review") {
-    if (!name.trim()) {
-      setMessage("Sila masukkan nama pelanggan.");
+    if (!name.trim() || !time || !date) {
+      setMessage("Sila isi nama, tarikh dan waktu ambil.");
       return;
     }
-
-    if (!date || !time) {
-      setMessage("Sila pilih tarikh dan waktu pengambilan.");
-      return;
-    }
-
-    const pickupMinutes = timeSlots.find(
-      (slot) => slot.label === time
-    )?.value;
-
-    if (pickupMinutes === undefined) {
-      setMessage(
-        "Waktu tersebut tidak tersedia. Sila pilih waktu pengambilan yang sah."
-      );
-      setTime("");
-      return;
-    }
-
-    if (date === todayBrunei()) {
-      if (pickupMinutes < currentBruneiMinutes() + 30) {
-        setMessage(
-          "Tempahan mesti dibuat sekurang-kurangnya 30 minit lebih awal."
-        );
-        setTime("");
-        return;
-      }
-    }
-
     if (lines.length === 0) {
-      if (selected.length < 1 || selected.length > 3) {
-        setMessage("Sila pilih sambal dan tambah pesanan dahulu.");
+      if (selected.length === 0) {
+        setMessage("Sila pilih sambal dan tambah pesanan terlebih dahulu.");
         return;
       }
-
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-        setMessage("Kuantiti mestilah antara 1 hingga 100.");
+        setMessage("Masukkan kuantiti antara 1 hingga 100.");
         return;
       }
-
-      setLines([
-        {
-          id: Date.now(),
-          sambals: [...selected],
-          quantity,
-        },
-      ]);
-
+      setLines([{ id: Date.now(), sambals: [...selected], quantity }]);
       setSelected([]);
     }
-
     setMessage("");
     setStage(next);
   }
@@ -373,1227 +148,366 @@ export default function Home() {
   function confirmOrder() {
     const orderLines = lines.map(
       (line, index) =>
-        `${index + 1}. ${line.sambals.join(" + ")} × ${
-          line.quantity
-        } — ${money(line.quantity * pricePerPack(line.sambals))}`
+        `${index + 1}. ${line.sambals.join(" + ")} × ${line.quantity} — ${money(
+          line.quantity * pricePerPack(line.sambals)
+        )}`
     );
-
     const addonLines = [
       ...(chickenQuantity > 0
-        ? [
-            `Ayam Goreng × ${chickenQuantity} — ${money(
-              chickenQuantity * ADDONS.chicken.price
-            )}`,
-          ]
+        ? [`Ayam Goreng × ${chickenQuantity} — ${money(chickenQuantity)}`]
         : []),
-
       ...(riceQuantity > 0
         ? [
-            `Nasi Putih × ${riceQuantity} (${money(
-              Number(riceUnitPrice)
-            )}/unit) — ${money(
+            `Nasi Putih × ${riceQuantity} (${money(Number(riceUnitPrice))}/unit) — ${money(
               riceQuantity * Number(riceUnitPrice)
             )}`,
           ]
         : []),
-
       ...(extraSambalEnabled
-        ? [
-            `Sambal ${extraType} — ${money(
-              Number(extraPrice)
-            )}`,
-          ]
+        ? [`Sambal tambahan (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
-
     const messageText = [
       "*PESANAN NASI KATOK 3 ABDUL*",
-      "--------------------------------",
+      "------------------------------",
       `Nama: ${name.trim()}`,
       `Cawangan: ${branch}`,
-      `Tarikh ambil: ${displayDate(date)}`,
+      `Tarikh ambil: ${date}`,
       `Waktu ambil: ${time}`,
       "",
-      "*SENARAI PESANAN*",
+      "*Senarai pesanan:*",
       ...orderLines,
+      `Subtotal: ${money(subtotal)}`,
       "",
-      `Subtotal nasi katok: ${money(subtotal)}`,
-      "",
-      "*ADD ON'S*",
-      ...(addonLines.length > 0 ? addonLines : ["Tiada Add On's"]),
+      "*Add On's:*",
+      ...(addonLines.length ? addonLines : ["Tiada Add On"]),
       `Jumlah Add On's: ${money(addonTotal)}`,
       "",
       `*JUMLAH KESELURUHAN: ${money(total)}*`,
-      "--------------------------------",
+      "------------------------------",
       "Pesanan dihantar melalui laman web.",
     ].join("\n");
 
-    setMessage("Sila hantar mesej WhatsApp untuk melengkapkan pesanan.");
+    setMessage("Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
     setStage("done");
-
-    const whatsappUrl =
-      `https://wa.me/6738999443?text=${encodeURIComponent(messageText)}`;
-
+    const whatsappUrl = `https://wa.me/6738999443?text=${encodeURIComponent(messageText)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
   const sectionTitleStyle: React.CSSProperties = {
     margin: "0 0 16px",
-    padding: "13px 15px",
+    padding: "12px 14px",
     borderRadius: 12,
     color: "#fff8e7",
-    background:
-      "linear-gradient(110deg, #003b24, #075537, #003b24)",
+    background: "linear-gradient(105deg, #003b24, #075537)",
     border: "1px solid #c9a441",
-    fontSize: 19,
+    fontSize: 20,
+    backgroundImage:
+      "radial-gradient(circle at 95% 20%, rgba(201,164,65,.18), transparent 28%), linear-gradient(105deg, #003b24, #075537)",
+  };
+
+  const noticeStyle: React.CSSProperties = {
+    background: "#fff8df",
+    border: "1px solid #e4c46b",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    color: "#173f30",
+    lineHeight: 1.5,
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    border: "1px solid #d7c17b",
+    borderRadius: 12,
+    padding: "12px 10px",
+    background: "#fff",
+    color: "#123d2a",
+    fontWeight: 600,
+    fontSize: 15,
+    minHeight: 48,
+    cursor: "pointer",
   };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    border: "1px solid #d8d2bd",
-    borderRadius: 10,
+    border: "1px solid #cbd5cf",
+    borderRadius: 12,
     padding: "12px",
     fontSize: 16,
+    boxSizing: "border-box",
     background: "#fff",
-    color: "#173326",
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    border: "1px solid #c9a441",
-    borderRadius: 10,
-    padding: "12px 10px",
-    background: "#fff",
-    color: "#06452d",
-    fontWeight: 700,
-    fontSize: 14,
-    minHeight: 46,
-    cursor: "pointer",
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #e2d8b9",
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 14,
-    boxShadow: "0 4px 14px rgba(0,59,36,.06)",
   };
 
   return (
-    <main className="nk3-main">
+    <main className="nk3-page">
       <style>{`
-        * {
-          box-sizing: border-box;
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f8f7f0; }
+        input, select, button { font: inherit; }
+        button:focus-visible, input:focus-visible, select:focus-visible {
+          outline: 3px solid #d5b24c; outline-offset: 2px;
         }
-
-        body {
-          margin: 0;
-          background: #f7f6ef;
+        .nk3-page {
+          max-width: 1100px; margin: 0 auto; padding: 12px;
+          color: #173326; background: #fffefa; min-height: 100vh;
           font-family: Arial, Helvetica, sans-serif;
         }
-
-        button, input, select {
-          font: inherit;
-        }
-
-        button:focus-visible,
-        input:focus-visible,
-        select:focus-visible {
-          outline: 3px solid #d5b24c;
-          outline-offset: 2px;
-        }
-
-        button:disabled {
-          opacity: .4;
-          cursor: not-allowed;
-        }
-
-        .nk3-main {
-          width: 100%;
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 12px;
-          min-height: 100vh;
-          color: #173326;
-          background: #fffdf7;
-        }
-
-        .nk3-header {
-          overflow: hidden;
-          border: 2px solid #c9a441;
-          border-radius: 17px;
-          background: #003b24;
-          color: #fff8e7;
-          margin-bottom: 16px;
-          box-shadow: 0 5px 18px rgba(0,59,36,.12);
-        }
-
         .nk3-banner {
-          display: block;
-          width: 100%;
-          max-height: 260px;
-          object-fit: cover;
+          display: block; width: 100%; height: auto; max-height: 270px;
+          object-fit: cover; background: #003b24;
         }
-
-        .nk3-header-title {
-          padding: 14px 12px;
-          text-align: center;
-          background: linear-gradient(90deg, #003b24, #075537, #003b24);
-          border-top: 1px solid #c9a441;
-        }
-
-        .nk3-header-title h1 {
-          margin: 0;
-          font-size: clamp(21px, 5vw, 29px);
-          letter-spacing: .6px;
-        }
-
-        .nk3-header-title p {
-          margin: 7px 0 0;
-          color: #f8e9b4;
-          font-size: 14px;
-        }
-
-        .nk3-section {
-          background: #fff;
-          border: 1px solid #e2d8b9;
-          border-radius: 16px;
-          padding: 16px;
-          margin-top: 14px;
-          box-shadow: 0 4px 14px rgba(0,59,36,.06);
-        }
-
-        .nk3-field {
-          display: block;
-          font-weight: 700;
-          margin-bottom: 7px;
-        }
-
-        .nk3-field-group {
-          margin-top: 14px;
-        }
-
-        .nk3-help {
-          color: #64736a;
-          line-height: 1.5;
-          font-size: 13px;
-        }
-
-        .nk3-notice {
-          background: #fff8df;
-          border: 1px solid #e4c46b;
-          border-radius: 12px;
-          padding: 12px;
-          margin-bottom: 14px;
-          line-height: 1.5;
-          font-size: 13px;
-        }
-
-        .branch-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
-        }
-
-        .branch-card {
-          overflow: hidden;
-          border: 2px solid #e2d8b9;
-          border-radius: 12px;
-          padding: 0;
-          background: #fff;
-          color: #173326;
-          text-align: left;
-          cursor: pointer;
-        }
-
-        .branch-card.selected {
-          border-color: #c9a441;
-          box-shadow: 0 0 0 2px rgba(201,164,65,.15);
-        }
-
-        .branch-card .food-image {
-          height: 110px;
-        }
-
-        .branch-card-text {
-          padding: 10px;
-        }
-
-        .branch-card-text strong {
-          display: block;
-          font-size: 15px;
-        }
-
-        .branch-card-text small {
-          display: block;
-          margin-top: 4px;
-          color: #68756d;
-          font-size: 11px;
-        }
-
-        .sambal-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 9px;
-        }
-
-        .sambal-card {
-          overflow: hidden;
-          border: 2px solid #e2d8b9;
-          border-radius: 11px;
-          background: #fff;
-          color: #173326;
-          padding: 0;
-          cursor: pointer;
-          min-width: 0;
-          text-align: center;
-        }
-
-        .sambal-card.selected {
-          border-color: #c9a441;
-          background: #f2f7f1;
-          box-shadow: 0 0 0 1px #c9a441;
-        }
-
-        .sambal-card .food-image {
-          height: 76px;
-        }
-
-        .sambal-name {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 43px;
-          padding: 5px 3px;
-          font-size: 11px;
-          font-weight: 700;
-          overflow-wrap: anywhere;
-        }
-
-        .food-image {
-          width: 100%;
-          overflow: hidden;
-          background: #f0eee4;
-        }
-
-        .food-image img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .image-placeholder {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          gap: 5px;
-          color: #587061;
-          background: linear-gradient(135deg, #f4f0df, #e4eadf);
-          padding: 5px;
-          text-align: center;
-        }
-
-        .image-placeholder span {
-          font-size: 26px;
-        }
-
-        .image-placeholder small {
-          font-size: 10px;
-          overflow-wrap: anywhere;
-        }
-
-        .quantity-control {
-          display: grid;
-          grid-template-columns: 42px minmax(0, 1fr) 42px;
-          align-items: center;
-          gap: 7px;
+        .nk3-main-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+        .nk3-card {
+          background: #fff; border: 1px solid #e2d8b9; border-radius: 16px;
+          padding: 14px; margin-top: 14px; box-shadow: 0 4px 14px rgba(0,59,36,.06);
           min-width: 0;
         }
-
-        .quantity-control button {
-          width: 42px;
-          height: 42px;
-          border: 1px solid #c9a441;
-          border-radius: 9px;
-          background: #075537;
-          color: #fff8e7;
-          font-size: 23px;
-          font-weight: 700;
-          cursor: pointer;
+        .nk3-branch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .nk3-branch {
+          border: 2px solid #e2d8b9; border-radius: 14px; overflow: hidden;
+          background: #fff; padding: 0; color: #173326; cursor: pointer; min-width: 0;
         }
-
-        .quantity-control input {
-          width: 100%;
-          min-width: 0;
-          height: 42px;
-          border: 1px solid #d8d2bd;
-          border-radius: 9px;
-          background: #fff;
-          color: #173326;
-          text-align: center;
-          font-size: 16px;
+        .nk3-branch.selected { border-color: #087447; box-shadow: 0 0 0 2px rgba(8,116,71,.12); }
+        .nk3-branch-photo { display: block; width: 100%; height: 112px; object-fit: cover; background: #eef0e7; }
+        .nk3-branch-name { display: block; padding: 10px 6px; font-size: 16px; font-weight: 700; }
+        .nk3-addon {
+          display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px;
+          align-items: center; border: 1px solid #eee7d5; border-radius: 14px;
+          padding: 10px; margin: 10px 0; background: #fffefa;
         }
-
-        .addon-card {
-          border: 1px solid #e2d8b9;
-          border-radius: 13px;
-          padding: 10px;
-          margin-top: 12px;
-          background: #fffef9;
+        .nk3-addon-photo {
+          width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
+          border: 1px solid #e2d8b9; background: #f2f0e7;
         }
-
-        .addon-top {
-          display: grid;
-          grid-template-columns: 95px minmax(0, 1fr);
-          gap: 12px;
-          align-items: center;
-        }
-
-        .addon-top .food-image {
-          height: 100px;
-          border-radius: 9px;
-        }
-
-        .addon-title {
-          margin: 0 0 5px;
-          font-size: 15px;
-        }
-
-        .addon-price {
-          color: #075537;
-          font-weight: 700;
-          font-size: 13px;
-        }
-
-        .addon-controls {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(110px, 145px);
-          gap: 10px;
-          align-items: center;
-          margin-top: 12px;
-        }
-
-        .addon-select {
-          width: 100%;
-          border: 1px solid #d8d2bd;
-          border-radius: 9px;
-          background: #fff;
-          padding: 10px;
-          color: #173326;
-        }
-
-        .order-line {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 36px 65px 30px;
-          align-items: center;
-          gap: 5px;
-          padding: 9px 0;
-          border-bottom: 1px solid #eeeade;
-          font-size: 12px;
-        }
-
-        .order-line-name {
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-
-        .order-line-quantity {
-          text-align: center;
-        }
-
-        .order-line-price {
-          text-align: right;
-          white-space: nowrap;
-        }
-
-        .delete-button {
-          width: 28px;
-          height: 28px;
-          border: 1px solid #e5c8c4;
-          border-radius: 7px;
-          background: #fff;
-          color: #a33a32;
-          cursor: pointer;
-        }
-
-        .price-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-          margin-top: 11px;
-        }
-
-        .action-row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 9px;
-          margin-top: 17px;
-        }
-
-        .primary-button {
-          background: #075537 !important;
-          color: #fff8e7 !important;
-          border-color: #c9a441 !important;
-        }
-
-        .status-message {
-          border-radius: 9px;
-          background: #fff8df;
-          color: #704b00;
-          padding: 10px;
-          font-size: 13px;
-          line-height: 1.5;
-          margin-top: 12px;
-        }
-
-        .review-addon {
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-          font-size: 13px;
-          margin: 9px 0;
-        }
-
+        .nk3-addon-content { min-width: 0; }
+        .nk3-addon-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+        .nk3-qty { display: grid; grid-template-columns: 34px 46px 34px; align-items: center; gap: 0; }
+        .nk3-qty button { min-height: 38px; padding: 4px; border: 1px solid #d6d6cf; background: #fff; cursor: pointer; }
+        .nk3-qty button:first-child { border-radius: 9px 0 0 9px; }
+        .nk3-qty button:last-child { border-radius: 0 9px 9px 0; }
+        .nk3-qty span { text-align: center; border-top: 1px solid #d6d6cf; border-bottom: 1px solid #d6d6cf; min-height: 38px; display: grid; place-items: center; }
+        .nk3-sambal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .nk3-total-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f5f5ee; }
         @media (min-width: 760px) {
-          .nk3-main {
-            padding: 20px;
-          }
-
-          .nk3-content-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            gap: 14px;
-            align-items: start;
-          }
-
-          .nk3-content-grid > .nk3-section {
-            margin-top: 14px;
-          }
-
-          .sambal-card .food-image {
-            height: 105px;
-          }
-
-          .sambal-name {
-            font-size: 13px;
-          }
+          .nk3-main-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: start; gap: 16px; }
+          .nk3-page { padding: 18px; }
+          .nk3-card { padding: 16px; }
         }
-
-        @media (max-width: 370px) {
-          .nk3-main {
-            padding: 8px;
-          }
-
-          .nk3-section {
-            padding: 11px;
-          }
-
-          .sambal-grid {
-            gap: 6px;
-          }
-
-          .sambal-card .food-image {
-            height: 60px;
-          }
-
-          .sambal-name {
-            font-size: 10px;
-          }
-
-          .addon-top {
-            grid-template-columns: 80px minmax(0, 1fr);
-            gap: 9px;
-          }
-
-          .addon-top .food-image {
-            height: 85px;
-          }
-
-          .addon-controls {
-            grid-template-columns: minmax(0, 1fr) 125px;
-            gap: 6px;
-          }
+        @media (max-width: 390px) {
+          .nk3-sambal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .nk3-branch-photo { height: 88px; }
+          .nk3-addon { grid-template-columns: 62px minmax(0, 1fr); gap: 9px; padding: 8px; }
+          .nk3-addon-photo { width: 62px; height: 62px; }
+          .nk3-qty { grid-template-columns: 30px 36px 30px; }
         }
       `}</style>
 
-      <header className="nk3-header">
-        <FoodImage
-          src="/nasi-katok-banner.png"
-          alt="Nasi Katok 3 Abdul"
-          className="nk3-banner"
-        />
-
-        <div className="nk3-header-title">
-          <h1>NASI KATOK 3 ABDUL</h1>
-          <p>Sila isikan order biskita.</p>
+      <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
+        <Photo src={imagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
+        <div style={{ padding: "10px 16px", textAlign: "center", background: "linear-gradient(90deg, #003b24, #075537, #003b24)", borderTop: "1px solid #c9a441" }}>
+          <strong style={{ fontSize: 17, letterSpacing: 1 }}>NASI KATOK 3 ABDUL</strong>
+          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>Sila isikan order biskita.</p>
         </div>
       </header>
 
-      <section className="nk3-section">
-        <h2 style={sectionTitleStyle}>📍 1. Maklumat pelanggan</h2>
-
-        <label className="nk3-field">Pilih cawangan</label>
-
-        <div className="branch-grid">
-          {BRANCHES.map((item) => (
-            <button
-              type="button"
-              key={item.name}
-              aria-pressed={branch === item.name}
-              onClick={() => setBranch(item.name)}
-              className={`branch-card ${
-                branch === item.name ? "selected" : ""
-              }`}
-            >
-              <FoodImage src={item.image} alt={item.name} />
-
-              <div className="branch-card-text">
-                <strong>
-                  {branch === item.name ? "✓ " : ""}
-                  {item.name}
-                </strong>
-                <small>{item.address}</small>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div className="nk3-field-group">
-          <label htmlFor="customerName" className="nk3-field">
-            Nama pelanggan
-          </label>
-
-          <input
-            id="customerName"
-            style={inputStyle}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Masukkan nama"
-            maxLength={80}
-          />
-        </div>
-
-        <div className="nk3-field-group">
-          <label htmlFor="pickupDate" className="nk3-field">
-            Tarikh ambil
-          </label>
-
-          <input
-            id="pickupDate"
-            style={inputStyle}
-            type="date"
-            min={todayBrunei()}
-            value={date}
-            onChange={(event) => handleDateChange(event.target.value)}
-          />
-        </div>
-
-        <div className="nk3-field-group">
-          <label htmlFor="pickupTime" className="nk3-field">
-            Waktu ambil
-          </label>
-
-          <select
-            id="pickupTime"
-            style={inputStyle}
-            value={time}
-            onChange={(event) => {
-              setTime(event.target.value);
-              setMessage("");
-            }}
-          >
-            <option value="">Pilih waktu ambil</option>
-
-            {timeSlots.map((slot) => (
-              <option key={slot.label} value={slot.label}>
-                {slot.label}
-              </option>
-            ))}
-          </select>
-
-          <p className="nk3-help">
-            Waktu operasi pengambilan: 10:00 pagi hingga 5:00 petang.
-            Tempahan memerlukan sekurang-kurangnya 30 minit sebelum waktu
-            pengambilan. Slot terakhir ialah 4:30 petang.
-          </p>
-        </div>
-      </section>
-
-      {stage === "order" && (
-        <section className="nk3-section">
-          <h2 style={sectionTitleStyle}>🌶️ 2. Pilihan sambal</h2>
-
-          <div className="nk3-notice">
-            <strong>Sambal Campur Hanya Boleh Pilih 2 jenis sahaja</strong>
-            <p style={{ margin: "6px 0 0" }}>
-              Maksimum 3 jenis sambal bagi setiap pesanan. Pilihan 3 jenis
-              sambal dikenakan harga $1.50 sebungkus.
-            </p>
-          </div>
-
-          <div className="sambal-grid">
-            {SAMBALS.map((sambal) => {
-              const isSelected = selected.includes(sambal.name);
-
-              return (
+      <div className="nk3-main-grid">
+        <div>
+          <section className="nk3-card">
+            <h2 style={sectionTitleStyle}>📍 1. Pilih cawangan</h2>
+            <div className="nk3-branch-grid">
+              {([
+                { name: "Rimba", src: imagePaths.rimba },
+                { name: "Telisai", src: imagePaths.telisai },
+              ] as const).map((item) => (
                 <button
                   type="button"
-                  key={sambal.name}
-                  aria-pressed={isSelected}
-                  onClick={() => toggleSambal(sambal.name)}
-                  className={`sambal-card ${
-                    isSelected ? "selected" : ""
-                  }`}
+                  key={item.name}
+                  className={`nk3-branch ${branch === item.name ? "selected" : ""}`}
+                  aria-pressed={branch === item.name}
+                  onClick={() => setBranch(item.name)}
                 >
-                  <FoodImage src={sambal.image} alt={sambal.name} />
-
-                  <span className="sambal-name">
-                    {isSelected ? "✓ " : ""}
-                    {sambal.name}
-                  </span>
+                  <Photo src={item.src} alt={`Kedai Nasi Katok 3 Abdul ${item.name}`} className="nk3-branch-photo" />
+                  <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>
                 </button>
-              );
-            })}
-          </div>
-
-          <div style={{ marginTop: 18 }}>
-            <label className="nk3-field">Kuantiti bungkus</label>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) auto",
-                gap: 10,
-                alignItems: "center",
-              }}
-            >
-              <QuantityControl
-                value={quantity}
-                min={1}
-                max={100}
-                onChange={setQuantity}
-              />
-
-              <button
-                type="button"
-                style={{
-                  ...buttonStyle,
-                  background: "#075537",
-                  color: "#fff8e7",
-                  minWidth: 85,
-                }}
-                onClick={addLine}
-              >
-                ＋ Add
-              </button>
+              ))}
             </div>
-          </div>
+          </section>
 
-          <div
-            style={{
-              marginTop: 18,
-              padding: 12,
-              borderRadius: 11,
-              background: "#f4f5ed",
-            }}
-          >
-            <div className="price-row">
-              <span>Harga sebungkus</span>
-              <strong>
-                {money(pricePerPack(selected))}
-              </strong>
-            </div>
-
-            <div className="price-row">
-              <span>Jumlah pilihan semasa</span>
-              <strong>
-                {money(quantity * pricePerPack(selected))}
-              </strong>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 20 }}>
-            <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>
-              Pesanan yang dipilih
-            </h3>
-
-            {lines.length === 0 ? (
-              <p className="nk3-help">Belum ada pesanan.</p>
-            ) : (
-              lines.map((line, index) => (
-                <div className="order-line" key={line.id}>
-                  <span className="order-line-name">
-                    {index + 1}. {line.sambals.join(" + ")}
-                  </span>
-
-                  <span className="order-line-quantity">
-                    {line.quantity}
-                  </span>
-
-                  <strong className="order-line-price">
-                    {money(
-                      line.quantity * pricePerPack(line.sambals)
-                    )}
-                  </strong>
-
-                  <button
-                    type="button"
-                    className="delete-button"
-                    aria-label={`Hapus pesanan ${index + 1}`}
-                    onClick={() =>
-                      setLines((current) =>
-                        current.filter((item) => item.id !== line.id)
-                      )
-                    }
-                  >
-                    🗑
-                  </button>
-                </div>
-              ))
-            )}
-
-            <div className="price-row">
-              <strong>Subtotal</strong>
-              <strong>{money(subtotal)}</strong>
-            </div>
-          </div>
-
-          <div className="action-row">
-            <button
-              type="button"
-              style={buttonStyle}
-              onClick={() => continueTo("addons")}
-            >
-              Add On's
-            </button>
-
-            <button
-              type="button"
-              className="primary-button"
-              style={buttonStyle}
-              onClick={() => continueTo("review")}
-            >
-              Confirm Order!
-            </button>
-          </div>
-
-          {message && (
-            <p className="status-message" role="status">
-              {message}
-            </p>
-          )}
-        </section>
-      )}
-
-      {stage === "addons" && (
-        <section className="nk3-section">
-          <h2 style={sectionTitleStyle}>🛍️ 3. Add On's</h2>
-
-          <div className="addon-card">
-            <div className="addon-top">
-              <FoodImage
-                src={ADDONS.chicken.image}
-                alt="Ayam Goreng"
-              />
-
-              <div>
-                <h3 className="addon-title">Ayam Goreng</h3>
-                <div className="addon-price">$1.00 setiap satu</div>
-                <p className="nk3-help">
-                  Tambah ayam goreng kepada pesanan biskita.
-                </p>
-              </div>
-            </div>
-
-            <div className="addon-controls">
-              <strong>Kuantiti</strong>
-
-              <QuantityControl
-                value={chickenQuantity}
-                min={0}
-                max={100}
-                onChange={setChickenQuantity}
-              />
-            </div>
-
-            <div className="price-row">
-              <span>Jumlah ayam</span>
-              <strong>
-                {money(chickenQuantity * ADDONS.chicken.price)}
-              </strong>
-            </div>
-          </div>
-
-          <div className="addon-card">
-            <div className="addon-top">
-              <FoodImage
-                src={ADDONS.rice.image}
-                alt="Nasi Putih"
-              />
-
-              <div>
-                <h3 className="addon-title">Nasi Putih</h3>
-                <div className="addon-price">Bermula $0.50</div>
-                <p className="nk3-help">
-                  Pilih harga dan kuantiti nasi putih.
-                </p>
-              </div>
-            </div>
-
-            <div className="addon-controls">
-              <label htmlFor="ricePrice" className="nk3-field">
-                Harga seunit
+          <section className="nk3-card">
+            <h2 style={sectionTitleStyle}>📅 2. Tarikh & masa ambil</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 12 }}>
+              <label style={{ display: "block", fontWeight: 600 }}>Tarikh
+                <input style={{ ...inputStyle, marginTop: 6 }} type="date" value={date} min={new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })} onChange={(e) => setDate(e.target.value)} />
               </label>
-
-              <select
-                id="ricePrice"
-                className="addon-select"
-                value={riceUnitPrice}
-                onChange={(event) =>
-                  setRiceUnitPrice(event.target.value)
-                }
-              >
-                <option value="0.50">$0.50</option>
-                <option value="1.00">$1.00</option>
-              </select>
+              <label style={{ display: "block", fontWeight: 600 }}>Masa
+                <select style={{ ...inputStyle, marginTop: 6 }} value={time} onChange={(e) => setTime(e.target.value)}>
+                  <option value="">Pilih waktu</option>
+                  {timeSlots.map((slot) => <option key={slot}>{slot}</option>)}
+                </select>
+              </label>
             </div>
-
-            <div className="addon-controls">
-              <strong>Kuantiti</strong>
-
-              <QuantityControl
-                value={riceQuantity}
-                min={0}
-                max={100}
-                onChange={setRiceQuantity}
-              />
+            <div style={{ ...noticeStyle, marginTop: 12, marginBottom: 0 }}>
+              🕒 Waktu ambil: 10:00 pagi – 5:00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.
             </div>
+          </section>
 
-            <div className="price-row">
-              <span>Jumlah nasi putih</span>
-              <strong>
-                {money(riceQuantity * Number(riceUnitPrice))}
-              </strong>
-            </div>
-          </div>
+          <section className="nk3-card">
+            <h2 style={sectionTitleStyle}>👤 3. Nama</h2>
+            <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama pelanggan" />
+          </section>
 
-          <div className="addon-card">
-            <div className="addon-top">
-              <FoodImage
-                src={ADDONS.sambal.image}
-                alt="Extra Sambal"
-              />
-
-              <div>
-                <h3 className="addon-title">Extra Sambal</h3>
-                <div className="addon-price">$0.50 – $5.00</div>
-                <p className="nk3-help">
-                  Pilih jenis sambal dan harga tambahan.
-                </p>
+          {stage === "order" && (
+            <section className="nk3-card">
+              <h2 style={sectionTitleStyle}>🌶️ 4. Pilihan sambal</h2>
+              <div style={noticeStyle}>
+                <strong>Campuran sambal:</strong>
+                <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
+                  <li>Pilih 1 hingga 3 jenis sambal bagi setiap pesanan.</li>
+                  <li>1 atau 2 jenis sambal: $1.00 sebungkus.</li>
+                  <li>3 jenis sambal: $1.50 sebungkus.</li>
+                </ul>
               </div>
-            </div>
-
-            <label
-              style={{
-                display: "flex",
-                gap: 9,
-                alignItems: "center",
-                marginTop: 14,
-                fontWeight: 700,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={extraSambalEnabled}
-                onChange={(event) =>
-                  setExtraSambalEnabled(event.target.checked)
-                }
-              />
-
-              Tambah Extra Sambal
-            </label>
-
-            <div className="nk3-field-group">
-              <label htmlFor="extraType" className="nk3-field">
-                Jenis sambal
-              </label>
-
-              <select
-                id="extraType"
-                className="addon-select"
-                value={extraType}
-                onChange={(event) => setExtraType(event.target.value)}
-              >
-                {SAMBALS.map((sambal) => (
-                  <option key={sambal.name} value={sambal.name}>
-                    {sambal.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="nk3-field-group">
-              <label htmlFor="extraPrice" className="nk3-field">
-                Harga Extra Sambal
-              </label>
-
-              <select
-                id="extraPrice"
-                className="addon-select"
-                value={extraPrice}
-                onChange={(event) => setExtraPrice(event.target.value)}
-              >
-                {Array.from({ length: 10 }, (_, index) => {
-                  const price = ((index + 1) * 0.5).toFixed(2);
-
+              <div className="nk3-sambal-grid">
+                {SAMBALS.map((sambal) => {
+                  const isSelected = selected.includes(sambal);
                   return (
-                    <option key={price} value={price}>
-                      {money(Number(price))}
-                    </option>
+                    <button key={sambal} type="button" aria-pressed={isSelected} onClick={() => toggleSambal(sambal)}
+                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : "1px solid #d8d8d2", background: isSelected ? "#075537" : "#fff", color: isSelected ? "#fff8e7" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere" }}>
+                      {isSelected ? "✓ " : ""}{sambal}
+                    </button>
                   );
                 })}
-              </select>
-            </div>
+              </div>
 
-            <div className="price-row">
-              <span>Jumlah Extra Sambal</span>
-              <strong>
-                {extraSambalEnabled
-                  ? money(Number(extraPrice))
-                  : money(0)}
-              </strong>
-            </div>
-          </div>
+              <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>Kuantiti bungkus</label>
+              <div style={{ display: "grid", gridTemplateColumns: "48px minmax(0, 1fr) 48px auto", gap: 8, alignItems: "center" }}>
+                <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity <= 1} onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</button>
+                <input style={{ ...inputStyle, textAlign: "center" }} type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
+                <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
+                <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ Add</button>
+              </div>
 
-          <div className="nk3-notice" style={{ marginTop: 14 }}>
-            <strong>No, Thanks!</strong>
-            <p style={{ margin: "5px 0 0" }}>
-              Tidak mahu Add On's? Tekan butang di bawah untuk terus
-              menyemak pesanan.
-            </p>
+              <div className="nk3-total-box">
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Harga sebungkus</span><strong>{money(selected.length === 3 ? 1.5 : 1)}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>Jumlah pilihan semasa</span><strong>{money(quantity * (selected.length === 3 ? 1.5 : 1))}</strong></div>
+              </div>
 
-            <button
-              type="button"
-              style={{ ...buttonStyle, marginTop: 10, width: "100%" }}
-              onClick={() => {
-                setChickenQuantity(0);
-                setRiceQuantity(0);
-                setExtraSambalEnabled(false);
-                setStage("review");
-                setMessage("");
-              }}
-            >
-              No, Thanks!
-            </button>
-          </div>
+              <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
+                <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>Pesanan dipilih</h3>
+                {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>Belum ada pesanan.</p> : lines.map((line, index) => (
+                  <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
+                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span>
+                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
+                    <button type="button" aria-label="Hapus pesanan" onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
+                  </div>
+                ))}
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>Subtotal</strong><strong>{money(subtotal)}</strong></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+                <button type="button" onClick={() => continueTo("addons")} style={buttonStyle}>＋ Add On's</button>
+                <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>✓ Confirm Order!</button>
+              </div>
+              {message && <p role="status" style={{ marginBottom: 0, color: message === "Pesanan ditambah." ? "#087447" : "#a33b2b" }}>{message}</p>}
+            </section>
+          )}
+        </div>
 
-          <div className="price-row">
-            <strong>Jumlah Add On's</strong>
-            <strong>{money(addonTotal)}</strong>
-          </div>
+        <div>
+          {stage === "addons" && (
+            <section className="nk3-card">
+              <h2 style={sectionTitleStyle}>🛍️ 5. Add On's</h2>
 
-          <div className="price-row">
-            <strong>Jumlah keseluruhan</strong>
-            <strong>{money(total)}</strong>
-          </div>
+              <div className="nk3-addon">
+                <Photo src={imagePaths.chicken} alt="Ayam goreng" className="nk3-addon-photo" />
+                <div className="nk3-addon-content">
+                  <div className="nk3-addon-row"><strong>Ayam Goreng</strong><strong>$1.00</strong></div>
+                  <div className="nk3-addon-row" style={{ marginTop: 8 }}>
+                    <span style={{ color: "#68756d", fontSize: 13 }}>Kuantiti</span>
+                    <div className="nk3-qty">
+                      <button type="button" aria-label="Kurangkan ayam" onClick={() => setChickenQuantity((q) => Math.max(0, q - 1))}>−</button>
+                      <span>{chickenQuantity}</span>
+                      <button type="button" aria-label="Tambah ayam" onClick={() => setChickenQuantity((q) => Math.min(100, q + 1))}>+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="action-row">
-            <button
-              type="button"
-              style={buttonStyle}
-              onClick={() => setStage("order")}
-            >
-              Kembali
-            </button>
+              <div className="nk3-addon">
+                <Photo src={imagePaths.rice} alt="Nasi putih" className="nk3-addon-photo" />
+                <div className="nk3-addon-content">
+                  <div className="nk3-addon-row"><strong>Nasi Putih</strong><strong>{money(Number(riceUnitPrice))}</strong></div>
+                  <div className="nk3-addon-row" style={{ marginTop: 8 }}>
+                    <select aria-label="Harga nasi putih" style={{ ...inputStyle, padding: "8px 5px", fontSize: 14, maxWidth: 104 }} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}>
+                      <option value="0.50">$0.50</option><option value="1.00">$1.00</option>
+                    </select>
+                    <div className="nk3-qty">
+                      <button type="button" aria-label="Kurangkan nasi" onClick={() => setRiceQuantity((q) => Math.max(0, q - 1))}>−</button>
+                      <span>{riceQuantity}</span>
+                      <button type="button" aria-label="Tambah nasi" onClick={() => setRiceQuantity((q) => Math.min(100, q + 1))}>+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <button
-              type="button"
-              style={buttonStyle}
-              className="primary-button"
-              onClick={() => {
-                setStage("review");
-                setMessage("");
-              }}
-            >
-              Semak pesanan
-            </button>
-          </div>
-        </section>
-      )}
+              <div className="nk3-addon">
+                <Photo src={imagePaths.sambal} alt="Sambal tambahan" className="nk3-addon-photo" />
+                <div className="nk3-addon-content">
+                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{extraSambalEnabled ? money(Number(extraPrice)) : "Pilihan"}</strong></div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
+                    <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> Tambah sambal
+                  </label>
+                  <select aria-label="Jenis sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
+                    {SAMBALS.map((item) => <option key={item}>{item}</option>)}
+                  </select>
+                  <select aria-label="Harga sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
+                    {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
+                  </select>
+                </div>
+              </div>
 
-      {stage === "review" && (
-        <section className="nk3-section">
-          <h2 style={sectionTitleStyle}>📋 4. Semak pesanan</h2>
-
-          <div className="price-row">
-            <span>Nama pelanggan</span>
-            <strong>{name.trim()}</strong>
-          </div>
-
-          <div className="price-row">
-            <span>Cawangan</span>
-            <strong>{branch}</strong>
-          </div>
-
-          <div className="price-row">
-            <span>Tarikh ambil</span>
-            <strong>{displayDate(date)}</strong>
-          </div>
-
-          <div className="price-row">
-            <span>Waktu ambil</span>
-            <strong>{time}</strong>
-          </div>
-
-          <h3 style={{ marginTop: 22 }}>Pesanan dipilih</h3>
-
-          {lines.map((line, index) => (
-            <div className="order-line" key={line.id}>
-              <span className="order-line-name">
-                {index + 1}. {line.sambals.join(" + ")}
-              </span>
-
-              <span className="order-line-quantity">
-                {line.quantity}
-              </span>
-
-              <strong className="order-line-price">
-                {money(
-                  line.quantity * pricePerPack(line.sambals)
-                )}
-              </strong>
-
-              <span />
-            </div>
-          ))}
-
-          <div className="price-row">
-            <span>Subtotal nasi katok</span>
-            <strong>{money(subtotal)}</strong>
-          </div>
-
-          <h3 style={{ marginTop: 22 }}>Add On's</h3>
-
-          {chickenQuantity > 0 && (
-            <div className="review-addon">
-              <span>Ayam Goreng × {chickenQuantity}</span>
-              <strong>
-                {money(chickenQuantity * ADDONS.chicken.price)}
-              </strong>
-            </div>
+              <button type="button" onClick={() => { setChickenQuantity(0); setRiceQuantity(0); setExtraSambalEnabled(false); setStage("review"); }} style={{ ...buttonStyle, width: "100%", marginTop: 8 }}>No, Thanks! / Teruskan</button>
+              <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>Jumlah Add On's</strong><strong>{money(addonTotal)}</strong></div>
+              <button type="button" onClick={() => setStage("review")} style={{ ...buttonStyle, width: "100%", marginTop: 10, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Semak pesanan</button>
+            </section>
           )}
 
-          {riceQuantity > 0 && (
-            <div className="review-addon">
-              <span>
-                Nasi Putih × {riceQuantity} (
-                {money(Number(riceUnitPrice))}/unit)
-              </span>
-              <strong>
-                {money(riceQuantity * Number(riceUnitPrice))}
-              </strong>
-            </div>
+          {(stage === "review" || stage === "done") && (
+            <section className="nk3-card">
+              <h2 style={sectionTitleStyle}>{stage === "done" ? "✅ Ringkasan pesanan" : "📋 Semak pesanan"}</h2>
+              {stage === "done" && <p role="status">{message}</p>}
+              <p><strong>Nama:</strong> {name}</p>
+              <p><strong>Cawangan:</strong> {branch}</p>
+              <p><strong>Tarikh ambil:</strong> {date}</p>
+              <p><strong>Waktu ambil:</strong> {time}</p>
+              <h3>Pesanan</h3>
+              {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
+              <div style={{ marginTop: 10 }}>
+                <strong>Add On's</strong>
+                {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>Ayam Goreng × {chickenQuantity} — {money(chickenQuantity)}</p>}
+                {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>Nasi Putih × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
+                {extraSambalEnabled && <p style={{ margin: "5px 0" }}>Extra Sambal ({extraType}) — {money(Number(extraPrice))}</p>}
+                {addonTotal === 0 && <p style={{ color: "#68756d" }}>Tiada Add On.</p>}
+              </div>
+              <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>Jumlah</span><span>{money(total)}</span></h2>
+              {stage === "review" && <>
+                <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>Kembali edit</button>
+                <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Sahkan melalui WhatsApp</button>
+              </>}
+            </section>
           )}
 
-          {extraSambalEnabled && (
-            <div className="review-addon">
-              <span>Sambal {extraType}</span>
-              <strong>{money(Number(extraPrice))}</strong>
-            </div>
-          )}
-
-          {chickenQuantity === 0 &&
-            riceQuantity === 0 &&
-            !extraSambalEnabled && (
-              <p className="nk3-help">Tiada Add On's.</p>
-            )}
-
-          <div className="price-row">
-            <span>Jumlah Add On's</span>
-            <strong>{money(addonTotal)}</strong>
-          </div>
-
-          <div
-            style={{
-              marginTop: 20,
-              padding: 15,
-              borderRadius: 12,
-              background: "#003b24",
-              color: "#fff8e7",
-              border: "1px solid #c9a441",
-            }}
-          >
-            <div className="price-row" style={{ marginTop: 0 }}>
-              <strong>JUMLAH KESELURUHAN</strong>
-              <strong style={{ fontSize: 22 }}>{money(total)}</strong>
-            </div>
-          </div>
-
-          <div className="action-row">
-            <button
-              type="button"
-              style={buttonStyle}
-              onClick={() => setStage("order")}
-            >
-              Kembali edit
-            </button>
-
-            <button
-              type="button"
-              style={buttonStyle}
-              className="primary-button"
-              onClick={confirmOrder}
-            >
-              Hantar WhatsApp
-            </button>
-          </div>
-
-          {message && (
-            <p className="status-message" role="status">
-              {message}
-            </p>
-          )}
-        </section>
-      )}
-
-      {stage === "done" && (
-        <section className="nk3-section">
-          <h2 style={sectionTitleStyle}>✅ Pesanan disediakan</h2>
-
-          <p>{message}</p>
-
-          <p>
-            <strong>{name.trim()}</strong> · {branch}
-          </p>
-
-          <p>
-            {displayDate(date)} · {time}
-          </p>
-
-          <div className="price-row">
-            <strong>Jumlah keseluruhan</strong>
-            <strong>{money(total)}</strong>
-          </div>
-
-          <p className="nk3-help">
-            Jika WhatsApp tidak terbuka, kembali ke halaman semakan dan
-            tekan Hantar WhatsApp sekali lagi.
-          </p>
-
-          <button
-            type="button"
-            style={{ ...buttonStyle, width: "100%" }}
-            onClick={() => setStage("review")}
-          >
-            Kembali ke ringkasan
-          </button>
-        </section>
-      )}
+          <section className="nk3-card">
+            <h2 style={sectionTitleStyle}>📝 Maklumat tambahan</h2>
+            <ul style={{ paddingLeft: 22, lineHeight: 1.6, marginBottom: 0 }}>
+              <li>Waktu ambil: 10:00 pagi – 5:00 petang.</li>
+              <li>Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</li>
+              <li>Harga mungkin berubah tanpa notis.</li>
+              <li>Sila pastikan maklumat pesanan adalah betul sebelum mengesahkan.</li>
+            </ul>
+          </section>
+        </div>
+      </div>
     </main>
   );
 }
