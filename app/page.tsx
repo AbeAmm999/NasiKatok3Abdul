@@ -58,9 +58,10 @@ function Photo({
 export default function Home() {
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const [date, setDate] = useState(
-    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })
-  );
+  const bruneiToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" });
+  const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+  const [todaySelected, setTodaySelected] = useState(false);
+  const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
@@ -337,16 +338,15 @@ export default function Home() {
 
           <section className="nk3-card">
             <h2 style={sectionTitleStyle}>📅 2. Tarikh & masa ambil</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 12 }}>
-              <label style={{ display: "block", fontWeight: 600 }}>Tarikh
-                <input style={{ ...inputStyle, marginTop: 6 }} type="date" value={date} min={new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })} onChange={(e) => setDate(e.target.value)} />
-              </label>
-              <label style={{ display: "block", fontWeight: 600 }}>Masa
-                <select style={{ ...inputStyle, marginTop: 6 }} value={time} onChange={(e) => setTime(e.target.value)}>
-                  <option value="">Pilih waktu</option>
-                  {timeSlots.map((slot) => <option key={slot}>{slot}</option>)}
-                </select>
-              </label>
+            <div style={{ background: "#fffdf7", border: "1px solid #e2dcc5", borderRadius: 16, padding: 14, color: "#173f30" }}>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12 }}>ORDER DATE</div>
+              <button type="button" aria-pressed={todaySelected} onClick={() => { const next = !todaySelected; setTodaySelected(next); setDate(next ? bruneiToday : tomorrowDate); }} style={{ width: "100%", minHeight: 64, borderRadius: 14, border: "2px solid #c9a441", background: todaySelected ? "#075537" : "#e9e5d8", color: todaySelected ? "#fff8e7" : "#173f30", fontWeight: 800, fontSize: 18, letterSpacing: 1, cursor: "pointer", marginBottom: 18 }}>{todaySelected ? "✓ TODAY SELECTED" : "TODAY"}</button>
+              <div style={{ display: "grid", gridTemplateColumns: "0.75fr 1.5fr 1fr", gap: 10, marginBottom: 22 }}>
+                {([{label:"DAY", value: date.split("-")[2], options: Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")), part:2}, {label:"MONTH", value: date.split("-")[1], options:Array.from({length:12},(_,i)=>String(i+1).padStart(2,"0")), part:1}, {label:"YEAR", value: date.split("-")[0], options:Array.from({length:3},(_,i)=>String(Number(tomorrowDate.slice(0,4))+i)), part:0}] as const).map((field) => <label key={field.label} style={{ display:"block", minWidth:0, fontSize:13, fontWeight:700, letterSpacing:1, color:"#173f30" }}>{field.label}<select disabled={todaySelected} value={field.value} onChange={(e)=>{ const parts=date.split("-"); parts[field.part]=e.target.value; const candidate=`${parts[0]}-${parts[1]}-${parts[2]}`; if(candidate >= tomorrowDate) setDate(candidate); }} style={{ ...inputStyle, marginTop:7, padding:"12px 8px", borderColor: todaySelected ? "#deded8" : "#cbd5cf", background:todaySelected?"#eeeeea":"#fff", color:todaySelected?"#999":"#173f30", opacity:todaySelected?0.65:1, cursor:todaySelected?"not-allowed":"pointer" }}>{field.options.map((option)=><option key={option} value={option}>{field.label==="MONTH"?new Date(2000,Number(option)-1,1).toLocaleString("en",{month:"long"}):option}</option>)}</select></label>)}
+              </div>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>ORDER TIME</div>
+              <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:7 }}>AVAILABLE PICK UP TIME</div>
+              <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">Pilih waktu</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
             <div style={{ ...noticeStyle, marginTop: 12, marginBottom: 0 }}>
               🕒 Waktu ambil: 10:00 pagi – 5:00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.
