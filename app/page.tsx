@@ -13,6 +13,14 @@ const SAMBALS = [
 
 type OrderLine = { id: number; sambals: string[]; quantity: number };
 
+function bruneiToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Brunei", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
 function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
@@ -57,9 +65,15 @@ function Photo({
 export default function Home() {
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const [date, setDate] = useState(
-    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })
-  );
+  const [date, setDate] = useState(bruneiToday());
+  const today = bruneiToday();
+  const [dateYear, dateMonth, dateDay] = date.split("-").map(Number);
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const daysInSelectedMonth = new Date(dateYear, dateMonth, 0).getDate();
+  function updateDate(day: number, month: number, year: number) {
+    const safeDay = Math.min(day, new Date(year, month, 0).getDate());
+    setDate(`${year}-${String(month).padStart(2, "0")}-${String(safeDay).padStart(2, "0")}`);
+  }
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
@@ -168,38 +182,25 @@ export default function Home() {
         ? [`Sambal tambahan (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
-    // Only include the add-ons section when the customer selected at least one add-on.
-    const addonSection = addonLines.length > 0
-      ? [
-          "",
-          "*Add-ons:*",
-          ...addonLines.map((line) => `> ${line}`),
-          `> Total Add-ons: ${money(addonTotal)}`,
-        ]
-      : [];
-
     const messageText = [
-      "*NEW ORDER NASI KATOK 3 ABDUL*",
+      "*PESANAN NASI KATOK 3 ABDUL*",
       "------------------------------",
-      "Name :",
-      `> ${name.trim()}`,
-      "Branch :",
-      `> ${branch}`,
-      "Pickup Date :",
-      `> ${date}`,
-      "Pickup Time :",
-      `> ${time}`,
+      `Nama: ${name.trim()}`,
+      `Cawangan: ${branch}`,
+      `Tarikh ambil: ${date}`,
+      `Waktu ambil: ${time}`,
       "",
-      "*Order Details:*",
-      ...orderLines.map((line) => `> ${line}`),
-      "",
+      "*Senarai pesanan:*",
+      ...orderLines,
       `Subtotal: ${money(subtotal)}`,
-      ...addonSection,
       "",
-      "*GRAND TOTAL:*",
-      `> ${money(total)}`,
+      "*Add On's:*",
+      ...(addonLines.length ? addonLines : ["Tiada Add On"]),
+      `Jumlah Add On's: ${money(addonTotal)}`,
+      "",
+      `*JUMLAH KESELURUHAN: ${money(total)}*`,
       "------------------------------",
-      "Please confirm this order. Thank you!",
+      "Pesanan dihantar melalui laman web.",
     ].join("\n");
 
     setMessage("Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
@@ -349,19 +350,38 @@ export default function Home() {
 
           <section className="nk3-card">
             <h2 style={sectionTitleStyle}>📅 2. Tarikh & masa ambil</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 12 }}>
-              <label style={{ display: "block", fontWeight: 600 }}>Tarikh
-                <input style={{ ...inputStyle, marginTop: 6 }} type="date" value={date} min={new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" })} onChange={(e) => setDate(e.target.value)} />
-              </label>
-              <label style={{ display: "block", fontWeight: 600 }}>Masa
-                <select style={{ ...inputStyle, marginTop: 6 }} value={time} onChange={(e) => setTime(e.target.value)}>
-                  <option value="">Pilih waktu</option>
-                  {timeSlots.map((slot) => <option key={slot}>{slot}</option>)}
-                </select>
-              </label>
-            </div>
-            <div style={{ ...noticeStyle, marginTop: 12, marginBottom: 0 }}>
-              🕒 Waktu ambil: 10:00 pagi – 5:00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.
+            <div style={{ background: "#171717", color: "#f7f0dd", border: "1px solid #4b4024", borderRadius: 16, padding: 14 }}>
+              <div style={{ color: "#eac45b", fontWeight: 800, letterSpacing: 2, fontSize: 14, marginBottom: 10 }}>ORDER DATE</div>
+              <button
+                type="button"
+                aria-pressed={date === today}
+                onClick={() => { setDate(today); setMessage(""); }}
+                style={{ width: "100%", minHeight: 56, borderRadius: 12, border: "2px solid #c49a31", background: date === today ? "#eac45b" : "#282317", color: date === today ? "#17130a" : "#eac45b", fontWeight: 900, fontSize: 17, letterSpacing: 1.5, cursor: "pointer", marginBottom: 14 }}
+              >{date === today ? "✓ TODAY SELECTED" : "TODAY"}</button>
+              <div style={{ display: "grid", gridTemplateColumns: "0.8fr 1.5fr 1fr", gap: 8, marginBottom: 18 }}>
+                <label style={{ display: "block", color: "#bdbdbd", fontSize: 12, letterSpacing: 1 }}>DAY
+                  <select aria-label="Day" disabled={date === today} value={dateDay} onChange={(e) => updateDate(Number(e.target.value), dateMonth, dateYear)} style={{ ...inputStyle, marginTop: 6, background: "#0c0c0c", color: "#fff8e7", border: "1px solid #78632f", padding: "12px 8px", opacity: date === today ? 0.45 : 1, cursor: date === today ? "not-allowed" : "pointer" }}>
+                    {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: "block", color: "#bdbdbd", fontSize: 12, letterSpacing: 1 }}>MONTH
+                  <select aria-label="Month" disabled={date === today} value={dateMonth} onChange={(e) => updateDate(dateDay, Number(e.target.value), dateYear)} style={{ ...inputStyle, marginTop: 6, background: "#0c0c0c", color: "#fff8e7", border: "1px solid #78632f", padding: "12px 8px", opacity: date === today ? 0.45 : 1, cursor: date === today ? "not-allowed" : "pointer" }}>
+                    {monthNames.map((month, i) => <option key={month} value={i + 1}>{month}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: "block", color: "#bdbdbd", fontSize: 12, letterSpacing: 1 }}>YEAR
+                  <select aria-label="Year" disabled={date === today} value={dateYear} onChange={(e) => updateDate(dateDay, dateMonth, Number(e.target.value))} style={{ ...inputStyle, marginTop: 6, background: "#0c0c0c", color: "#fff8e7", border: "1px solid #78632f", padding: "12px 8px", opacity: date === today ? 0.45 : 1, cursor: date === today ? "not-allowed" : "pointer" }}>
+                    {Array.from({ length: 3 }, (_, i) => new Date(today + "T00:00:00+08:00").getFullYear() + i).map((year) => <option key={year} value={year}>{year}</option>)}
+                  </select>
+                </label>
+              </div>
+              <div style={{ color: "#eac45b", fontWeight: 800, letterSpacing: 1.5, fontSize: 14, marginBottom: 8 }}>ORDER TIME</div>
+              <div style={{ color: "#bdbdbd", fontSize: 12, letterSpacing: 1, marginBottom: 6 }}>AVAILABLE PICK UP TIME</div>
+              <select value={time} onChange={(e) => setTime(e.target.value)} aria-label="Order time" style={{ ...inputStyle, background: "#0c0c0c", color: "#fff8e7", border: "2px solid #eac45b", borderRadius: 12, minHeight: 58, fontSize: 18 }}>
+                <option value="">Pilih waktu</option>
+                {timeSlots.map((slot) => <option key={slot}>{slot}</option>)}
+              </select>
+              <p style={{ color: "#bdbdbd", fontSize: 13, lineHeight: 1.6, margin: "12px 0 0" }}>Waktu ambil: 10:00 pagi – 4:30 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</p>
             </div>
           </section>
 
