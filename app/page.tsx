@@ -371,10 +371,13 @@ export default function Home() {
               <div className="nk3-sambal-grid">
                 {SAMBALS.map((sambal) => {
                   const isSelected = selected.includes(sambal);
+                  const isUnavailable = sambal === "Lada Padi";
                   return (
-                    <button key={sambal} type="button" aria-pressed={isSelected} onClick={() => toggleSambal(sambal)}
-                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : "1px solid #d8d8d2", background: isSelected ? "#075537" : "#fff", color: isSelected ? "#fff8e7" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere" }}>
-                      {isSelected ? "✓ " : ""}{sambal}
+                    <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
+                      onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
+                      title={isUnavailable ? "Lada Padi buat masa ini tidak tersedia" : undefined}
+                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
+                      {isSelected ? "✓ " : ""}{sambal}{isUnavailable ? " (Tidak tersedia)" : ""}
                     </button>
                   );
                 })}
