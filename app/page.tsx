@@ -168,25 +168,38 @@ export default function Home() {
         ? [`Sambal tambahan (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
+    // Only include the add-ons section when the customer selected at least one add-on.
+    const addonSection = addonLines.length > 0
+      ? [
+          "",
+          "*Add-ons:*",
+          ...addonLines.map((line) => `> ${line}`),
+          `> Total Add-ons: ${money(addonTotal)}`,
+        ]
+      : [];
+
     const messageText = [
-      "*PESANAN NASI KATOK 3 ABDUL*",
+      "*NEW ORDER NASI KATOK 3 ABDUL*",
       "------------------------------",
-      `Nama: ${name.trim()}`,
-      `Cawangan: ${branch}`,
-      `Tarikh ambil: ${date}`,
-      `Waktu ambil: ${time}`,
+      "Name :",
+      `> ${name.trim()}`,
+      "Branch :",
+      `> ${branch}`,
+      "Pickup Date :",
+      `> ${date}`,
+      "Pickup Time :",
+      `> ${time}`,
       "",
-      "*Senarai pesanan:*",
-      ...orderLines,
+      "*Order Details:*",
+      ...orderLines.map((line) => `> ${line}`),
+      "",
       `Subtotal: ${money(subtotal)}`,
+      ...addonSection,
       "",
-      "*Add On's:*",
-      ...(addonLines.length ? addonLines : ["Tiada Add On"]),
-      `Jumlah Add On's: ${money(addonTotal)}`,
-      "",
-      `*JUMLAH KESELURUHAN: ${money(total)}*`,
+      "*GRAND TOTAL:*",
+      `> ${money(total)}`,
       "------------------------------",
-      "Pesanan dihantar melalui laman web.",
+      "Please confirm this order. Thank you!",
     ].join("\n");
 
     setMessage("Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
