@@ -9,7 +9,6 @@ const SAMBALS = [
   "Udang Biasa",
   "Padas Manis",
   "Padas Padas",
-  "Lada Padi",
 ];
 
 type OrderLine = { id: number; sambals: string[]; quantity: number };
