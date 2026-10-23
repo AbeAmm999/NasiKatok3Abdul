@@ -178,7 +178,7 @@ export default function Home() {
       "Cawangan :",
       `> ${branch}`,
       "Tarikh ambil :",
-      `> ${date}`,
+      `> ${todaySelected ? "Today" : date}`,
       "Waktu ambil:",
       `> ${time}`,
       "",
@@ -186,10 +186,14 @@ export default function Home() {
       ...orderLines.map((line) => `> ${line}`),
       "",
       `Subtotal: ${money(subtotal)}`,
-      "",
-      "*Add On's:*",
-      ...(addonLines.length ? addonLines.map((line) => `> ${line}`) : ["> Tiada Add On"]),
-      `> Jumlah Add On's: ${money(addonTotal)}`,
+      ...(addonLines.filter(Boolean).length > 0
+        ? [
+            "",
+            "*Add On's:*",
+            ...addonLines.filter(Boolean).map((line) => `> ${line}`),
+            `> Jumlah Add On's: ${money(addonTotal)}`,
+          ]
+        : []),
       "",
       "*JUMLAH KESELURUHAN:*",
       `> ${money(total)}*`,
