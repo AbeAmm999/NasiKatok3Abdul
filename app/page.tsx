@@ -174,24 +174,25 @@ export default function Home() {
       "*NEW ORDER NASI KATOK 3 ABDUL*",
       "------------------------------",
       "Nama :",
-      `│ ${name.trim()}`,
+      `> ${name.trim()}`,
       "Cawangan :",
-      `│ ${branch}`,
+      `> ${branch}`,
       "Tarikh ambil :",
-      `│ ${date}`,
+      `> ${date}`,
       "Waktu ambil:",
-      `│ ${time}`,
+      `> ${time}`,
       "",
       "*Senarai pesanan:*",
-      ...orderLines.map((line) => `│ ${line}`),
+      ...orderLines.map((line) => `> ${line}`),
+      "",
       `Subtotal: ${money(subtotal)}`,
       "",
       "*Add On's:*",
-      ...(addonLines.length ? addonLines.map((line) => `│ ${line}`) : ["│ Tiada Add On"]),
-      `│ Jumlah Add On's: ${money(addonTotal)}`,
+      ...(addonLines.length ? addonLines.map((line) => `> ${line}`) : ["> Tiada Add On"]),
+      `> Jumlah Add On's: ${money(addonTotal)}`,
       "",
       "*JUMLAH KESELURUHAN:*",
-      `│ ${money(total)}*`,
+      `> ${money(total)}*`,
       "------------------------------",
       "Please Confirm This Order. Thank You!",
     ].join("\n");
@@ -466,7 +467,7 @@ export default function Home() {
                     <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> Tambah sambal
                   </label>
                   <select aria-label="Jenis sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
-                    {SAMBALS.map((item) => <option key={item}>{item}</option>)}
+                    {SAMBALS.map((item) => <option key={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? "Lada Padi (Tidak tersedia sementara)" : item}</option>)}
                   </select>
                   <select aria-label="Harga sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
                     {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
