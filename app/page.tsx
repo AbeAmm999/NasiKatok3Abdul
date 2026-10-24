@@ -365,7 +365,9 @@ export default function Home() {
         .nk3-qty span { border-color: #d7cba5; background: #fffdf5; color: #063c28; }
         .nk3-addons-shortcut { background: linear-gradient(135deg,#fff4cb,#f7e4a0); border: 1px solid #c9a441; color: #063c28; }
         .nk3-confirm-card { border: 2px solid #c9a441; background: #fffdf5; box-shadow: 0 6px 18px rgba(3,53,34,.13); }
-        .nk3-confirm-title { background: #063c28; color: #f9e8a9; border-bottom: 2px solid #c9a441; }
+        .nk3-confirm-title { background: linear-gradient(rgba(3,48,31,.88),rgba(3,48,31,.88)), url('/images/floral-texture.jpg') center/cover; color: #f9e8a9; border-bottom: 3px solid #c9a441; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(20px, 4vw, 30px); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 18px 20px; display: flex; align-items: center; gap: 12px; }
+        .nk3-confirm-button { display:flex; justify-content:center; align-items:center; gap:14px; min-height:76px; border-radius:18px; background:linear-gradient(135deg,#f7d45a,#e9b92e 55%,#f8d85f); color:#10150e; border:2px solid #d4a521; box-shadow:0 5px 12px rgba(125,91,8,.18); font-size:clamp(15px,3.4vw,21px); line-height:1.25; font-weight:900; letter-spacing:.01em; }
+        .nk3-confirm-button svg { flex:0 0 auto; width:36px; height:36px; }
         .nk3-total-box { background: #edf2e3; border: 1px solid #d7dfc8; color: #063c28; }
         input, select { background-color: #fffdf5 !important; border-color: #d7cba5 !important; color: #153c2c !important; }
         .nk3-page button { transition: box-shadow .15s ease, transform .15s ease; }
@@ -597,10 +599,10 @@ export default function Home() {
       </div>
 
       <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
-          <h2 className="nk3-confirm-title">✅ {tr("Sahkan Pesanan", "Confirm Order")}</h2>
+          <h2 className="nk3-confirm-title"><span aria-hidden="true" style={{ display: "inline-grid", placeItems: "center", width: 42, height: 42, borderRadius: "50%", background: "#e8bd3e", color: "#063c28", fontFamily: "Arial, sans-serif", fontSize: 27, flex: "0 0 auto" }}>✓</span><span>{tr("Sahkan Pesanan", "Confirm Order")}</span></h2>
           <div style={{ padding: 16, textAlign: "center" }}>
             <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semula semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
-            {stage !== "done" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
+            {stage !== "done" && <button type="button" onClick={confirmOrder} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px" }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</span></button>}
             {stage === "done" && <p role="status" style={{ margin: 0, color: "#087447", fontWeight: 700 }}>{message}</p>}
           </div>
         </section>
