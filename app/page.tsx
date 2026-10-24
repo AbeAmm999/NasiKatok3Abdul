@@ -163,6 +163,18 @@ export default function Home() {
   }
 
   function confirmOrder() {
+    if (!name.trim() || !time || (!todaySelected && !date)) {
+      setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
+      return;
+    }
+    if (lines.length === 0) {
+      setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");
+      return;
+    }
+    if (selected.length > 0) {
+      setMessage(isEnglish ? "Please press Add first to include your current sambal selection." : "Sila tekan Tambah dahulu untuk memasukkan pilihan sambal semasa.");
+      return;
+    }
     const orderLines = lines.map(
       (line, index) =>
         `${index + 1}. ${line.sambals.join(" + ")} × ${line.quantity} — ${money(
@@ -556,15 +568,14 @@ export default function Home() {
         </div>
       </div>
 
-      {(stage === "review" || stage === "done") && (
-        <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
+      <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
           <h2 className="nk3-confirm-title">✅ {tr("Sahkan Pesanan", "Confirm Order")}</h2>
           <div style={{ padding: 16, textAlign: "center" }}>
             <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semula semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
-            {stage === "review" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
+            {stage !== "done" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
+            {stage === "done" && <p role="status" style={{ margin: 0, color: "#087447", fontWeight: 700 }}>{message}</p>}
           </div>
         </section>
-      )}
     </main>
   );
 }
