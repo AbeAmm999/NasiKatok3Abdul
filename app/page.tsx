@@ -551,19 +551,20 @@ export default function Home() {
               {stage === "review" && <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginTop: 12 }}>{tr("Kembali edit pesanan", "Back to edit order")}</button>}
             </section>
           )}
-          {(stage === "review" || stage === "done") && (
-            <section className="nk3-confirm-card">
-              <h2 className="nk3-confirm-title">✅ {tr("Sahkan Pesanan", "Confirm Order")}</h2>
-              <div style={{ padding: 16, textAlign: "center" }}>
-                <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
-                {stage === "review" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
-              </div>
-            </section>
-          )}
 
 
         </div>
       </div>
+
+      {(stage === "review" || stage === "done") && (
+        <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
+          <h2 className="nk3-confirm-title">✅ {tr("Sahkan Pesanan", "Confirm Order")}</h2>
+          <div style={{ padding: 16, textAlign: "center" }}>
+            <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semula semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
+            {stage === "review" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
