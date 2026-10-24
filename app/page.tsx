@@ -365,7 +365,7 @@ export default function Home() {
         .nk3-qty span { border-color: #d7cba5; background: #fffdf5; color: #063c28; }
         .nk3-addons-shortcut { background: linear-gradient(135deg,#fff4cb,#f7e4a0); border: 1px solid #c9a441; color: #063c28; }
         .nk3-confirm-card { border: 2px solid #c9a441; background: #fffdf5; box-shadow: 0 6px 18px rgba(3,53,34,.13); }
-        .nk3-confirm-title { background: linear-gradient(rgba(3,48,31,.88),rgba(3,48,31,.88)), url('/images/floral-texture.jpg') center/cover; color: #ffffff; border-bottom: 3px solid #c9a441; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(20px, 4vw, 30px); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 18px 20px; display: flex; align-items: center; gap: 12px; }
+        .nk3-page h2.nk3-confirm-title { background: linear-gradient(rgba(3,48,31,.88),rgba(3,48,31,.88)), url('/images/floral-texture.jpg') center/cover; color: #ffffff !important; border-bottom: 3px solid #c9a441; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(20px, 4vw, 30px); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 18px 20px; display: flex; align-items: center; gap: 12px; }
         .nk3-confirm-button { display:flex; justify-content:center; align-items:center; gap:14px; min-height:76px; border-radius:18px; background:linear-gradient(135deg,#f7d45a,#e9b92e 55%,#f8d85f); color:#10150e; border:2px solid #d4a521; box-shadow:0 5px 12px rgba(125,91,8,.18); font-size:clamp(15px,3.4vw,21px); line-height:1.25; font-weight:900; letter-spacing:.01em; }
         .nk3-confirm-button svg { flex:0 0 auto; width:36px; height:36px; }
         .nk3-total-box { background: #edf2e3; border: 1px solid #d7dfc8; color: #063c28; }
