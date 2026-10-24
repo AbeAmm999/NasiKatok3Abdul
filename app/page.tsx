@@ -56,6 +56,9 @@ function Photo({
 }
 
 export default function Home() {
+  const [language, setLanguage] = useState<"bm" | "en">("bm");
+  const isEnglish = language === "en";
+  const tr = (bm: string, en: string) => isEnglish ? en : bm;
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
   const bruneiToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" });
@@ -212,7 +215,7 @@ export default function Home() {
       "Please Confirm This Order. Thank You!",
     ].join("\n");
 
-    setMessage("Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
+    setMessage(isEnglish ? "Order summary is ready. Send the WhatsApp message to complete your order." : "Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
     setStage("done");
     const whatsappUrl = `https://wa.me/6738999443?text=${encodeURIComponent(messageText)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
@@ -328,16 +331,20 @@ export default function Home() {
 
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
         <Photo src={imagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
-        <div style={{ padding: "10px 16px", textAlign: "center", background: "linear-gradient(90deg, #003b24, #075537, #003b24)", borderTop: "1px solid #c9a441" }}>
+        <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(90deg, #003b24, #075537, #003b24)", borderTop: "1px solid #c9a441" }}>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:8}}>
+            <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
+            <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>
+          </div>
           <strong style={{ fontSize: 17, letterSpacing: 1 }}>NASI KATOK 3 ABDUL</strong>
-          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>Sila isikan order biskita.</p>
+          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>{tr("Sila isi borang pesanan anda.","Please complete your order form.")}</p>
         </div>
       </header>
 
       <div className="nk3-main-grid">
         <div>
           <section className="nk3-card">
-            <h2 style={sectionTitleStyle}>📍 1. Pilih cawangan</h2>
+            <h2 style={sectionTitleStyle}>📍 1. {tr("Pilih cawangan", "Choose branch")}</h2>
             <div className="nk3-branch-grid">
               {([
                 { name: "Rimba", src: imagePaths.rimba },
@@ -358,35 +365,35 @@ export default function Home() {
           </section>
 
           <section className="nk3-card">
-            <h2 style={sectionTitleStyle}>🗓️ 2. Maklumat pelanggan & waktu ambil</h2>
+            <h2 style={sectionTitleStyle}>🗓️ 2. {tr("Maklumat pelanggan & waktu ambil", "Customer details & pickup time")}</h2>
             <div style={{ background: "#fffdf7", border: "1px solid #e2dcc5", borderRadius: 16, padding: 14, color: "#173f30" }}>
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>1. NAMA</div>
-              <input style={{ ...inputStyle, marginBottom: 20 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama pelanggan" />
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12, fontSize: 18 }}>2. TARIKH AMBIL PESANAN</div>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>{tr("1. NAMA", "1. NAME")}</div>
+              <input style={{ ...inputStyle, marginBottom: 20 }} value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Masukkan nama pelanggan", "Enter customer name")} />
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12, fontSize: 18 }}>{tr("2. TARIKH AMBIL PESANAN", "2. PICKUP DATE")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 18 }}>
                 <button type="button" aria-pressed={todaySelected} disabled={todayButtonClosed} onClick={() => { if (todayButtonClosed) return; setTodaySelected(true); setDate(bruneiToday); }} style={{ position:"relative", textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:todayButtonClosed?"#e5e7eb":todaySelected?"#075537":"#fffdf7", color:todayButtonClosed?"#6b7280":todaySelected?"#fff8e7":"#8b6416", fontWeight:800, cursor:todayButtonClosed?"not-allowed":"pointer", opacity:todayButtonClosed?0.8:1, boxShadow:todaySelected?"0 0 0 2px rgba(201,164,65,.25)":"none" }}>
-                  <span style={{fontSize:30, lineHeight:1}}>▣</span><span><span style={{display:"block",fontSize:16}}>{todayButtonClosed ? "TUTUP" : "HARI INI"}</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>{todayButtonClosed ? "Di luar waktu operasi" : "Ambil pesanan hari ini"}</span></span>{todaySelected&&<span style={{position:"absolute",right:-5,top:-9,background:"#087447",border:"2px solid #fff",borderRadius:"50%",width:28,height:28,display:"grid",placeItems:"center",color:"white",fontSize:17}}>✓</span>}
+                  <span style={{fontSize:30, lineHeight:1}}>▣</span><span><span style={{display:"block",fontSize:16}}>{todayButtonClosed ? tr("TUTUP", "CLOSED") : tr("HARI INI", "TODAY")}</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>{todayButtonClosed ? tr("Di luar waktu operasi", "Outside operating hours") : tr("Ambil pesanan hari ini", "Pick up order today")}</span></span>{todaySelected&&<span style={{position:"absolute",right:-5,top:-9,background:"#087447",border:"2px solid #fff",borderRadius:"50%",width:28,height:28,display:"grid",placeItems:"center",color:"white",fontSize:17}}>✓</span>}
                 </button>
                 <button type="button" aria-pressed={!todaySelected} onClick={() => { setTodaySelected(false); setDate((current) => current < tomorrowDate ? tomorrowDate : current); }} style={{ textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:!todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:!todaySelected?"#fff8df":"#fffdf7", color:"#8b6416", fontWeight:800, cursor:"pointer" }}>
-                  <span style={{fontSize:30,lineHeight:1}}>▦</span><span><span style={{display:"block",fontSize:15}}>TEMPAHAN AWAL</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>Pilih tarikh akan datang</span></span>
+                  <span style={{fontSize:30,lineHeight:1}}>▦</span><span><span style={{display:"block",fontSize:15}}>{tr("TEMPAHAN AWAL", "ADVANCE ORDER")}</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>{tr("Pilih tarikh akan datang", "Choose a future date")}</span></span>
                 </button>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "0.75fr 1.5fr 1fr", gap: 10, marginBottom: 22 }}>
-                {([{label:"DAY", value: date.split("-")[2], options: Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")), part:2}, {label:"MONTH", value: date.split("-")[1], options:Array.from({length:12},(_,i)=>String(i+1).padStart(2,"0")), part:1}, {label:"YEAR", value: date.split("-")[0], options:Array.from({length:3},(_,i)=>String(Number(tomorrowDate.slice(0,4))+i)), part:0}] as const).map((field) => <label key={field.label} style={{ display:"block", minWidth:0, fontSize:13, fontWeight:700, letterSpacing:1, color:"#173f30" }}>{field.label}<select disabled={todaySelected} value={field.value} onChange={(e)=>{ const parts=date.split("-"); parts[field.part]=e.target.value; const candidate=`${parts[0]}-${parts[1]}-${parts[2]}`; if(candidate >= tomorrowDate) setDate(candidate); }} style={{ ...inputStyle, marginTop:7, padding:"12px 8px", borderColor: todaySelected ? "#deded8" : "#cbd5cf", background:todaySelected?"#eeeeea":"#fff", color:todaySelected?"#999":"#173f30", opacity:todaySelected?0.65:1, cursor:todaySelected?"not-allowed":"pointer" }}>{field.options.map((option)=><option key={option} value={option}>{field.label==="MONTH"?new Date(2000,Number(option)-1,1).toLocaleString("en",{month:"long"}):option}</option>)}</select></label>)}
+                {([{label:"DAY", value: date.split("-")[2], options: Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")), part:2}, {label:"MONTH", value: date.split("-")[1], options:Array.from({length:12},(_,i)=>String(i+1).padStart(2,"0")), part:1}, {label:"YEAR", value: date.split("-")[0], options:Array.from({length:3},(_,i)=>String(Number(tomorrowDate.slice(0,4))+i)), part:0}] as const).map((field) => <label key={field.label} style={{ display:"block", minWidth:0, fontSize:13, fontWeight:700, letterSpacing:1, color:"#173f30" }}>{field.label}<select disabled={todaySelected} value={field.value} onChange={(e)=>{ const parts=date.split("-"); parts[field.part]=e.target.value; const candidate=`${parts[0]}-${parts[1]}-${parts[2]}`; if(candidate >= tomorrowDate) setDate(candidate); }} style={{ ...inputStyle, marginTop:7, padding:"12px 8px", borderColor: todaySelected ? "#deded8" : "#cbd5cf", background:todaySelected?"#eeeeea":"#fff", color:todaySelected?"#999":"#173f30", opacity:todaySelected?0.65:1, cursor:todaySelected?"not-allowed":"pointer" }}>{field.options.map((option)=><option key={option} value={option}>{field.label==="MONTH"?new Date(2000,Number(option)-1,1).toLocaleString(isEnglish ? "en" : "ms",{month:"long"}):option}</option>)}</select></label>)}
               </div>
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8, fontSize:18 }}>3. WAKTU AMBIL</div>
-              <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>PILIH WAKTU AMBIL YANG TERSEDIA</div>
-              <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">Pilih waktu</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8, fontSize:18 }}>{tr("3. WAKTU AMBIL", "3. PICKUP TIME")}</div>
+              <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>{tr("PILIH WAKTU AMBIL YANG TERSEDIA", "SELECT AN AVAILABLE PICKUP TIME")}</div>
+              <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
             <div style={{ marginTop:12, marginBottom:0, padding:"16px 14px", border:"1px solid #e4c64d", borderRadius:18, background:"#fff8df", color:"#174d38", display:"flex", alignItems:"center", gap:14, lineHeight:1.55 }}>
-              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>Waktu ambil: 10:00 pagi – 5:00 petang.<br/>Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</span>
+              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>{tr("Waktu ambil: 10:00 pagi – 5:00 petang.", "Pickup time: 10:00 AM – 5:00 PM.")}<br/>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</span>
             </div>
           </section>
 
 
           {stage === "order" && (
             <section className="nk3-card">
-              <h2 style={sectionTitleStyle}>🌶️ 4. Pilihan sambal</h2>
+              <h2 style={sectionTitleStyle}>🌶️ 4. {tr("Pilihan sambal", "Choose sambal")}</h2>
               <div style={noticeStyle}>
                 <strong>Campuran sambal:</strong>
                 <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
@@ -418,13 +425,13 @@ export default function Home() {
               </div>
 
               <div className="nk3-total-box">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Harga sebungkus</span><strong>{money(pricePerPack(selected))}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>Jumlah pilihan semasa</span><strong>{money(quantity * pricePerPack(selected))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected))}</strong></div>
               </div>
 
               <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
-                <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>Pesanan dipilih</h3>
-                {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>Belum ada pesanan.</p> : lines.map((line, index) => (
+                <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>{tr("Pesanan dipilih", "Selected order")}</h3>
+                {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>{tr("Belum ada pesanan.", "No items added yet.")}</p> : lines.map((line, index) => (
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
                     <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span>
                     <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
@@ -435,7 +442,7 @@ export default function Home() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
                 <button type="button" onClick={() => continueTo("addons")} style={buttonStyle}>＋ Add On's</button>
-                <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>✓ Confirm Order!</button>
+                <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>✓ {tr("Sahkan pesanan", "Confirm order")}</button>
               </div>
               {message && <p role="status" style={{ marginBottom: 0, color: message === "Pesanan ditambah." ? "#087447" : "#a33b2b" }}>{message}</p>}
             </section>
@@ -524,13 +531,13 @@ export default function Home() {
 
           {(stage === "review" || stage === "done") && (
             <section className="nk3-card">
-              <h2 style={sectionTitleStyle}>{stage === "done" ? "✅ Ringkasan pesanan" : "📋 Semak pesanan"}</h2>
+              <h2 style={sectionTitleStyle}>{stage === "done" ? tr("✅ Ringkasan pesanan", "✅ Order summary") : tr("📋 Semak pesanan", "📋 Review order")}</h2>
               {stage === "done" && <p role="status">{message}</p>}
-              <p><strong>Nama:</strong> {name}</p>
-              <p><strong>Cawangan:</strong> {branch}</p>
-              <p><strong>Tarikh ambil:</strong> {date}</p>
-              <p><strong>Waktu ambil:</strong> {time}</p>
-              <h3>Pesanan</h3>
+              <p><strong>{tr("Nama:", "Name:")}</strong> {name}</p>
+              <p><strong>{tr("Cawangan:", "Branch:")}</strong> {branch}</p>
+              <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
+              <p><strong>{tr("Waktu ambil:", "Pickup time:")}</strong> {time}</p>
+              <h3>{tr("Pesanan", "Order")}</h3>
               {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
@@ -538,23 +545,23 @@ export default function Home() {
                 {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>Ayam Goreng × {chickenQuantity} — {money(chickenQuantity)}</p>}
                 {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>Nasi Putih × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
                 {extraSambalEnabled && <p style={{ margin: "5px 0" }}>Extra Sambal ({extraType}) — {money(Number(extraPrice))}</p>}
-                {addonTotal === 0 && <p style={{ color: "#68756d" }}>Tiada Add On.</p>}
+                {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
-              <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>Jumlah</span><span>{money(total)}</span></h2>
+              <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>{tr("Jumlah", "Total")}</span><span>{money(total)}</span></h2>
               {stage === "review" && <>
-                <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>Kembali edit</button>
-                <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>Sahkan melalui WhatsApp</button>
+                <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>{tr("Kembali edit", "Back to edit")}</button>
+                <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>{tr("Sahkan melalui WhatsApp", "Confirm via WhatsApp")}</button>
               </>}
             </section>
           )}
 
           <section className="nk3-card">
-            <h2 style={sectionTitleStyle}>📝 Maklumat tambahan</h2>
+            <h2 style={sectionTitleStyle}>📝 {tr("Maklumat tambahan", "Additional information")}</h2>
             <ul style={{ paddingLeft: 22, lineHeight: 1.6, marginBottom: 0 }}>
-              <li>Waktu ambil: 10:00 pagi – 5:00 petang.</li>
-              <li>Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</li>
-              <li>Harga mungkin berubah tanpa notis.</li>
-              <li>Sila pastikan maklumat pesanan adalah betul sebelum mengesahkan.</li>
+              <li>{tr("Waktu ambil: 10:00 pagi – 5:00 petang.", "Pickup time: 10:00 AM – 5:00 PM.")}</li>
+              <li>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</li>
+              <li>{tr("Harga mungkin berubah tanpa notis.", "Prices may change without notice.")}</li>
+              <li>{tr("Sila pastikan maklumat pesanan adalah betul sebelum mengesahkan.", "Please check your order details before confirming.")}</li>
             </ul>
           </section>
         </div>
