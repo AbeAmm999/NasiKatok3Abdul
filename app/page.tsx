@@ -555,15 +555,7 @@ export default function Home() {
             </section>
           )}
 
-          <section className="nk3-card">
-            <h2 style={sectionTitleStyle}>📝 {tr("Maklumat tambahan", "Additional information")}</h2>
-            <ul style={{ paddingLeft: 22, lineHeight: 1.6, marginBottom: 0 }}>
-              <li>{tr("Waktu ambil: 10:00 pagi – 5:00 petang.", "Pickup time: 10:00 AM – 5:00 PM.")}</li>
-              <li>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</li>
-              <li>{tr("Harga mungkin berubah tanpa notis.", "Prices may change without notice.")}</li>
-              <li>{tr("Sila pastikan maklumat pesanan adalah betul sebelum mengesahkan.", "Please check your order details before confirming.")}</li>
-            </ul>
-          </section>
+
         </div>
       </div>
     </main>
