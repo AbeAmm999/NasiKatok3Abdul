@@ -342,16 +342,44 @@ export default function Home() {
           .nk3-addon-photo { width: 62px; height: 62px; }
           .nk3-qty { grid-template-columns: 30px 36px 30px; }
         }
+        /* V29 brand theme: deep forest green, antique gold and warm cream */
+        body { background: #f4efdc; }
+        .nk3-page {
+          color: #073b28;
+          background-color: #fbf7e9;
+          background-image: radial-gradient(ellipse at 12% 8%, rgba(201,164,65,.07), transparent 35%), radial-gradient(ellipse at 90% 90%, rgba(7,85,55,.06), transparent 36%);
+        }
+        .nk3-page h1, .nk3-page h2, .nk3-page h3 { color: #063c28; }
+        .nk3-card {
+          background: #fffdf5;
+          border: 1px solid #c9a441;
+          border-radius: 14px;
+          box-shadow: 0 5px 15px rgba(3,53,34,.10);
+        }
+        .nk3-branch { background: #fff9e9; border-color: #c9a441; }
+        .nk3-branch.selected { border-color: #075537; box-shadow: 0 0 0 2px rgba(201,164,65,.3); }
+        .nk3-branch-name { color: #063c28; }
+        .nk3-addon { background: #fff9e9; border-color: #d8c47c; }
+        .nk3-addon-photo { border-color: #c9a441; }
+        .nk3-qty button { border-color: #c9a441; background: #fff5d5; color: #063c28; }
+        .nk3-qty span { border-color: #d7cba5; background: #fffdf5; color: #063c28; }
+        .nk3-addons-shortcut { background: linear-gradient(135deg,#fff4cb,#f7e4a0); border: 1px solid #c9a441; color: #063c28; }
+        .nk3-confirm-card { border: 2px solid #c9a441; background: #fffdf5; box-shadow: 0 6px 18px rgba(3,53,34,.13); }
+        .nk3-confirm-title { background: #063c28; color: #f9e8a9; border-bottom: 2px solid #c9a441; }
+        .nk3-total-box { background: #edf2e3; border: 1px solid #d7dfc8; color: #063c28; }
+        input, select { background-color: #fffdf5 !important; border-color: #d7cba5 !important; color: #153c2c !important; }
+        .nk3-page button { transition: box-shadow .15s ease, transform .15s ease; }
+        .nk3-page button:active { transform: translateY(1px); }
       `}</style>
 
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
         <Photo src={imagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
-        <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(90deg, #003b24, #075537, #003b24)", borderTop: "1px solid #c9a441" }}>
+        <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(135deg, #032f20, #075537 52%, #032f20)", borderTop: "2px solid #c9a441" }}>
           <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:8}}>
             <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
             <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>
           </div>
-          <strong style={{ fontSize: 17, letterSpacing: 1 }}>NASI KATOK 3 ABDUL</strong>
+          <strong style={{ fontSize: 22, letterSpacing: 2, color: "#e8c75c", fontFamily: "Georgia, Times New Roman, serif", textShadow: "0 2px 4px rgba(0,0,0,.3)" }}>NASI KATOK 3 ABDUL</strong>
           <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>{tr("Sila isi borang pesanan anda.","Please complete your order form.")}</p>
         </div>
       </header>
