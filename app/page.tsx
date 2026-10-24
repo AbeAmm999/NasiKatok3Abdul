@@ -351,17 +351,24 @@ export default function Home() {
             <div style={{ background: "#fffdf7", border: "1px solid #e2dcc5", borderRadius: 16, padding: 14, color: "#173f30" }}>
               <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>1. NAMA</div>
               <input style={{ ...inputStyle, marginBottom: 20 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama pelanggan" />
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12 }}>2. ORDER DATE</div>
-              <button type="button" aria-pressed={todaySelected} onClick={() => { const next = !todaySelected; setTodaySelected(next); setDate(next ? bruneiToday : tomorrowDate); }} style={{ width: "100%", minHeight: 64, borderRadius: 14, border: "2px solid #c9a441", background: todaySelected ? "#075537" : "#e9e5d8", color: todaySelected ? "#fff8e7" : "#173f30", fontWeight: 800, fontSize: 18, letterSpacing: 1, cursor: "pointer", marginBottom: 18 }}>{todaySelected ? "✓ TODAY SELECTED" : "TODAY"}</button>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12, fontSize: 18 }}>2. TARIKH AMBIL PESANAN</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 18 }}>
+                <button type="button" aria-pressed={todaySelected} onClick={() => { setTodaySelected(true); setDate(bruneiToday); }} style={{ position:"relative", textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:todaySelected?"#075537":"#fffdf7", color:todaySelected?"#fff8e7":"#8b6416", fontWeight:800, cursor:"pointer", boxShadow:todaySelected?"0 0 0 2px rgba(201,164,65,.25)":"none" }}>
+                  <span style={{fontSize:30, lineHeight:1}}>▣</span><span><span style={{display:"block",fontSize:16}}>HARI INI</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>Ambil pesanan hari ini</span></span>{todaySelected&&<span style={{position:"absolute",right:-5,top:-9,background:"#087447",border:"2px solid #fff",borderRadius:"50%",width:28,height:28,display:"grid",placeItems:"center",color:"white",fontSize:17}}>✓</span>}
+                </button>
+                <button type="button" aria-pressed={!todaySelected} onClick={() => { setTodaySelected(false); setDate((current) => current < tomorrowDate ? tomorrowDate : current); }} style={{ textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:!todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:!todaySelected?"#fff8df":"#fffdf7", color:"#8b6416", fontWeight:800, cursor:"pointer" }}>
+                  <span style={{fontSize:30,lineHeight:1}}>▦</span><span><span style={{display:"block",fontSize:15}}>TEMPAHAN AWAL</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>Pilih tarikh akan datang</span></span>
+                </button>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "0.75fr 1.5fr 1fr", gap: 10, marginBottom: 22 }}>
                 {([{label:"DAY", value: date.split("-")[2], options: Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")), part:2}, {label:"MONTH", value: date.split("-")[1], options:Array.from({length:12},(_,i)=>String(i+1).padStart(2,"0")), part:1}, {label:"YEAR", value: date.split("-")[0], options:Array.from({length:3},(_,i)=>String(Number(tomorrowDate.slice(0,4))+i)), part:0}] as const).map((field) => <label key={field.label} style={{ display:"block", minWidth:0, fontSize:13, fontWeight:700, letterSpacing:1, color:"#173f30" }}>{field.label}<select disabled={todaySelected} value={field.value} onChange={(e)=>{ const parts=date.split("-"); parts[field.part]=e.target.value; const candidate=`${parts[0]}-${parts[1]}-${parts[2]}`; if(candidate >= tomorrowDate) setDate(candidate); }} style={{ ...inputStyle, marginTop:7, padding:"12px 8px", borderColor: todaySelected ? "#deded8" : "#cbd5cf", background:todaySelected?"#eeeeea":"#fff", color:todaySelected?"#999":"#173f30", opacity:todaySelected?0.65:1, cursor:todaySelected?"not-allowed":"pointer" }}>{field.options.map((option)=><option key={option} value={option}>{field.label==="MONTH"?new Date(2000,Number(option)-1,1).toLocaleString("en",{month:"long"}):option}</option>)}</select></label>)}
               </div>
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>3. ORDER TIME</div>
-              <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:7 }}>AVAILABLE PICK UP TIME</div>
+              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8, fontSize:18 }}>3. WAKTU AMBIL</div>
+              <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>PILIH WAKTU AMBIL YANG TERSEDIA</div>
               <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">Pilih waktu</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
-            <div style={{ ...noticeStyle, marginTop: 12, marginBottom: 0 }}>
-              🕒 Waktu ambil: 10:00 pagi – 5:00 petang. Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.
+            <div style={{ marginTop:12, marginBottom:0, padding:"16px 14px", border:"1px solid #e4c64d", borderRadius:18, background:"#fff8df", color:"#174d38", display:"flex", alignItems:"center", gap:14, lineHeight:1.55 }}>
+              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>Waktu ambil: 10:00 pagi – 5:00 petang.<br/>Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.</span>
             </div>
           </section>
 
