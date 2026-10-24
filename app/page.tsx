@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const SAMBALS = [
   "Biasa Manis",
@@ -61,6 +61,17 @@ export default function Home() {
   const bruneiToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" });
   const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
   const [todaySelected, setTodaySelected] = useState(false);
+  const [bruneiClock, setBruneiClock] = useState(() => new Date());
+  useEffect(() => {
+    const updateClock = () => setBruneiClock(new Date());
+    updateClock();
+    const timer = window.setInterval(updateClock, 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const bruneiHourMinute = Number(new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Brunei", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).format(bruneiClock).replace(":", ""));
+  const todayButtonClosed = bruneiHourMinute < 1000 || bruneiHourMinute >= 1700;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -354,7 +365,7 @@ export default function Home() {
               <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12, fontSize: 18 }}>2. TARIKH AMBIL PESANAN</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 18 }}>
                 <button type="button" aria-pressed={todaySelected} onClick={() => { setTodaySelected(true); setDate(bruneiToday); }} style={{ position:"relative", textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:todaySelected?"#075537":"#fffdf7", color:todaySelected?"#fff8e7":"#8b6416", fontWeight:800, cursor:"pointer", boxShadow:todaySelected?"0 0 0 2px rgba(201,164,65,.25)":"none" }}>
-                  <span style={{fontSize:30, lineHeight:1}}>▣</span><span><span style={{display:"block",fontSize:16}}>HARI INI</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>Ambil pesanan hari ini</span></span>{todaySelected&&<span style={{position:"absolute",right:-5,top:-9,background:"#087447",border:"2px solid #fff",borderRadius:"50%",width:28,height:28,display:"grid",placeItems:"center",color:"white",fontSize:17}}>✓</span>}
+                  <span style={{fontSize:30, lineHeight:1}}>▣</span><span><span style={{display:"block",fontSize:16}}>{todayButtonClosed ? "TUTUP" : "HARI INI"}</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>{todayButtonClosed ? "Di luar waktu operasi" : "Ambil pesanan hari ini"}</span></span>{todaySelected&&<span style={{position:"absolute",right:-5,top:-9,background:"#087447",border:"2px solid #fff",borderRadius:"50%",width:28,height:28,display:"grid",placeItems:"center",color:"white",fontSize:17}}>✓</span>}
                 </button>
                 <button type="button" aria-pressed={!todaySelected} onClick={() => { setTodaySelected(false); setDate((current) => current < tomorrowDate ? tomorrowDate : current); }} style={{ textAlign:"left", display:"flex", alignItems:"center", gap:10, padding:"14px 12px", minHeight:86, borderRadius:16, border:!todaySelected?"3px solid #e4c64d":"2px solid #c9a441", background:!todaySelected?"#fff8df":"#fffdf7", color:"#8b6416", fontWeight:800, cursor:"pointer" }}>
                   <span style={{fontSize:30,lineHeight:1}}>▦</span><span><span style={{display:"block",fontSize:15}}>TEMPAHAN AWAL</span><span style={{display:"block",fontSize:12,fontWeight:500,marginTop:4}}>Pilih tarikh akan datang</span></span>
