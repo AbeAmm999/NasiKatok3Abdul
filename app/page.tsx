@@ -313,7 +313,10 @@ export default function Home() {
         .nk3-qty button:first-child { border-radius: 9px 0 0 9px; }
         .nk3-qty button:last-child { border-radius: 0 9px 9px 0; }
         .nk3-qty span { text-align: center; border-top: 1px solid #d6d6cf; border-bottom: 1px solid #d6d6cf; min-height: 38px; display: grid; place-items: center; }
-        .nk3-sambal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .nk3-sambal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .nk3-addons-shortcut { min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
+        .nk3-confirm-card { margin-top: 16px; overflow: hidden; border: 1px solid #d9d6c6; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px rgba(18,61,42,.08); }
+        .nk3-confirm-title { margin: 0; padding: 14px 16px; background: #075537; color: #fff8e7; font-size: 20px; }
         .nk3-total-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f5f5ee; }
         @media (min-width: 760px) {
           .nk3-main-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: start; gap: 16px; }
@@ -414,6 +417,7 @@ export default function Home() {
                     </button>
                   );
                 })}
+                <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
@@ -439,10 +443,6 @@ export default function Home() {
                   </div>
                 ))}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
-                <button type="button" onClick={() => continueTo("addons")} style={buttonStyle}>＋ Add On's</button>
-                <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>✓ {tr("Sahkan pesanan", "Confirm order")}</button>
               </div>
               {message && <p role="status" style={{ marginBottom: 0, color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b" }}>{message}</p>}
             </section>
@@ -548,10 +548,16 @@ export default function Home() {
                 {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
               <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>{tr("Jumlah", "Total")}</span><span>{money(total)}</span></h2>
-              {stage === "review" && <>
-                <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginBottom: 10 }}>{tr("Kembali edit", "Back to edit")}</button>
-                <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>{tr("Sahkan melalui WhatsApp", "Confirm via WhatsApp")}</button>
-              </>}
+              {stage === "review" && <button type="button" onClick={() => setStage("order")} style={{ ...buttonStyle, width: "100%", marginTop: 12 }}>{tr("Kembali edit pesanan", "Back to edit order")}</button>}
+            </section>
+          )}
+          {(stage === "review" || stage === "done") && (
+            <section className="nk3-confirm-card">
+              <h2 className="nk3-confirm-title">✅ {tr("Sahkan Pesanan", "Confirm Order")}</h2>
+              <div style={{ padding: 16, textAlign: "center" }}>
+                <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
+                {stage === "review" && <button type="button" onClick={confirmOrder} style={{ ...buttonStyle, width: "100%", padding: "16px 12px", background: "#e8b936", color: "#171717", borderColor: "#d6a52b", fontWeight: 800 }}>☏ {tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</button>}
+              </div>
             </section>
           )}
 
