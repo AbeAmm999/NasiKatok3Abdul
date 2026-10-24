@@ -104,19 +104,19 @@ export default function Home() {
     for (let mins = 10 * 60; mins <= 16 * 60 + 30; mins += 30) {
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
-      const suffix = hour < 12 ? "pagi" : "petang";
+      const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
       const displayHour = hour % 12 || 12;
       slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
     return slots;
-  }, []);
+  }, [isEnglish]);
 
   function toggleSambal(sambal: string) {
     setMessage("");
     setSelected((current) => {
       if (current.includes(sambal)) return current.filter((item) => item !== sambal);
       if (current.length >= SAMBALS.length) {
-        setMessage("Semua jenis sambal telah dipilih.");
+        setMessage(isEnglish ? "All sambal types have been selected." : "Semua jenis sambal telah dipilih.");
         return current;
       }
       return [...current, sambal];
@@ -125,11 +125,11 @@ export default function Home() {
 
   function addLine() {
     if (selected.length < 1) {
-      setMessage("Sila pilih sekurang-kurangnya 1 jenis sambal.");
+      setMessage(isEnglish ? "Please select at least 1 sambal type." : "Sila pilih sekurang-kurangnya 1 jenis sambal.");
       return;
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-      setMessage("Masukkan kuantiti antara 1 hingga 100.");
+      setMessage(isEnglish ? "Enter a quantity between 1 and 100." : "Masukkan kuantiti antara 1 hingga 100.");
       return;
     }
     setLines((current) => [
@@ -138,21 +138,21 @@ export default function Home() {
     ]);
     setSelected([]);
     setQuantity(1);
-    setMessage("Pesanan ditambah.");
+    setMessage(isEnglish ? "Order added." : "Pesanan ditambah.");
   }
 
   function continueTo(next: "addons" | "review") {
     if (!name.trim() || !time || !date) {
-      setMessage("Sila isi nama, tarikh dan waktu ambil.");
+      setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
       return;
     }
     if (lines.length === 0) {
       if (selected.length === 0) {
-        setMessage("Sila pilih sambal dan tambah pesanan terlebih dahulu.");
+        setMessage(isEnglish ? "Please select sambal and add your order first." : "Sila pilih sambal dan tambah pesanan terlebih dahulu.");
         return;
       }
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-        setMessage("Masukkan kuantiti antara 1 hingga 100.");
+        setMessage(isEnglish ? "Enter a quantity between 1 and 100." : "Masukkan kuantiti antara 1 hingga 100.");
         return;
       }
       setLines([{ id: Date.now(), sambals: [...selected], quantity }]);
@@ -171,48 +171,48 @@ export default function Home() {
     );
     const addonLines = [
       ...(chickenQuantity > 0
-        ? [`Ayam Goreng × ${chickenQuantity} — ${money(chickenQuantity)}`]
+        ? [`${isEnglish ? "Fried chicken" : "Ayam Goreng"} × ${chickenQuantity} — ${money(chickenQuantity)}`]
         : []),
       ...(riceQuantity > 0
         ? [
-            `Nasi Putih × ${riceQuantity} (${money(Number(riceUnitPrice))}/unit) — ${money(
+            `${isEnglish ? "Plain rice" : "Nasi Putih"} × ${riceQuantity} (${money(Number(riceUnitPrice))}/${isEnglish ? "unit" : "unit"}) — ${money(
               riceQuantity * Number(riceUnitPrice)
             )}`,
           ]
         : []),
       ...(extraSambalEnabled
-        ? [`Sambal tambahan (${extraType}) — ${money(Number(extraPrice))}`]
+        ? [`${isEnglish ? "Extra sambal" : "Sambal tambahan"} (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
     const messageText = [
       "*NEW ORDER NASI KATOK 3 ABDUL*",
       "------------------------------",
-      "Nama :",
+      isEnglish ? "Name:" : "Nama :",
       `> ${name.trim()}`,
-      "Cawangan :",
+      isEnglish ? "Branch:" : "Cawangan :",
       `> ${branch}`,
-      "Tarikh ambil :",
+      isEnglish ? "Pickup date:" : "Tarikh ambil :",
       `> ${todaySelected ? "Today" : date}`,
-      "Waktu ambil:",
+      isEnglish ? "Pickup time:" : "Waktu ambil:",
       `> ${time}`,
       "",
-      "*Senarai pesanan:*",
+      isEnglish ? "*Order list:*" : "*Senarai pesanan:*",
       ...orderLines.map((line) => `> ${line}`),
       "",
-      `Subtotal: ${money(subtotal)}`,
+      `${isEnglish ? "Subtotal" : "Subtotal"}: ${money(subtotal)}`,
       ...(addonLines.filter(Boolean).length > 0
         ? [
             "",
-            "*Add On's:*",
+            isEnglish ? "*Add-ons:*" : "*Add On's:*",
             ...addonLines.filter(Boolean).map((line) => `> ${line}`),
-            `> Jumlah Add On's: ${money(addonTotal)}`,
+            `> ${isEnglish ? "Add-ons total" : "Jumlah Add On's"}: ${money(addonTotal)}`,
           ]
         : []),
       "",
-      "*JUMLAH KESELURUHAN:*",
+      isEnglish ? "*GRAND TOTAL:*" : "*JUMLAH KESELURUHAN:*",
       `> ${money(total)}*`,
       "------------------------------",
-      "Please Confirm This Order. Thank You!",
+      isEnglish ? "Please confirm this order. Thank you!" : "Please Confirm This Order. Thank You!",
     ].join("\n");
 
     setMessage(isEnglish ? "Order summary is ready. Send the WhatsApp message to complete your order." : "Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
@@ -357,7 +357,7 @@ export default function Home() {
                   aria-pressed={branch === item.name}
                   onClick={() => setBranch(item.name)}
                 >
-                  <Photo src={item.src} alt={`Kedai Nasi Katok 3 Abdul ${item.name}`} className="nk3-branch-photo" />
+                  <Photo src={item.src} alt={tr(`Kedai Nasi Katok 3 Abdul ${item.name}`, `Nasi Katok 3 Abdul ${item.name} branch`)} className="nk3-branch-photo" />
                   <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>
                 </button>
               ))}
@@ -395,10 +395,10 @@ export default function Home() {
             <section className="nk3-card">
               <h2 style={sectionTitleStyle}>🌶️ 4. {tr("Pilihan sambal", "Choose sambal")}</h2>
               <div style={noticeStyle}>
-                <strong>Campuran sambal:</strong>
+                <strong>{tr("Campuran sambal:", "Sambal combinations:")}</strong>
                 <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
-                  <li>1 atau 2 jenis sambal: $1.00 sebungkus.</li>
-                  <li>3 jenis sambal atau lebih: caj tambahan $0.50 bagi setiap jenis sambal selepas 2 pilihan.</li>
+                  <li>{tr("1 atau 2 jenis sambal: $1.00 sebungkus.", "1 or 2 sambal types: $1.00 per pack.")}</li>
+                  <li>{tr("3 jenis sambal atau lebih: caj tambahan $0.50 bagi setiap jenis sambal selepas 2 pilihan.", "3 or more sambal types: an extra $0.50 is charged for each type after the first 2.")}</li>
                 </ul>
               </div>
               <div className="nk3-sambal-grid">
@@ -408,20 +408,20 @@ export default function Home() {
                   return (
                     <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
-                      title={isUnavailable ? "Lada Padi buat masa ini tidak tersedia" : undefined}
+                      title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
                       style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
-                      {isSelected ? "✓ " : ""}{sambal}{isUnavailable ? " (Tidak tersedia)" : ""}
+                      {isSelected ? "✓ " : ""}{sambal}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
                     </button>
                   );
                 })}
               </div>
 
-              <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>Kuantiti bungkus</label>
+              <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
               <div style={{ display: "grid", gridTemplateColumns: "48px minmax(0, 1fr) 48px auto", gap: 8, alignItems: "center" }}>
                 <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity <= 1} onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</button>
                 <input style={{ ...inputStyle, textAlign: "center" }} type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
                 <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
-                <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ Add</button>
+                <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ {tr("Tambah", "Add")}</button>
               </div>
 
               <div className="nk3-total-box">
@@ -435,16 +435,16 @@ export default function Home() {
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
                     <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span>
                     <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
-                    <button type="button" aria-label="Hapus pesanan" onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
+                    <button type="button" aria-label={tr("Hapus pesanan", "Remove order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
                   </div>
                 ))}
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>Subtotal</strong><strong>{money(subtotal)}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
                 <button type="button" onClick={() => continueTo("addons")} style={buttonStyle}>＋ Add On's</button>
                 <button type="button" onClick={() => continueTo("review")} style={{ ...buttonStyle, background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>✓ {tr("Sahkan pesanan", "Confirm order")}</button>
               </div>
-              {message && <p role="status" style={{ marginBottom: 0, color: message === "Pesanan ditambah." ? "#087447" : "#a33b2b" }}>{message}</p>}
+              {message && <p role="status" style={{ marginBottom: 0, color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b" }}>{message}</p>}
             </section>
           )}
         </div>
@@ -452,58 +452,58 @@ export default function Home() {
         <div>
           {stage === "addons" && (
             <section className="nk3-card">
-              <h2 style={sectionTitleStyle}>🛍️ 5. Add On's</h2>
+              <h2 style={sectionTitleStyle}>🛍️ 5. {tr("Add On's", "Add-ons")}</h2>
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.chicken} alt="Ayam goreng" className="nk3-addon-photo" />
+                <Photo src={imagePaths.chicken} alt={tr("Ayam goreng", "Fried chicken")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>Ayam Goreng</strong><strong>$1.00</strong></div>
+                  <div className="nk3-addon-row"><strong>{tr("Ayam Goreng", "Fried chicken")}</strong><strong>$1.00</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
-                    <span style={{ color: "#68756d", fontSize: 13 }}>Kuantiti</span>
+                    <span style={{ color: "#68756d", fontSize: 13 }}>{tr("Kuantiti", "Quantity")}</span>
                     <div className="nk3-qty">
-                      <button type="button" aria-label="Kurangkan ayam" onClick={() => setChickenQuantity((q) => Math.max(0, q - 1))}>−</button>
+                      <button type="button" aria-label={tr("Kurangkan ayam", "Decrease chicken")} onClick={() => setChickenQuantity((q) => Math.max(0, q - 1))}>−</button>
                       <span>{chickenQuantity}</span>
-                      <button type="button" aria-label="Tambah ayam" onClick={() => setChickenQuantity((q) => Math.min(100, q + 1))}>+</button>
+                      <button type="button" aria-label={tr("Tambah ayam", "Increase chicken")} onClick={() => setChickenQuantity((q) => Math.min(100, q + 1))}>+</button>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.rice} alt="Nasi putih" className="nk3-addon-photo" />
+                <Photo src={imagePaths.rice} alt={tr("Nasi putih", "Plain rice")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>Nasi Putih</strong><strong>{money(Number(riceUnitPrice))}</strong></div>
+                  <div className="nk3-addon-row"><strong>{tr("Nasi Putih", "Plain rice")}</strong><strong>{money(Number(riceUnitPrice))}</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
-                    <select aria-label="Harga nasi putih" style={{ ...inputStyle, padding: "8px 5px", fontSize: 14, maxWidth: 104 }} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}>
+                    <select aria-label={tr("Harga nasi putih", "Rice price")} style={{ ...inputStyle, padding: "8px 5px", fontSize: 14, maxWidth: 104 }} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}>
                       <option value="0.50">$0.50</option><option value="1.00">$1.00</option>
                     </select>
                     <div className="nk3-qty">
-                      <button type="button" aria-label="Kurangkan nasi" onClick={() => setRiceQuantity((q) => Math.max(0, q - 1))}>−</button>
+                      <button type="button" aria-label={tr("Kurangkan nasi", "Decrease rice")} onClick={() => setRiceQuantity((q) => Math.max(0, q - 1))}>−</button>
                       <span>{riceQuantity}</span>
-                      <button type="button" aria-label="Tambah nasi" onClick={() => setRiceQuantity((q) => Math.min(100, q + 1))}>+</button>
+                      <button type="button" aria-label={tr("Tambah nasi", "Increase rice")} onClick={() => setRiceQuantity((q) => Math.min(100, q + 1))}>+</button>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.sambal} alt="Sambal tambahan" className="nk3-addon-photo" />
+                <Photo src={imagePaths.sambal} alt={tr("Sambal tambahan", "Extra sambal")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{extraSambalEnabled ? money(Number(extraPrice)) : "Pilihan"}</strong></div>
+                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{extraSambalEnabled ? money(Number(extraPrice)) : tr("Pilihan", "Optional")}</strong></div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
-                    <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> Tambah sambal
+                    <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> {tr("Tambah sambal", "Add sambal")}
                   </label>
-                  <select aria-label="Jenis sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
-                    {SAMBALS.map((item) => <option key={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? "Lada Padi (Tidak tersedia sementara)" : item}</option>)}
+                  <select aria-label={tr("Jenis sambal tambahan", "Extra sambal type")} style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
+                    {SAMBALS.map((item) => <option key={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? tr("Lada Padi (Tidak tersedia sementara)", "Lada Padi (Temporarily unavailable)") : item}</option>)}
                   </select>
-                  <select aria-label="Harga sambal tambahan" style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
+                  <select aria-label={tr("Harga sambal tambahan", "Extra sambal price")} style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
                     {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <strong>Jumlah Add On's</strong><strong>{money(addonTotal)}</strong>
+                <strong>{tr("Jumlah Add On's", "Add-ons total")}</strong><strong>{money(addonTotal)}</strong>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
                 <button
@@ -516,14 +516,14 @@ export default function Home() {
                   }}
                   style={{ ...buttonStyle, width: "100%", padding: "12px 8px" }}
                 >
-                  No Thanks!
+                  {tr("Tidak, terima kasih", "No thanks")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStage("review")}
                   style={{ ...buttonStyle, width: "100%", padding: "12px 8px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}
                 >
-                  Confirm Add On
+                  {tr("Sahkan Add On", "Confirm add-ons")}
                 </button>
               </div>
             </section>
@@ -536,14 +536,14 @@ export default function Home() {
               <p><strong>{tr("Nama:", "Name:")}</strong> {name}</p>
               <p><strong>{tr("Cawangan:", "Branch:")}</strong> {branch}</p>
               <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
-              <p><strong>{tr("Waktu ambil:", "Pickup time:")}</strong> {time}</p>
+              <p><strong>{tr(isEnglish ? "Pickup time:" : "Waktu ambil:", "Pickup time:")}</strong> {time}</p>
               <h3>{tr("Pesanan", "Order")}</h3>
               {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Subtotal", "Subtotal")}</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
-                <strong>Add On's</strong>
-                {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>Ayam Goreng × {chickenQuantity} — {money(chickenQuantity)}</p>}
-                {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>Nasi Putih × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
+                <strong>{tr("Add On's", "Add-ons")}</strong>
+                {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Ayam Goreng", "Fried chicken")} × {chickenQuantity} — {money(chickenQuantity)}</p>}
+                {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Nasi Putih", "Plain rice")} × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
                 {extraSambalEnabled && <p style={{ margin: "5px 0" }}>Extra Sambal ({extraType}) — {money(Number(extraPrice))}</p>}
                 {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
