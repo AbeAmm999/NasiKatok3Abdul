@@ -25,7 +25,7 @@ function pricePerPack(sambals: string[]) {
 }
 
 const imagePaths = {
-  banner: "/nasi-katok-banner.png",
+  banner: "/nasi-katok-banner.jpg",
   rimba: "/images/rimba.jpg",
   telisai: "/images/telisai.jpg",
   chicken: "/images/ayam-goreng.jpg",
@@ -242,7 +242,7 @@ export default function Home() {
     border: "1px solid #c9a441",
     fontSize: 20,
     backgroundImage:
-      "radial-gradient(circle at 95% 20%, rgba(201,164,65,.18), transparent 28%), linear-gradient(105deg, #003b24, #075537)",
+      "linear-gradient(105deg, rgba(0,59,36,.92), rgba(7,85,55,.92)), url('/images/floral-texture.jpg')",
   };
 
   const noticeStyle: React.CSSProperties = {
@@ -297,8 +297,8 @@ export default function Home() {
         }
         .nk3-main-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
         .nk3-card {
-          background: #fff; border: 1px solid #e2d8b9; border-radius: 16px;
-          padding: 14px; margin-top: 14px; box-shadow: 0 4px 14px rgba(0,59,36,.06);
+          background: linear-gradient(rgba(255,254,250,.96), rgba(255,254,250,.96)), url('/images/floral-texture.jpg'); background-size: auto, 280px auto; border: 1px solid #c9a441; border-radius: 16px;
+          padding: 14px; margin-top: 14px; box-shadow: 0 4px 14px rgba(0,59,36,.10);
           min-width: 0;
         }
         .nk3-branch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
