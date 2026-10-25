@@ -453,9 +453,6 @@ export default function Home() {
               <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>{tr("PILIH WAKTU AMBIL YANG TERSEDIA", "SELECT AN AVAILABLE PICKUP TIME")}</div>
               <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
-            <div style={{ marginTop:12, marginBottom:0, padding:"16px 14px", border:"1px solid #e4c64d", borderRadius:18, background:"#fff8df", color:"#174d38", display:"flex", alignItems:"center", gap:14, lineHeight:1.55 }}>
-              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>{tr("Waktu operasi: Isnin–Khamis & Sabtu 9:30 pagi – 4:30 petang; Jumaat 9:30 pagi – 11:30 pagi; Ahad 10:00 pagi – 12:30 tengah hari.", "Business hours: Mon–Thu & Sat 9:30 AM–4:30 PM; Fri 9:30–11:30 AM; Sun 10:00 AM–12:30 PM.")}<br/>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</span>
-            </div>
           </section>
 
 
