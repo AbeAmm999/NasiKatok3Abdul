@@ -229,7 +229,8 @@ export default function Home() {
 
     setMessage(isEnglish ? "Order summary is ready. Send the WhatsApp message to complete your order." : "Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
     setStage("done");
-    const whatsappUrl = `https://wa.me/6738999443?text=${encodeURIComponent(messageText)}`;
+    const whatsappNumber = branch === "Telisai" ? "6737141084" : "6738999443";
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
