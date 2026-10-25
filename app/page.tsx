@@ -74,7 +74,7 @@ export default function Home() {
   const bruneiHourMinute = Number(new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Brunei", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
   }).format(bruneiClock).replace(":", ""));
-  const todayButtonClosed = bruneiHourMinute < 1000 || bruneiHourMinute >= 1700;
+  const todayButtonClosed = bruneiHourMinute < 600 || bruneiHourMinute >= 1600;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -101,7 +101,7 @@ export default function Home() {
 
   const timeSlots = useMemo(() => {
     const slots: string[] = [];
-    for (let mins = 10 * 60; mins <= 16 * 60 + 30; mins += 30) {
+    for (let mins = 10 * 60; mins <= 16 * 60; mins += 30) {
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
