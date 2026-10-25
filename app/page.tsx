@@ -196,35 +196,36 @@ export default function Home() {
         ? [`${isEnglish ? "Extra sambal" : "Sambal tambahan"} (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
+    const pickupDate = todaySelected ? bruneiToday : date;
     const messageText = [
       "*NEW ORDER NASI KATOK 3 ABDUL*",
-      "------------------------------",
-      isEnglish ? "Name:" : "Nama :",
-      `> ${name.trim()}`,
-      isEnglish ? "Branch:" : "Cawangan :",
-      `> ${branch}`,
-      isEnglish ? "Pickup date:" : "Tarikh ambil :",
-      `> ${todaySelected ? "Today" : date}`,
-      isEnglish ? "Pickup time:" : "Waktu ambil:",
-      `> ${time}`,
+      "----------------------------------------",
+      "> Nama :",
+      `- *${name.trim()}*`,
+      "> Cawangan :",
+      `- *${branch}*`,
+      "> Tarikh ambil :",
+      `- *${pickupDate}*`,
+      "> Waktu ambil:",
+      `- *${time}*`,
       "",
-      isEnglish ? "*Order list:*" : "*Senarai pesanan:*",
-      ...orderLines.map((line) => `> ${line}`),
+      "> Senarai pesanan :",
+      ...orderLines.map((line) => `- *${line}*`),
       "",
-      `${isEnglish ? "Subtotal" : "Subtotal"}: ${money(subtotal)}`,
+      `*Subtotal: ${money(subtotal)}*`,
       ...(addonLines.filter(Boolean).length > 0
         ? [
             "",
-            isEnglish ? "*Add-ons:*" : "*Add On's:*",
-            ...addonLines.filter(Boolean).map((line) => `> ${line}`),
-            `> ${isEnglish ? "Add-ons total" : "Jumlah Add On's"}: ${money(addonTotal)}`,
+            "*Add On's:*",
+            ...addonLines.filter(Boolean).map((line) => `- *${line}*`),
+            `*Jumlah Add On's: ${money(addonTotal)}*`,
           ]
         : []),
       "",
-      isEnglish ? "*GRAND TOTAL:*" : "*JUMLAH KESELURUHAN:*",
-      `> ${money(total)}*`,
+      "> JUMLAH KESELURUHAN:",
+      `- *BND ${money(total)}*`,
       "------------------------------",
-      isEnglish ? "Please confirm this order. Thank you!" : "Please Confirm This Order. Thank You!",
+      "*Please Confirm This Order. Thank You!*",
     ].join("\n");
 
     setMessage(isEnglish ? "Order summary is ready. Send the WhatsApp message to complete your order." : "Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
