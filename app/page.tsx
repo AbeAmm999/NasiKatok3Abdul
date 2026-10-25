@@ -82,7 +82,7 @@ export default function Home() {
     Mon: { open: 570, close: 990 }, Tue: { open: 570, close: 990 },
     Wed: { open: 570, close: 990 }, Thu: { open: 570, close: 990 },
     Fri: { open: 570, close: 690 }, Sat: { open: 570, close: 990 },
-    Sun: { open: 600, close: 750 },
+    Sun: { open: 600, close: 780 },
   };
   const todayHours = operatingHours[bruneiWeekday] ?? operatingHours.Sun;
   // Today orders can be selected from 6:00 AM until the closing time for that weekday.
@@ -120,7 +120,7 @@ export default function Home() {
     const hours = operatingHours[selectedWeekday] ?? operatingHours.Sun;
     const nowMinutes = bruneiHourMinute;
     const slots: string[] = [];
-    for (let mins = hours.open; mins < hours.close; mins += 30) {
+    for (let mins = hours.open; mins <= hours.close; mins += 30) {
       // For today's orders, show only pickup slots strictly later than the current Brunei time.
       if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
       const hour = Math.floor(mins / 60);
