@@ -61,7 +61,7 @@ export default function Home() {
   const tr = (bm: string, en: string) => isEnglish ? en : bm;
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const bruneiToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" });
+  const bruneiToday = (() => { const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00"; return `${get("year")}-${get("month")}-${get("day")}`; })();
   const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
   const [todaySelected, setTodaySelected] = useState(false);
   const [bruneiClock, setBruneiClock] = useState(() => new Date());
@@ -71,10 +71,22 @@ export default function Home() {
     const timer = window.setInterval(updateClock, 30_000);
     return () => window.clearInterval(timer);
   }, []);
-  const bruneiHourMinute = Number(new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Brunei", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-  }).format(bruneiClock).replace(":", ""));
-  const todayButtonClosed = bruneiHourMinute < 600 || bruneiHourMinute >= 1600;
+  const bruneiParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Brunei", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(bruneiClock);
+  const bruneiWeekday = bruneiParts.find((part) => part.type === "weekday")?.value ?? "Sun";
+  const bruneiHour = Number(bruneiParts.find((part) => part.type === "hour")?.value ?? "0");
+  const bruneiMinute = Number(bruneiParts.find((part) => part.type === "minute")?.value ?? "0");
+  const bruneiHourMinute = bruneiHour * 60 + bruneiMinute;
+  const operatingHours: Record<string, { open: number; close: number }> = {
+    Mon: { open: 570, close: 990 }, Tue: { open: 570, close: 990 },
+    Wed: { open: 570, close: 990 }, Thu: { open: 570, close: 990 },
+    Fri: { open: 570, close: 690 }, Sat: { open: 570, close: 990 },
+    Sun: { open: 600, close: 750 },
+  };
+  const todayHours = operatingHours[bruneiWeekday] ?? operatingHours.Sun;
+  // Today orders can be selected from 6:00 AM until the closing time for that weekday.
+  const todayButtonClosed = bruneiHourMinute < 360 || bruneiHourMinute >= todayHours.close;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -100,8 +112,17 @@ export default function Home() {
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
+    const selectedDate = todaySelected ? bruneiToday : date;
+    // Parse at midday to avoid date shifts across time zones.
+    const selectedWeekday = new Date(`${selectedDate}T12:00:00+08:00`).toLocaleDateString("en-US", {
+      weekday: "short", timeZone: "Asia/Brunei",
+    });
+    const hours = operatingHours[selectedWeekday] ?? operatingHours.Sun;
+    const nowMinutes = bruneiHourMinute;
     const slots: string[] = [];
-    for (let mins = 10 * 60; mins <= 16 * 60; mins += 30) {
+    for (let mins = hours.open; mins < hours.close; mins += 30) {
+      // For today's orders, show only pickup slots strictly later than the current Brunei time.
+      if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -109,7 +130,7 @@ export default function Home() {
       slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
     return slots;
-  }, [isEnglish]);
+  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute]);
 
   function toggleSambal(sambal: string) {
     setMessage("");
@@ -433,7 +454,7 @@ export default function Home() {
               <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
             <div style={{ marginTop:12, marginBottom:0, padding:"16px 14px", border:"1px solid #e4c64d", borderRadius:18, background:"#fff8df", color:"#174d38", display:"flex", alignItems:"center", gap:14, lineHeight:1.55 }}>
-              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>{tr("Waktu ambil: 10:00 pagi – 5:00 petang.", "Pickup time: 10:00 AM – 5:00 PM.")}<br/>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</span>
+              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>{tr("Waktu operasi: Isnin–Khamis & Sabtu 9:30 pagi – 4:30 petang; Jumaat 9:30 pagi – 11:30 pagi; Ahad 10:00 pagi – 12:30 tengah hari.", "Business hours: Mon–Thu & Sat 9:30 AM–4:30 PM; Fri 9:30–11:30 AM; Sun 10:00 AM–12:30 PM.")}<br/>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</span>
             </div>
           </section>
 
