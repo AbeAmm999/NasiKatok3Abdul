@@ -78,15 +78,23 @@ export default function Home() {
   const bruneiHour = Number(bruneiParts.find((part) => part.type === "hour")?.value ?? "0");
   const bruneiMinute = Number(bruneiParts.find((part) => part.type === "minute")?.value ?? "0");
   const bruneiHourMinute = bruneiHour * 60 + bruneiMinute;
-  const operatingHours: Record<string, { open: number; close: number }> = {
-    Mon: { open: 570, close: 990 }, Tue: { open: 570, close: 990 },
-    Wed: { open: 570, close: 990 }, Thu: { open: 570, close: 990 },
-    Fri: { open: 570, close: 690 }, Sat: { open: 570, close: 990 },
-    Sun: { open: 600, close: 780 },
+  const rimbaOperatingHours: Record<string, { open: number; close: number } | null> = {
+    Mon: { open: 570, close: 960 }, Tue: { open: 570, close: 960 },
+    Wed: { open: 570, close: 960 }, Thu: { open: 570, close: 960 },
+    Fri: { open: 570, close: 710 }, Sat: { open: 570, close: 960 },
+    Sun: { open: 630, close: 810 },
   };
-  const todayHours = operatingHours[bruneiWeekday] ?? operatingHours.Sun;
-  // Today orders can be selected from 6:00 AM until the closing time for that weekday.
-  const todayButtonClosed = bruneiHourMinute < 360 || bruneiHourMinute >= todayHours.close;
+  const telisaiOperatingHours: Record<string, { open: number; close: number } | null> = {
+    Mon: { open: 570, close: 1140 }, Tue: { open: 570, close: 1140 },
+    Wed: { open: 570, close: 1140 }, Thu: { open: 570, close: 1140 },
+    Fri: { open: 570, close: 1140 }, Sat: { open: 570, close: 1140 },
+    Sun: null,
+  };
+  const operatingHours = branch === "Telisai" ? telisaiOperatingHours : rimbaOperatingHours;
+  const todayHours = operatingHours[bruneiWeekday] ?? null;
+  // TODAY starts at 6:00 AM and closes 20 minutes before this branch's closing time.
+  // Telisai is closed all day Sunday.
+  const todayButtonClosed = bruneiHourMinute < 360 || !todayHours || bruneiHourMinute >= todayHours.close - 20;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -117,9 +125,10 @@ export default function Home() {
     const selectedWeekday = new Date(`${selectedDate}T12:00:00+08:00`).toLocaleDateString("en-US", {
       weekday: "short", timeZone: "Asia/Brunei",
     });
-    const hours = operatingHours[selectedWeekday] ?? operatingHours.Sun;
+    const hours = operatingHours[selectedWeekday] ?? null;
     const nowMinutes = bruneiHourMinute;
     const slots: string[] = [];
+    if (!hours) return slots;
     for (let mins = hours.open; mins <= hours.close; mins += 30) {
       // For today's orders, show only pickup slots strictly later than the current Brunei time.
       if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
@@ -130,7 +139,7 @@ export default function Home() {
       slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
     return slots;
-  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute]);
+  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute, branch]);
 
   function toggleSambal(sambal: string) {
     setMessage("");
@@ -217,7 +226,7 @@ export default function Home() {
         ? [`${isEnglish ? "Extra sambal" : "Sambal tambahan"} (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
-    const pickupDate = todaySelected ? bruneiToday : date;
+    const pickupDate = todaySelected ? (isEnglish ? "Today" : "Hari Ini") : date;
     const messageText = [
       "*NEW ORDER NASI KATOK 3 ABDUL*",
       "----------------------------------------",
@@ -423,7 +432,14 @@ export default function Home() {
                   key={item.name}
                   className={`nk3-branch ${branch === item.name ? "selected" : ""}`}
                   aria-pressed={branch === item.name}
-                  onClick={() => setBranch(item.name)}
+                  onClick={() => {
+                    setBranch(item.name);
+                    setTime("");
+                    if (item.name === "Telisai" && todaySelected && bruneiWeekday === "Sun") {
+                      setTodaySelected(false);
+                      setDate(tomorrowDate);
+                    }
+                  }}
                 >
                   <Photo src={item.src} alt={tr(`Kedai Nasi Katok 3 Abdul ${item.name}`, `Nasi Katok 3 Abdul ${item.name} branch`)} className="nk3-branch-photo" />
                   <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>
