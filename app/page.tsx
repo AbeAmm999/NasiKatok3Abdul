@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const NO_SAMBAL = "__NO_SAMBAL__";
+
 const SAMBALS = [
   "Biasa Manis",
   "Tahai Biasa",
@@ -18,7 +20,13 @@ function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
+function displaySambals(sambals: string[], isEnglish: boolean) {
+  if (sambals.includes(NO_SAMBAL)) return isEnglish ? "No sambal" : "Kosong (Tanpa sambal)";
+  return sambals.join(" + ");
+}
+
 function pricePerPack(sambals: string[]) {
+  if (sambals.includes(NO_SAMBAL)) return 1;
   const count = sambals.length;
   if (count <= 2) return 1;
   return 1 + (count - 2) * 0.5;
@@ -145,6 +153,8 @@ export default function Home() {
     setMessage("");
     setSelected((current) => {
       if (current.includes(sambal)) return current.filter((item) => item !== sambal);
+      if (sambal === NO_SAMBAL) return [NO_SAMBAL];
+      if (current.includes(NO_SAMBAL)) current = [];
       if (current.length >= SAMBALS.length) {
         setMessage(isEnglish ? "All sambal types have been selected." : "Semua jenis sambal telah dipilih.");
         return current;
@@ -207,7 +217,7 @@ export default function Home() {
     }
     const orderLines = lines.map(
       (line, index) =>
-        `${index + 1}. ${line.sambals.join(" + ")} × ${line.quantity} — ${money(
+        `${index + 1}. ${displaySambals(line.sambals, isEnglish)} × ${line.quantity} — ${money(
           line.quantity * pricePerPack(line.sambals)
         )}`
     );
@@ -358,7 +368,7 @@ export default function Home() {
         .nk3-qty button:last-child { border-radius: 0 9px 9px 0; }
         .nk3-qty span { text-align: center; border-top: 1px solid #d6d6cf; border-bottom: 1px solid #d6d6cf; min-height: 38px; display: grid; place-items: center; }
         .nk3-sambal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .nk3-addons-shortcut { min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
+        .nk3-addons-shortcut { grid-column: 1 / -1; justify-self: center; width: min(70%, 280px); min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
         .nk3-confirm-card { margin-top: 16px; overflow: hidden; border: 1px solid #d9d6c6; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px rgba(18,61,42,.08); }
         .nk3-confirm-title { margin: 0; padding: 14px 16px; background: #075537; color: #fff8e7; font-size: 20px; }
         .nk3-total-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f5f5ee; }
@@ -495,6 +505,11 @@ export default function Home() {
                     </button>
                   );
                 })}
+                <button type="button" aria-pressed={selected.includes(NO_SAMBAL)}
+                  onClick={() => toggleSambal(NO_SAMBAL)}
+                  style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
+                  {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Kosong (Tanpa sambal)", "No sambal")}
+                </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
 
@@ -515,7 +530,7 @@ export default function Home() {
                 <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>{tr("Pesanan dipilih", "Selected order")}</h3>
                 {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>{tr("Belum ada pesanan.", "No items added yet.")}</p> : lines.map((line, index) => (
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
-                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span>
+                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, isEnglish)} × {line.quantity}</span>
                     <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
                     <button type="button" aria-label={tr("Hapus pesanan", "Remove order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
                   </div>
@@ -616,7 +631,7 @@ export default function Home() {
               <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
               <p><strong>{tr(isEnglish ? "Pickup time:" : "Waktu ambil:", "Pickup time:")}</strong> {time}</p>
               <h3>{tr("Pesanan", "Order")}</h3>
-              {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
+              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, isEnglish)} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Subtotal", "Subtotal")}</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
                 <strong>{tr("Add On's", "Add-ons")}</strong>
