@@ -164,8 +164,14 @@ export default function Home() {
       return;
     }
     if (selected.includes(sambal)) {
-      setSelectedExtraSambals((current) => [...current, sambal]);
-      setMessage(isEnglish ? `Extra ${sambal} added (+$0.50). Tap again to add another.` : `Extra Sambal ${sambal} ditambah (+$0.50). Tekan lagi untuk tambah satu lagi.`);
+      if (selectedExtraSambals.includes(sambal)) {
+        setSelected((current) => current.filter((item) => item !== sambal));
+        setSelectedExtraSambals((current) => current.filter((item) => item !== sambal));
+        setMessage(isEnglish ? `${sambal} and its Extra Sambal were cancelled.` : `Pilihan ${sambal} dan Extra Sambal dibatalkan.`);
+      } else {
+        setSelectedExtraSambals((current) => [...current, sambal]);
+        setMessage(isEnglish ? `Extra ${sambal} added (+$0.50). Tap the same sambal once more to cancel this sambal choice.` : `Extra Sambal ${sambal} ditambah (+$0.50). Tekan sambal yang sama sekali lagi untuk membatalkan pilihan sambal ini.`);
+      }
       return;
     }
     if (selected.length >= SAMBALS.length) {
@@ -173,6 +179,18 @@ export default function Home() {
       return;
     }
     setSelected((current) => [...current, sambal]);
+  }
+
+  function removeSelectedExtraSambal(index: number) {
+    setSelectedExtraSambals((current) => current.filter((_, i) => i !== index));
+    setMessage(isEnglish ? "Extra Sambal removed." : "Extra Sambal dibuang.");
+  }
+
+  function removeLineExtraSambal(lineId: number, extraIndex: number) {
+    setLines((current) => current.map((line) => line.id === lineId
+      ? { ...line, extraSambals: line.extraSambals.filter((_, i) => i !== extraIndex) }
+      : line));
+    setMessage(isEnglish ? "Extra Sambal removed from the selected order." : "Extra Sambal dibuang daripada pesanan dipilih.");
   }
 
   function addLine() {
@@ -514,7 +532,7 @@ export default function Home() {
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
                       style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
                       {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
-                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("Extra +$0.50 · Tekan lagi untuk batalkan pilihan ini", "Extra +$0.50 · Tap again to cancel this sambal choice") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
                     </button>
                   );
                 })}
@@ -527,7 +545,7 @@ export default function Home() {
               </div>
               <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.5 }}>
                 <strong>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
-                <div>{tr("Tekan sekali untuk sambal biasa. Tekan sambal yang sama sekali lagi untuk Extra Sambal (+$0.50 setiap tambahan).", "Tap once to choose a main sambal. Tap the same sambal again for Extra Sambal (+$0.50 each).")}</div>
+                <div>{tr("Tekan 1 kali untuk pilih sambal. Tekan kali ke-2 untuk Extra Sambal (+$0.50). Tekan kali ke-3 untuk membatalkan pilihan sambal itu bersama Extra Sambal.", "Tap once to choose a sambal. Tap a 2nd time for Extra Sambal (+$0.50). Tap a 3rd time to cancel that sambal choice and its Extra Sambal.")}</div>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
@@ -537,6 +555,18 @@ export default function Home() {
                 <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
                 <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ {tr("Tambah", "Add")}</button>
               </div>
+
+              {selectedExtraSambals.length > 0 && (
+                <div style={{ marginTop: 12, padding: 12, border: "1px solid #e6c85c", borderRadius: 10, background: "#fffaf0" }}>
+                  <strong>{tr("Extra Sambal dipilih", "Selected Extra Sambal")}</strong>
+                  {selectedExtraSambals.map((extra, index) => (
+                    <div key={`${extra}-${index}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8 }}>
+                      <span>{extra} — $0.50</span>
+                      <button type="button" onClick={() => removeSelectedExtraSambal(index)} style={{ ...buttonStyle, padding: "6px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff" }}>{tr("Buang Extra Sambal", "Remove Extra Sambal")}</button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="nk3-total-box">
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected, selectedExtraSambals))}</strong></div>
@@ -549,7 +579,8 @@ export default function Home() {
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
                     <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity}</span>
                     <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</strong>
-                    <button type="button" aria-label={tr("Hapus pesanan", "Remove order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
+                    <button type="button" aria-label={tr("Hapus seluruh pesanan", "Delete entire order")} title={tr("Hapus seluruh pilihan pesanan", "Delete entire selected order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ ...buttonStyle, padding: "7px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto", fontSize: 12 }}>{tr("Hapus", "Delete")}</button>
+                    {line.extraSambals.length > 0 && <button type="button" onClick={() => removeLineExtraSambal(line.id, line.extraSambals.length - 1)} style={{ ...buttonStyle, padding: "6px 8px", fontSize: 11, color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto" }}>{tr("Buang Extra", "Remove Extra")}</button>}
                   </div>
                 ))}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
