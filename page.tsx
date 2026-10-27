@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const NO_SAMBAL = "__NO_SAMBAL__";
+
 const SAMBALS = [
   "Biasa Manis",
   "Tahai Biasa",
@@ -12,16 +14,25 @@ const SAMBALS = [
   "Lada Padi",
 ];
 
-type OrderLine = { id: number; sambals: string[]; quantity: number };
+type OrderLine = { id: number; sambals: string[]; extraSambals: string[]; quantity: number };
 
 function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-function pricePerPack(sambals: string[]) {
-  const count = sambals.length;
-  if (count <= 2) return 1;
-  return 1 + (count - 2) * 0.5;
+function displaySambals(sambals: string[], extraSambals: string[], isEnglish: boolean) {
+  if (sambals.includes(NO_SAMBAL)) return isEnglish ? "No sambal" : "Nasi Katok Tanpa Sambal";
+  const main = sambals.join(" + ");
+  if (extraSambals.length === 0) return main;
+  const extras = extraSambals.map((item) => item).join(", ");
+  return `${main} (${isEnglish ? "Extra Sambal" : "Extra Sambal"} ${extras})`;
+}
+
+function pricePerPack(sambals: string[], extraSambals: string[] = []) {
+  if (sambals.includes(NO_SAMBAL)) return 1;
+  const mainCount = sambals.length;
+  const mainPrice = 1 + Math.max(0, mainCount - 2) * 0.5;
+  return mainPrice + extraSambals.length * 0.5;
 }
 
 const imagePaths = {
@@ -61,7 +72,7 @@ export default function Home() {
   const tr = (bm: string, en: string) => isEnglish ? en : bm;
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
-  const bruneiToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Brunei" });
+  const bruneiToday = (() => { const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00"; return `${get("year")}-${get("month")}-${get("day")}`; })();
   const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
   const [todaySelected, setTodaySelected] = useState(false);
   const [bruneiClock, setBruneiClock] = useState(() => new Date());
@@ -71,13 +82,34 @@ export default function Home() {
     const timer = window.setInterval(updateClock, 30_000);
     return () => window.clearInterval(timer);
   }, []);
-  const bruneiHourMinute = Number(new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Brunei", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-  }).format(bruneiClock).replace(":", ""));
-  const todayButtonClosed = bruneiHourMinute < 600 || bruneiHourMinute >= 1600;
+  const bruneiParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Brunei", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(bruneiClock);
+  const bruneiWeekday = bruneiParts.find((part) => part.type === "weekday")?.value ?? "Sun";
+  const bruneiHour = Number(bruneiParts.find((part) => part.type === "hour")?.value ?? "0");
+  const bruneiMinute = Number(bruneiParts.find((part) => part.type === "minute")?.value ?? "0");
+  const bruneiHourMinute = bruneiHour * 60 + bruneiMinute;
+  const rimbaOperatingHours: Record<string, { open: number; close: number } | null> = {
+    Mon: { open: 570, close: 960 }, Tue: { open: 570, close: 960 },
+    Wed: { open: 570, close: 960 }, Thu: { open: 570, close: 960 },
+    Fri: { open: 570, close: 710 }, Sat: { open: 570, close: 960 },
+    Sun: { open: 630, close: 810 },
+  };
+  const telisaiOperatingHours: Record<string, { open: number; close: number } | null> = {
+    Mon: { open: 570, close: 1140 }, Tue: { open: 570, close: 1140 },
+    Wed: { open: 570, close: 1140 }, Thu: { open: 570, close: 1140 },
+    Fri: { open: 570, close: 1140 }, Sat: { open: 570, close: 1140 },
+    Sun: null,
+  };
+  const operatingHours = branch === "Telisai" ? telisaiOperatingHours : rimbaOperatingHours;
+  const todayHours = operatingHours[bruneiWeekday] ?? null;
+  // TODAY starts at 6:00 AM and closes 20 minutes before this branch's closing time.
+  // Telisai is closed all day Sunday.
+  const todayButtonClosed = bruneiHourMinute < 360 || !todayHours || bruneiHourMinute >= todayHours.close - 20;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [selectedExtraSambals, setSelectedExtraSambals] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
@@ -85,23 +117,31 @@ export default function Home() {
   const [chickenQuantity, setChickenQuantity] = useState(0);
   const [riceQuantity, setRiceQuantity] = useState(0);
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
-  const [extraType, setExtraType] = useState("Tahai Biasa");
-  const [extraPrice, setExtraPrice] = useState("0.50");
-  const [extraSambalEnabled, setExtraSambalEnabled] = useState(false);
+
 
   const subtotal = useMemo(
-    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals), 0),
+    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals, line.extraSambals), 0),
     [lines]
   );
   const addonTotal =
     chickenQuantity +
     riceQuantity * Number(riceUnitPrice) +
-    (extraSambalEnabled ? Number(extraPrice) : 0);
+    0;
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
+    const selectedDate = todaySelected ? bruneiToday : date;
+    // Parse at midday to avoid date shifts across time zones.
+    const selectedWeekday = new Date(`${selectedDate}T12:00:00+08:00`).toLocaleDateString("en-US", {
+      weekday: "short", timeZone: "Asia/Brunei",
+    });
+    const hours = operatingHours[selectedWeekday] ?? null;
+    const nowMinutes = bruneiHourMinute;
     const slots: string[] = [];
-    for (let mins = 10 * 60; mins <= 16 * 60; mins += 30) {
+    if (!hours) return slots;
+    for (let mins = hours.open; mins <= hours.close; mins += 30) {
+      // For today's orders, show only pickup slots strictly later than the current Brunei time.
+      if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -109,18 +149,48 @@ export default function Home() {
       slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
     return slots;
-  }, [isEnglish]);
+  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute, branch]);
 
   function toggleSambal(sambal: string) {
     setMessage("");
-    setSelected((current) => {
-      if (current.includes(sambal)) return current.filter((item) => item !== sambal);
-      if (current.length >= SAMBALS.length) {
-        setMessage(isEnglish ? "All sambal types have been selected." : "Semua jenis sambal telah dipilih.");
-        return current;
+    if (sambal === NO_SAMBAL) {
+      setSelected([NO_SAMBAL]);
+      setSelectedExtraSambals([]);
+      return;
+    }
+    if (selected.includes(NO_SAMBAL)) {
+      setSelected([sambal]);
+      setSelectedExtraSambals([]);
+      return;
+    }
+    if (selected.includes(sambal)) {
+      if (selectedExtraSambals.includes(sambal)) {
+        setSelected((current) => current.filter((item) => item !== sambal));
+        setSelectedExtraSambals((current) => current.filter((item) => item !== sambal));
+        setMessage(isEnglish ? `${sambal} and its Extra Sambal were cancelled.` : `Pilihan ${sambal} dan Extra Sambal dibatalkan.`);
+      } else {
+        setSelectedExtraSambals((current) => [...current, sambal]);
+        setMessage(isEnglish ? `Extra ${sambal} added (+$0.50). Tap the same sambal once more to cancel this sambal choice.` : `Extra Sambal ${sambal} ditambah (+$0.50). Tekan sambal yang sama sekali lagi untuk membatalkan pilihan sambal ini.`);
       }
-      return [...current, sambal];
-    });
+      return;
+    }
+    if (selected.length >= SAMBALS.length) {
+      setMessage(isEnglish ? "All sambal types have been selected. Tap a selected sambal again for Extra Sambal." : "Semua jenis sambal sudah dipilih. Tekan sambal yang sudah dipilih sekali lagi untuk Extra Sambal.");
+      return;
+    }
+    setSelected((current) => [...current, sambal]);
+  }
+
+  function removeSelectedExtraSambal(index: number) {
+    setSelectedExtraSambals((current) => current.filter((_, i) => i !== index));
+    setMessage(isEnglish ? "Extra Sambal removed." : "Extra Sambal dibuang.");
+  }
+
+  function removeLineExtraSambal(lineId: number, extraIndex: number) {
+    setLines((current) => current.map((line) => line.id === lineId
+      ? { ...line, extraSambals: line.extraSambals.filter((_, i) => i !== extraIndex) }
+      : line));
+    setMessage(isEnglish ? "Extra Sambal removed from the selected order." : "Extra Sambal dibuang daripada pesanan dipilih.");
   }
 
   function addLine() {
@@ -134,9 +204,10 @@ export default function Home() {
     }
     setLines((current) => [
       ...current,
-      { id: Date.now(), sambals: [...selected], quantity },
+      { id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity },
     ]);
     setSelected([]);
+    setSelectedExtraSambals([]);
     setQuantity(1);
     setMessage(isEnglish ? "Order added." : "Pesanan ditambah.");
   }
@@ -155,8 +226,9 @@ export default function Home() {
         setMessage(isEnglish ? "Enter a quantity between 1 and 100." : "Masukkan kuantiti antara 1 hingga 100.");
         return;
       }
-      setLines([{ id: Date.now(), sambals: [...selected], quantity }]);
+      setLines([{ id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity }]);
       setSelected([]);
+      setSelectedExtraSambals([]);
     }
     setMessage("");
     setStage(next);
@@ -177,8 +249,8 @@ export default function Home() {
     }
     const orderLines = lines.map(
       (line, index) =>
-        `${index + 1}. ${line.sambals.join(" + ")} × ${line.quantity} — ${money(
-          line.quantity * pricePerPack(line.sambals)
+        `${index + 1}. ${displaySambals(line.sambals, line.extraSambals, isEnglish)} × ${line.quantity} — ${money(
+          line.quantity * pricePerPack(line.sambals, line.extraSambals)
         )}`
     );
     const addonLines = [
@@ -192,11 +264,8 @@ export default function Home() {
             )}`,
           ]
         : []),
-      ...(extraSambalEnabled
-        ? [`${isEnglish ? "Extra sambal" : "Sambal tambahan"} (${extraType}) — ${money(Number(extraPrice))}`]
-        : []),
     ];
-    const pickupDate = todaySelected ? bruneiToday : date;
+    const pickupDate = todaySelected ? (isEnglish ? "Today" : "Hari Ini") : date;
     const messageText = [
       "*NEW ORDER NASI KATOK 3 ABDUL*",
       "----------------------------------------",
@@ -328,7 +397,7 @@ export default function Home() {
         .nk3-qty button:last-child { border-radius: 0 9px 9px 0; }
         .nk3-qty span { text-align: center; border-top: 1px solid #d6d6cf; border-bottom: 1px solid #d6d6cf; min-height: 38px; display: grid; place-items: center; }
         .nk3-sambal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .nk3-addons-shortcut { min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
+        .nk3-addons-shortcut { grid-column: 1 / -1; justify-self: center; width: min(70%, 280px); min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
         .nk3-confirm-card { margin-top: 16px; overflow: hidden; border: 1px solid #d9d6c6; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px rgba(18,61,42,.08); }
         .nk3-confirm-title { margin: 0; padding: 14px 16px; background: #075537; color: #fff8e7; font-size: 20px; }
         .nk3-total-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f5f5ee; }
@@ -402,7 +471,14 @@ export default function Home() {
                   key={item.name}
                   className={`nk3-branch ${branch === item.name ? "selected" : ""}`}
                   aria-pressed={branch === item.name}
-                  onClick={() => setBranch(item.name)}
+                  onClick={() => {
+                    setBranch(item.name);
+                    setTime("");
+                    if (item.name === "Telisai" && todaySelected && bruneiWeekday === "Sun") {
+                      setTodaySelected(false);
+                      setDate(tomorrowDate);
+                    }
+                  }}
                 >
                   <Photo src={item.src} alt={tr(`Kedai Nasi Katok 3 Abdul ${item.name}`, `Nasi Katok 3 Abdul ${item.name} branch`)} className="nk3-branch-photo" />
                   <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>
@@ -432,9 +508,6 @@ export default function Home() {
               <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>{tr("PILIH WAKTU AMBIL YANG TERSEDIA", "SELECT AN AVAILABLE PICKUP TIME")}</div>
               <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => <option key={slot}>{slot}</option>)}</select></label>
             </div>
-            <div style={{ marginTop:12, marginBottom:0, padding:"16px 14px", border:"1px solid #e4c64d", borderRadius:18, background:"#fff8df", color:"#174d38", display:"flex", alignItems:"center", gap:14, lineHeight:1.55 }}>
-              <span style={{fontSize:36,flexShrink:0}}>🕒</span><span>{tr("Waktu ambil: 10:00 pagi – 5:00 petang.", "Pickup time: 10:00 AM – 5:00 PM.")}<br/>{tr("Tempahan perlu dibuat sekurang-kurangnya 30 minit lebih awal.", "Orders must be placed at least 30 minutes in advance.")}</span>
-            </div>
           </section>
 
 
@@ -451,17 +524,28 @@ export default function Home() {
               <div className="nk3-sambal-grid">
                 {SAMBALS.map((sambal) => {
                   const isSelected = selected.includes(sambal);
+                  const extraCount = selectedExtraSambals.filter((item) => item === sambal).length;
                   const isUnavailable = sambal === "Lada Padi";
                   return (
                     <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
                       style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
-                      {isSelected ? "✓ " : ""}{sambal}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
+                      {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra $0.50 ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra $0.50 ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
                     </button>
                   );
                 })}
+                <button type="button" aria-pressed={selected.includes(NO_SAMBAL)}
+                  onClick={() => toggleSambal(NO_SAMBAL)}
+                  style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
+                  {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Tanpa Sambal", "No Sambal")}
+                </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
+              </div>
+              <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.5 }}>
+                <strong>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
+                <div>{tr("Tekan 1 kali untuk pilih sambal. Tekan kali ke-2 untuk Extra Sambal (+$0.50). Tekan kali ke-3 untuk batalkan pilihan sambal itu bersama Extra Sambal.", "Tap once to choose a sambal. Tap a 2nd time for Extra Sambal (+$0.50). Tap a 3rd time to cancel that sambal choice and its Extra Sambal.")}</div>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
@@ -472,23 +556,36 @@ export default function Home() {
                 <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ {tr("Tambah", "Add")}</button>
               </div>
 
+              {selectedExtraSambals.length > 0 && (
+                <div style={{ marginTop: 12, padding: 12, border: "1px solid #e6c85c", borderRadius: 10, background: "#fffaf0" }}>
+                  <strong>{tr("Extra Sambal dipilih", "Selected Extra Sambal")}</strong>
+                  {selectedExtraSambals.map((extra, index) => (
+                    <div key={`${extra}-${index}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8 }}>
+                      <span>{extra} — $0.50</span>
+                      <button type="button" onClick={() => removeSelectedExtraSambal(index)} style={{ ...buttonStyle, padding: "6px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff" }}>{tr("Buang Extra Sambal", "Remove Extra Sambal")}</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="nk3-total-box">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected))}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected, selectedExtraSambals))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected, selectedExtraSambals))}</strong></div>
               </div>
 
               <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
                 <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>{tr("Pesanan dipilih", "Selected order")}</h3>
                 {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>{tr("Belum ada pesanan.", "No items added yet.")}</p> : lines.map((line, index) => (
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
-                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity}</span>
-                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
-                    <button type="button" aria-label={tr("Hapus pesanan", "Remove order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
+                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity}</span>
+                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</strong>
+                    <button type="button" aria-label={tr("Hapus seluruh pesanan", "Delete entire order")} title={tr("Hapus seluruh pilihan pesanan", "Delete entire selected order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ ...buttonStyle, padding: "7px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto", fontSize: 12 }}>{tr("Hapus", "Delete")}</button>
+                    {line.extraSambals.length > 0 && <button type="button" onClick={() => removeLineExtraSambal(line.id, line.extraSambals.length - 1)} style={{ ...buttonStyle, padding: "6px 8px", fontSize: 11, color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto" }}>{tr("Buang Extra", "Remove Extra")}</button>}
                   </div>
                 ))}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
               </div>
-              {message && <p role="status" style={{ marginBottom: 0, color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b" }}>{message}</p>}
+              
             </section>
           )}
         </div>
@@ -530,21 +627,6 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="nk3-addon">
-                <Photo src={imagePaths.sambal} alt={tr("Sambal tambahan", "Extra sambal")} className="nk3-addon-photo" />
-                <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{extraSambalEnabled ? money(Number(extraPrice)) : tr("Pilihan", "Optional")}</strong></div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
-                    <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> {tr("Tambah sambal", "Add sambal")}
-                  </label>
-                  <select aria-label={tr("Jenis sambal tambahan", "Extra sambal type")} style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
-                    {SAMBALS.map((item) => <option key={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? tr("Lada Padi (Tidak tersedia sementara)", "Lada Padi (Temporarily unavailable)") : item}</option>)}
-                  </select>
-                  <select aria-label={tr("Harga sambal tambahan", "Extra sambal price")} style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
-                    {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
-                  </select>
-                </div>
-              </div>
 
               <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                 <strong>{tr("Jumlah Add On's", "Add-ons total")}</strong><strong>{money(addonTotal)}</strong>
@@ -555,7 +637,6 @@ export default function Home() {
                   onClick={() => {
                     setChickenQuantity(0);
                     setRiceQuantity(0);
-                    setExtraSambalEnabled(false);
                     setStage("review");
                   }}
                   style={{ ...buttonStyle, width: "100%", padding: "12px 8px" }}
@@ -582,13 +663,12 @@ export default function Home() {
               <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
               <p><strong>{tr(isEnglish ? "Pickup time:" : "Waktu ambil:", "Pickup time:")}</strong> {time}</p>
               <h3>{tr("Pesanan", "Order")}</h3>
-              {lines.map((line, index) => <p key={line.id}>{index + 1}. {line.sambals.join(" + ")} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
+              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</p>)}
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Subtotal", "Subtotal")}</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
                 <strong>{tr("Add On's", "Add-ons")}</strong>
                 {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Ayam Goreng", "Fried chicken")} × {chickenQuantity} — {money(chickenQuantity)}</p>}
                 {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Nasi Putih", "Plain rice")} × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
-                {extraSambalEnabled && <p style={{ margin: "5px 0" }}>Extra Sambal ({extraType}) — {money(Number(extraPrice))}</p>}
                 {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
               <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>{tr("Jumlah", "Total")}</span><span>{money(total)}</span></h2>
@@ -599,6 +679,8 @@ export default function Home() {
 
         </div>
       </div>
+
+      {message && <div role="status" style={{ width: "100%", boxSizing: "border-box", marginTop: 16, marginBottom: 0, padding: "12px 16px", borderRadius: 12, border: `1px solid ${(message === "Pesanan ditambah." || message === "Order added.") ? "#8cc9a5" : "#d9a39a"}`, background: (message === "Pesanan ditambah." || message === "Order added.") ? "#eaf7ee" : "#fff0ed", color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b", fontWeight: 600, lineHeight: 1.45 }}>{message}</div>}
 
       <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
           <h2 className="nk3-confirm-title"><span aria-hidden="true" style={{ display: "inline-grid", placeItems: "center", width: 42, height: 42, borderRadius: "50%", background: "#e8bd3e", color: "#063c28", fontFamily: "Arial, sans-serif", fontSize: 27, flex: "0 0 auto" }}>✓</span><span>{tr("Sahkan Pesanan", "Confirm Order")}</span></h2>
