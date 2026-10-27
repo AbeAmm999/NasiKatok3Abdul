@@ -138,14 +138,11 @@ export default function Home() {
     });
     const hours = operatingHours[selectedWeekday] ?? null;
     const nowMinutes = bruneiHourMinute;
-    // Same-day pickup needs at least 30 minutes' notice, then round UP to the next half-hour slot.
-    // Examples: 10:45 -> 11:30; 11:01 -> 12:00; 11:30 -> 12:00.
-    const earliestTodaySlot = Math.ceil((nowMinutes + 30) / 30) * 30;
-    const isSameDayOrder = todaySelected && selectedDate === bruneiToday;
     const slots: string[] = [];
     if (!hours) return slots;
     for (let mins = hours.open; mins <= hours.close; mins += 30) {
-      if (isSameDayOrder && mins < earliestTodaySlot) continue;
+      // For today's orders, show only pickup slots strictly later than the current Brunei time.
+      if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -158,8 +155,14 @@ export default function Home() {
   function toggleSambal(sambal: string) {
     setMessage("");
     if (sambal === NO_SAMBAL) {
-      setSelected([NO_SAMBAL]);
-      setSelectedExtraSambals([]);
+      // No Sambal is a normal toggle: tap once to select, tap again to cancel.
+      if (selected.includes(NO_SAMBAL)) {
+        setSelected([]);
+        setSelectedExtraSambals([]);
+      } else {
+        setSelected([NO_SAMBAL]);
+        setSelectedExtraSambals([]);
+      }
       return;
     }
     if (selected.includes(NO_SAMBAL)) {
@@ -546,12 +549,19 @@ export default function Home() {
                   onClick={() => toggleSambal(NO_SAMBAL)}
                   style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
                   {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Tanpa Sambal", "No Sambal")}
+                  <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>
+                    {selected.includes(NO_SAMBAL) ? tr("Tekan sekali lagi untuk batal", "Tap again to cancel") : tr("Tekan 1 kali untuk pilih", "Tap once to select")}
+                  </span>
                 </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
-              <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.5 }}>
-                <strong>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
-                <div>{tr("Tekan 1 kali untuk pilih sambal. Tekan kali ke-2 untuk Extra Sambal (+$0.50). Tekan kali ke-3 untuk batalkan pilihan sambal itu bersama Extra Sambal.", "Tap once to choose a sambal. Tap a 2nd time for Extra Sambal (+$0.50). Tap a 3rd time to cancel that sambal choice and its Extra Sambal.")}</div>
+              <div style={{ marginTop: 10, padding: 14, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.55 }}>
+                <strong style={{ display: "block", marginBottom: 6 }}>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
+                <ul style={{ margin: 0, paddingLeft: 19 }}>
+                  <li>{tr("Tekan 1 kali untuk memilih sambal.", "Tap once to choose a sambal.")}</li>
+                  <li>{tr("Tekan kali ke-2 untuk Extra Sambal (+$0.50).", "Tap a 2nd time for Extra Sambal (+$0.50).")}</li>
+                  <li>{tr("Tekan kali ke-3 untuk membatalkan sambal itu dan Extra Sambalnya. Kemudian, ulangi pilihan jika perlu.", "Tap a 3rd time to cancel that sambal and its Extra Sambal. Then choose again if needed.")}</li>
+                </ul>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
