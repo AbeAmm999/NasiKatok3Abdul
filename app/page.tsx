@@ -532,7 +532,7 @@ export default function Home() {
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
                       style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
                       {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
-                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("Extra +$0.50 · Tekan lagi untuk batalkan pilihan ini", "Extra +$0.50 · Tap again to cancel this sambal choice") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra $0.50 ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra $0.50 ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
                     </button>
                   );
                 })}
@@ -545,7 +545,7 @@ export default function Home() {
               </div>
               <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.5 }}>
                 <strong>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
-                <div>{tr("Tekan 1 kali untuk pilih sambal. Tekan kali ke-2 untuk Extra Sambal (+$0.50). Tekan kali ke-3 untuk membatalkan pilihan sambal itu bersama Extra Sambal.", "Tap once to choose a sambal. Tap a 2nd time for Extra Sambal (+$0.50). Tap a 3rd time to cancel that sambal choice and its Extra Sambal.")}</div>
+                <div>{tr("Tekan 1 kali untuk pilih sambal. Tekan kali ke-2 untuk Extra Sambal (+$0.50). Tekan kali ke-3 untuk batalkan pilihan sambal itu bersama Extra Sambal.", "Tap once to choose a sambal. Tap a 2nd time for Extra Sambal (+$0.50). Tap a 3rd time to cancel that sambal choice and its Extra Sambal.")}</div>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
