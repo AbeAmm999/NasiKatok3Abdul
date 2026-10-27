@@ -14,22 +14,25 @@ const SAMBALS = [
   "Lada Padi",
 ];
 
-type OrderLine = { id: number; sambals: string[]; quantity: number };
+type OrderLine = { id: number; sambals: string[]; extraSambals: string[]; quantity: number };
 
 function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-function displaySambals(sambals: string[], isEnglish: boolean) {
-  if (sambals.includes(NO_SAMBAL)) return isEnglish ? "No sambal" : "Kosong (Tanpa sambal)";
-  return sambals.join(" + ");
+function displaySambals(sambals: string[], extraSambals: string[], isEnglish: boolean) {
+  if (sambals.includes(NO_SAMBAL)) return isEnglish ? "No sambal" : "Nasi Katok Tanpa Sambal";
+  const main = sambals.join(" + ");
+  if (extraSambals.length === 0) return main;
+  const extras = extraSambals.map((item) => item).join(", ");
+  return `${main} (${isEnglish ? "Extra Sambal" : "Extra Sambal"} ${extras})`;
 }
 
-function pricePerPack(sambals: string[]) {
+function pricePerPack(sambals: string[], extraSambals: string[] = []) {
   if (sambals.includes(NO_SAMBAL)) return 1;
-  const count = sambals.length;
-  if (count <= 2) return 1;
-  return 1 + (count - 2) * 0.5;
+  const mainCount = sambals.length;
+  const mainPrice = 1 + Math.max(0, mainCount - 2) * 0.5;
+  return mainPrice + extraSambals.length * 0.5;
 }
 
 const imagePaths = {
@@ -106,6 +109,7 @@ export default function Home() {
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [selectedExtraSambals, setSelectedExtraSambals] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [stage, setStage] = useState<"order" | "addons" | "review" | "done">("order");
@@ -113,18 +117,16 @@ export default function Home() {
   const [chickenQuantity, setChickenQuantity] = useState(0);
   const [riceQuantity, setRiceQuantity] = useState(0);
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
-  const [extraType, setExtraType] = useState("Tahai Biasa");
-  const [extraPrice, setExtraPrice] = useState("0.50");
-  const [extraSambalEnabled, setExtraSambalEnabled] = useState(false);
+
 
   const subtotal = useMemo(
-    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals), 0),
+    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals, line.extraSambals), 0),
     [lines]
   );
   const addonTotal =
     chickenQuantity +
     riceQuantity * Number(riceUnitPrice) +
-    (extraSambalEnabled ? Number(extraPrice) : 0);
+    0;
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
@@ -151,16 +153,26 @@ export default function Home() {
 
   function toggleSambal(sambal: string) {
     setMessage("");
-    setSelected((current) => {
-      if (current.includes(sambal)) return current.filter((item) => item !== sambal);
-      if (sambal === NO_SAMBAL) return [NO_SAMBAL];
-      if (current.includes(NO_SAMBAL)) current = [];
-      if (current.length >= SAMBALS.length) {
-        setMessage(isEnglish ? "All sambal types have been selected." : "Semua jenis sambal telah dipilih.");
-        return current;
-      }
-      return [...current, sambal];
-    });
+    if (sambal === NO_SAMBAL) {
+      setSelected([NO_SAMBAL]);
+      setSelectedExtraSambals([]);
+      return;
+    }
+    if (selected.includes(NO_SAMBAL)) {
+      setSelected([sambal]);
+      setSelectedExtraSambals([]);
+      return;
+    }
+    if (selected.includes(sambal)) {
+      setSelectedExtraSambals((current) => [...current, sambal]);
+      setMessage(isEnglish ? `Extra ${sambal} added (+$0.50). Tap again to add another.` : `Extra Sambal ${sambal} ditambah (+$0.50). Tekan lagi untuk tambah satu lagi.`);
+      return;
+    }
+    if (selected.length >= SAMBALS.length) {
+      setMessage(isEnglish ? "All sambal types have been selected. Tap a selected sambal again for Extra Sambal." : "Semua jenis sambal sudah dipilih. Tekan sambal yang sudah dipilih sekali lagi untuk Extra Sambal.");
+      return;
+    }
+    setSelected((current) => [...current, sambal]);
   }
 
   function addLine() {
@@ -174,9 +186,10 @@ export default function Home() {
     }
     setLines((current) => [
       ...current,
-      { id: Date.now(), sambals: [...selected], quantity },
+      { id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity },
     ]);
     setSelected([]);
+    setSelectedExtraSambals([]);
     setQuantity(1);
     setMessage(isEnglish ? "Order added." : "Pesanan ditambah.");
   }
@@ -195,8 +208,9 @@ export default function Home() {
         setMessage(isEnglish ? "Enter a quantity between 1 and 100." : "Masukkan kuantiti antara 1 hingga 100.");
         return;
       }
-      setLines([{ id: Date.now(), sambals: [...selected], quantity }]);
+      setLines([{ id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity }]);
       setSelected([]);
+      setSelectedExtraSambals([]);
     }
     setMessage("");
     setStage(next);
@@ -217,8 +231,8 @@ export default function Home() {
     }
     const orderLines = lines.map(
       (line, index) =>
-        `${index + 1}. ${displaySambals(line.sambals, isEnglish)} × ${line.quantity} — ${money(
-          line.quantity * pricePerPack(line.sambals)
+        `${index + 1}. ${displaySambals(line.sambals, line.extraSambals, isEnglish)} × ${line.quantity} — ${money(
+          line.quantity * pricePerPack(line.sambals, line.extraSambals)
         )}`
     );
     const addonLines = [
@@ -231,9 +245,6 @@ export default function Home() {
               riceQuantity * Number(riceUnitPrice)
             )}`,
           ]
-        : []),
-      ...(extraSambalEnabled
-        ? [`${isEnglish ? "Extra sambal" : "Sambal tambahan"} (${extraType}) — ${money(Number(extraPrice))}`]
         : []),
     ];
     const pickupDate = todaySelected ? (isEnglish ? "Today" : "Hari Ini") : date;
@@ -495,22 +506,28 @@ export default function Home() {
               <div className="nk3-sambal-grid">
                 {SAMBALS.map((sambal) => {
                   const isSelected = selected.includes(sambal);
+                  const extraCount = selectedExtraSambals.filter((item) => item === sambal).length;
                   const isUnavailable = sambal === "Lada Padi";
                   return (
                     <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
                       style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
-                      {isSelected ? "✓ " : ""}{sambal}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
+                      {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
                     </button>
                   );
                 })}
                 <button type="button" aria-pressed={selected.includes(NO_SAMBAL)}
                   onClick={() => toggleSambal(NO_SAMBAL)}
                   style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
-                  {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Kosong (Tanpa sambal)", "No sambal")}
+                  {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Tanpa Sambal", "No Sambal")}
                 </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
+              </div>
+              <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.5 }}>
+                <strong>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
+                <div>{tr("Tekan sekali untuk sambal biasa. Tekan sambal yang sama sekali lagi untuk Extra Sambal (+$0.50 setiap tambahan).", "Tap once to choose a main sambal. Tap the same sambal again for Extra Sambal (+$0.50 each).")}</div>
               </div>
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
@@ -522,16 +539,16 @@ export default function Home() {
               </div>
 
               <div className="nk3-total-box">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected))}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected, selectedExtraSambals))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected, selectedExtraSambals))}</strong></div>
               </div>
 
               <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
                 <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>{tr("Pesanan dipilih", "Selected order")}</h3>
                 {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>{tr("Belum ada pesanan.", "No items added yet.")}</p> : lines.map((line, index) => (
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
-                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, isEnglish)} × {line.quantity}</span>
-                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals))}</strong>
+                    <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity}</span>
+                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</strong>
                     <button type="button" aria-label={tr("Hapus pesanan", "Remove order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ border: 0, background: "transparent", color: "#a33a32", fontSize: 18, cursor: "pointer" }}>🗑</button>
                   </div>
                 ))}
@@ -579,21 +596,6 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="nk3-addon">
-                <Photo src={imagePaths.sambal} alt={tr("Sambal tambahan", "Extra sambal")} className="nk3-addon-photo" />
-                <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{extraSambalEnabled ? money(Number(extraPrice)) : tr("Pilihan", "Optional")}</strong></div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
-                    <input type="checkbox" checked={extraSambalEnabled} onChange={(e) => setExtraSambalEnabled(e.target.checked)} /> {tr("Tambah sambal", "Add sambal")}
-                  </label>
-                  <select aria-label={tr("Jenis sambal tambahan", "Extra sambal type")} style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7 }} value={extraType} onChange={(e) => setExtraType(e.target.value)}>
-                    {SAMBALS.map((item) => <option key={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? tr("Lada Padi (Tidak tersedia sementara)", "Lada Padi (Temporarily unavailable)") : item}</option>)}
-                  </select>
-                  <select aria-label={tr("Harga sambal tambahan", "Extra sambal price")} style={{ ...inputStyle, padding: "8px", fontSize: 14 }} value={extraPrice} onChange={(e) => setExtraPrice(e.target.value)}>
-                    {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
-                  </select>
-                </div>
-              </div>
 
               <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                 <strong>{tr("Jumlah Add On's", "Add-ons total")}</strong><strong>{money(addonTotal)}</strong>
@@ -604,7 +606,6 @@ export default function Home() {
                   onClick={() => {
                     setChickenQuantity(0);
                     setRiceQuantity(0);
-                    setExtraSambalEnabled(false);
                     setStage("review");
                   }}
                   style={{ ...buttonStyle, width: "100%", padding: "12px 8px" }}
@@ -631,13 +632,12 @@ export default function Home() {
               <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
               <p><strong>{tr(isEnglish ? "Pickup time:" : "Waktu ambil:", "Pickup time:")}</strong> {time}</p>
               <h3>{tr("Pesanan", "Order")}</h3>
-              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, isEnglish)} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals))}</p>)}
+              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</p>)}
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Subtotal", "Subtotal")}</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
                 <strong>{tr("Add On's", "Add-ons")}</strong>
                 {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Ayam Goreng", "Fried chicken")} × {chickenQuantity} — {money(chickenQuantity)}</p>}
                 {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Nasi Putih", "Plain rice")} × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
-                {extraSambalEnabled && <p style={{ margin: "5px 0" }}>Extra Sambal ({extraType}) — {money(Number(extraPrice))}</p>}
                 {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
               <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>{tr("Jumlah", "Total")}</span><span>{money(total)}</span></h2>
