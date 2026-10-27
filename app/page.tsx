@@ -585,7 +585,7 @@ export default function Home() {
                 ))}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
               </div>
-              {message && <p role="status" style={{ marginBottom: 0, color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b" }}>{message}</p>}
+              
             </section>
           )}
         </div>
@@ -679,6 +679,8 @@ export default function Home() {
 
         </div>
       </div>
+
+      {message && <div role="status" style={{ width: "100%", boxSizing: "border-box", marginTop: 16, marginBottom: 0, padding: "12px 16px", borderRadius: 12, border: `1px solid ${(message === "Pesanan ditambah." || message === "Order added.") ? "#8cc9a5" : "#d9a39a"}`, background: (message === "Pesanan ditambah." || message === "Order added.") ? "#eaf7ee" : "#fff0ed", color: (message === "Pesanan ditambah." || message === "Order added.") ? "#087447" : "#a33b2b", fontWeight: 600, lineHeight: 1.45 }}>{message}</div>}
 
       <section className="nk3-confirm-card" style={{ width: "100%", marginTop: 16 }}>
           <h2 className="nk3-confirm-title"><span aria-hidden="true" style={{ display: "inline-grid", placeItems: "center", width: 42, height: 42, borderRadius: "50%", background: "#e8bd3e", color: "#063c28", fontFamily: "Arial, sans-serif", fontSize: 27, flex: "0 0 auto" }}>✓</span><span>{tr("Sahkan Pesanan", "Confirm Order")}</span></h2>
