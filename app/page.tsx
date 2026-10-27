@@ -174,15 +174,12 @@ export default function Home() {
       if (selectedExtraSambals.includes(sambal)) {
         setSelected((current) => current.filter((item) => item !== sambal));
         setSelectedExtraSambals((current) => current.filter((item) => item !== sambal));
-        setMessage(isEnglish ? `${sambal} and its Extra Sambal were cancelled.` : `Pilihan ${sambal} dan Extra Sambal dibatalkan.`);
       } else {
         setSelectedExtraSambals((current) => [...current, sambal]);
-        setMessage(isEnglish ? `Extra ${sambal} added (+$0.50). Tap the same sambal once more to cancel this sambal choice.` : `Extra Sambal ${sambal} ditambah (+$0.50). Tekan sambal yang sama sekali lagi untuk membatalkan pilihan sambal ini.`);
       }
       return;
     }
     if (selected.length >= SAMBALS.length) {
-      setMessage(isEnglish ? "All sambal types have been selected. Tap a selected sambal again for Extra Sambal." : "Semua jenis sambal sudah dipilih. Tekan sambal yang sudah dipilih sekali lagi untuk Extra Sambal.");
       return;
     }
     setSelected((current) => [...current, sambal]);
@@ -190,14 +187,12 @@ export default function Home() {
 
   function removeSelectedExtraSambal(index: number) {
     setSelectedExtraSambals((current) => current.filter((_, i) => i !== index));
-    setMessage(isEnglish ? "Extra Sambal removed." : "Extra Sambal dibuang.");
   }
 
   function removeLineExtraSambal(lineId: number, extraIndex: number) {
     setLines((current) => current.map((line) => line.id === lineId
       ? { ...line, extraSambals: line.extraSambals.filter((_, i) => i !== extraIndex) }
       : line));
-    setMessage(isEnglish ? "Extra Sambal removed from the selected order." : "Extra Sambal dibuang daripada pesanan dipilih.");
   }
 
   function addLine() {
@@ -549,9 +544,6 @@ export default function Home() {
                   onClick={() => toggleSambal(NO_SAMBAL)}
                   style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
                   {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Tanpa Sambal", "No Sambal")}
-                  <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>
-                    {selected.includes(NO_SAMBAL) ? tr("Tekan sekali lagi untuk batal", "Tap again to cancel") : tr("Tekan 1 kali untuk pilih", "Tap once to select")}
-                  </span>
                 </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
