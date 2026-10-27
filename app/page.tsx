@@ -118,7 +118,9 @@ export default function Home() {
   const [chickenQuantity, setChickenQuantity] = useState(0);
   const [riceQuantity, setRiceQuantity] = useState(0);
   const [riceUnitPrice, setRiceUnitPrice] = useState("0.50");
-
+  const [addonSambalEnabled, setAddonSambalEnabled] = useState(false);
+  const [addonSambalType, setAddonSambalType] = useState("Tahai Biasa");
+  const [addonSambalPrice, setAddonSambalPrice] = useState("0.50");
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals, line.extraSambals), 0),
@@ -127,7 +129,7 @@ export default function Home() {
   const addonTotal =
     chickenQuantity +
     riceQuantity * Number(riceUnitPrice) +
-    0;
+    (addonSambalEnabled ? Number(addonSambalPrice) : 0);
   const total = subtotal + addonTotal;
 
   const timeSlots = useMemo(() => {
@@ -267,6 +269,9 @@ export default function Home() {
               riceQuantity * Number(riceUnitPrice)
             )}`,
           ]
+        : []),
+      ...(addonSambalEnabled
+        ? [`${isEnglish ? "Extra Sambal (separate, not mixed into the nasi katok)" : "Extra Sambal (asing, tidak dicampur pada nasi katok)"} — ${addonSambalType} — ${money(Number(addonSambalPrice))}`]
         : []),
     ];
     const pickupDate = todaySelected ? (isEnglish ? "Today" : "Hari Ini") : date;
@@ -636,6 +641,22 @@ export default function Home() {
               </div>
 
 
+              <div className="nk3-addon">
+                <Photo src={imagePaths.sambal} alt={tr("Sambal tambahan berasingan", "Separate extra sambal") } className="nk3-addon-photo" />
+                <div className="nk3-addon-content">
+                  <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{addonSambalEnabled ? money(Number(addonSambalPrice)) : tr("Pilihan", "Optional")}</strong></div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
+                    <input type="checkbox" checked={addonSambalEnabled} onChange={(e) => setAddonSambalEnabled(e.target.checked)} /> {tr("Tambah sambal berasingan", "Add sambal separately")}
+                  </label>
+                  <select aria-label={tr("Jenis Add On sambal", "Add-on sambal type")} style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7, width: "100%" }} value={addonSambalType} onChange={(e) => setAddonSambalType(e.target.value)}>
+                    {SAMBALS.map((item) => <option key={item} value={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? tr("Lada Padi (Tidak tersedia)", "Lada Padi (Unavailable)") : item}</option>)}
+                  </select>
+                  <select aria-label={tr("Harga Add On sambal", "Add-on sambal price")} style={{ ...inputStyle, padding: "8px", fontSize: 14, width: "100%" }} value={addonSambalPrice} onChange={(e) => setAddonSambalPrice(e.target.value)}>
+                    {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
+                  </select>
+                </div>
+              </div>
+
               <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                 <strong>{tr("Jumlah Add On's", "Add-ons total")}</strong><strong>{money(addonTotal)}</strong>
               </div>
@@ -645,6 +666,7 @@ export default function Home() {
                   onClick={() => {
                     setChickenQuantity(0);
                     setRiceQuantity(0);
+                    setAddonSambalEnabled(false);
                     setStage("review");
                   }}
                   style={{ ...buttonStyle, width: "100%", padding: "12px 8px" }}
@@ -677,6 +699,7 @@ export default function Home() {
                 <strong>{tr("Add On's", "Add-ons")}</strong>
                 {chickenQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Ayam Goreng", "Fried chicken")} × {chickenQuantity} — {money(chickenQuantity)}</p>}
                 {riceQuantity > 0 && <p style={{ margin: "5px 0" }}>{tr("Nasi Putih", "Plain rice")} × {riceQuantity} — {money(riceQuantity * Number(riceUnitPrice))}</p>}
+                {addonSambalEnabled && <p style={{ margin: "5px 0" }}>{tr("Extra Sambal berasingan", "Separate Extra Sambal")} ({addonSambalType}) — {money(Number(addonSambalPrice))}</p>}
                 {addonTotal === 0 && <p style={{ color: "#68756d" }}>{tr("Tiada Add On.", "No add-ons.")}</p>}
               </div>
               <h2 style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}><span>{tr("Jumlah", "Total")}</span><span>{money(total)}</span></h2>
