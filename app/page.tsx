@@ -217,7 +217,18 @@ export default function Home() {
   }
 
   function continueTo(next: "addons" | "review") {
-    if (!name.trim() || !time || !date) {
+    // Add On's must remain accessible even before customer details or pickup time are completed.
+    if (next === "addons") {
+      if (lines.length === 0 && selected.length > 0 && Number.isInteger(quantity) && quantity >= 1 && quantity <= 100) {
+        setLines([{ id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity }]);
+        setSelected([]);
+        setSelectedExtraSambals([]);
+      }
+      setMessage("");
+      setStage("addons");
+      return;
+    }
+    if (!name.trim() || !time || (!todaySelected && !date)) {
       setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
       return;
     }
