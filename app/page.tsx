@@ -138,11 +138,14 @@ export default function Home() {
     });
     const hours = operatingHours[selectedWeekday] ?? null;
     const nowMinutes = bruneiHourMinute;
+    // Same-day pickup needs at least 30 minutes' notice, then round UP to the next half-hour slot.
+    // Examples: 10:45 -> 11:30; 11:01 -> 12:00; 11:30 -> 12:00.
+    const earliestTodaySlot = Math.ceil((nowMinutes + 30) / 30) * 30;
+    const isSameDayOrder = todaySelected && selectedDate === bruneiToday;
     const slots: string[] = [];
     if (!hours) return slots;
     for (let mins = hours.open; mins <= hours.close; mins += 30) {
-      // For today's orders, show only pickup slots strictly later than the current Brunei time.
-      if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
+      if (isSameDayOrder && mins < earliestTodaySlot) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
