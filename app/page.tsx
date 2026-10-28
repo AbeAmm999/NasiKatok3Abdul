@@ -577,7 +577,7 @@ export default function Home() {
                 <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity <= 1} onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</button>
                 <input style={{ ...inputStyle, textAlign: "center" }} type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
                 <button type="button" style={{ ...buttonStyle, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
-                <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>＋ {tr("Tambah", "Add")}</button>
+                <button type="button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>🛒 {tr("Tambah ke Troli", "Add to Cart")}</button>
               </div>
 
               {selectedExtraSambals.length > 0 && (
