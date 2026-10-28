@@ -541,6 +541,14 @@ export default function Home() {
                   <li>{tr("3 jenis sambal atau lebih: caj tambahan $0.50 bagi setiap jenis sambal selepas 2 pilihan.", "3 or more sambal types: an extra $0.50 is charged for each type after the first 2.")}</li>
                 </ul>
               </div>
+              <div style={{ marginTop: 10, padding: 14, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.55 }}>
+                <strong style={{ display: "block", marginBottom: 6 }}>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
+                <ul style={{ margin: 0, paddingLeft: 19 }}>
+                  <li>{tr("Tekan 1 kali untuk memilih sambal.", "Tap once to choose a sambal.")}</li>
+                  <li>{tr("Tekan kali ke-2 untuk Extra Sambal (+$0.50).", "Tap a 2nd time for Extra Sambal (+$0.50).")}</li>
+                  <li>{tr("Tekan kali ke-3 untuk membatalkan sambal itu dan Extra Sambalnya. Kemudian, ulangi pilihan jika perlu.", "Tap a 3rd time to cancel that sambal and its Extra Sambal. Then choose again if needed.")}</li>
+                </ul>
+              </div>
               <div className="nk3-sambal-grid">
                 {SAMBALS.map((sambal) => {
                   const isSelected = selected.includes(sambal);
@@ -563,14 +571,7 @@ export default function Home() {
                 </button>
                 <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
-              <div style={{ marginTop: 10, padding: 14, borderRadius: 10, background: "#fff7d6", border: "1px solid #e6c85c", color: "#4d4218", fontSize: 13, lineHeight: 1.55 }}>
-                <strong style={{ display: "block", marginBottom: 6 }}>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
-                <ul style={{ margin: 0, paddingLeft: 19 }}>
-                  <li>{tr("Tekan 1 kali untuk memilih sambal.", "Tap once to choose a sambal.")}</li>
-                  <li>{tr("Tekan kali ke-2 untuk Extra Sambal (+$0.50).", "Tap a 2nd time for Extra Sambal (+$0.50).")}</li>
-                  <li>{tr("Tekan kali ke-3 untuk membatalkan sambal itu dan Extra Sambalnya. Kemudian, ulangi pilihan jika perlu.", "Tap a 3rd time to cancel that sambal and its Extra Sambal. Then choose again if needed.")}</li>
-                </ul>
-              </div>
+
 
               <label style={{ display: "block", fontWeight: 700, margin: "18px 0 8px" }}>{tr("Kuantiti bungkus", "Pack quantity")}</label>
               <div style={{ display: "grid", gridTemplateColumns: "48px minmax(0, 1fr) 48px auto", gap: 8, alignItems: "center" }}>
