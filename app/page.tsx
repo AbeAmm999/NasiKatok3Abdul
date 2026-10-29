@@ -72,6 +72,7 @@ export default function Home() {
   const tr = (bm: string, en: string) => isEnglish ? en : bm;
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
+  const [specialNotes, setSpecialNotes] = useState("");
   const [showPickupValidation, setShowPickupValidation] = useState(false);
   const bruneiToday = (() => { const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00"; return `${get("year")}-${get("month")}-${get("day")}`; })();
   const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
@@ -302,6 +303,7 @@ export default function Home() {
       ...orderLines.map((line) => `- *${line}*`),
       "",
       `*Subtotal: ${money(subtotal)}*`,
+      ...(specialNotes.trim() ? ["", `*${isEnglish ? "Special Notes" : "Catatan Khas"}:*`, specialNotes.trim()] : []),
       ...(addonLines.filter(Boolean).length > 0
         ? [
             "",
@@ -619,6 +621,17 @@ export default function Home() {
                   </div>
                 ))}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}><strong>{tr("Subtotal", "Subtotal")}</strong><strong>{money(subtotal)}</strong></div>
+                <div style={{ marginTop: 14 }}>
+                  <label htmlFor="nk3-special-notes" style={{ display: "block", fontWeight: 700, marginBottom: 7, color: "#123d2a" }}>{tr("Special Notes (Pilihan)", "Special Notes (Optional)")}</label>
+                  <textarea
+                    id="nk3-special-notes"
+                    value={specialNotes}
+                    onChange={(event) => setSpecialNotes(event.target.value)}
+                    placeholder={tr("Tulis permintaan khas di sini...", "Write any special requests here...")}
+                    rows={3}
+                    style={{ ...inputStyle, minHeight: 84, resize: "vertical", fontWeight: 400, lineHeight: 1.45 }}
+                  />
+                </div>
               </div>
               
             </section>
