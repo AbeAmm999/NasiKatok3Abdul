@@ -581,7 +581,6 @@ export default function Home() {
                   style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: selected.includes(NO_SAMBAL) ? "2px solid #c9a441" : "1px solid #d8d8d2", background: selected.includes(NO_SAMBAL) ? "#075537" : "#fff", color: selected.includes(NO_SAMBAL) ? "#fff8e7" : "#123d2a", fontWeight: 700, overflowWrap: "anywhere" }}>
                   {selected.includes(NO_SAMBAL) ? "✓ " : ""}{tr("Tanpa Sambal", "No Sambal")}
                 </button>
-                <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
               </div>
 
 
@@ -592,6 +591,7 @@ export default function Home() {
                 <button type="button" className="nk3-quantity-step" style={{ ...buttonStyle, padding: 8 }} disabled={quantity >= 100} onClick={() => setQuantity((q) => Math.min(100, q + 1))}>+</button>
                 <button type="button" className="nk3-cart-button" onClick={addLine} style={{ ...buttonStyle, padding: "12px 16px", background: "#075537", color: "#fff8e7", borderColor: "#c9a441" }}>🛒 {tr("Tambah ke Troli", "Add to Cart")}</button>
               </div>
+              <button type="button" className="nk3-addons-shortcut" onClick={() => continueTo("addons")}>＋ Add On's</button>
 
               {selectedExtraSambals.length > 0 && (
                 <div style={{ marginTop: 12, padding: 12, border: "1px solid #e6c85c", borderRadius: 10, background: "#fffaf0" }}>
