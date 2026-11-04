@@ -418,13 +418,13 @@ export default function Home() {
         .nk3-qty button:first-child { border-radius: 9px 0 0 9px; }
         .nk3-qty button:last-child { border-radius: 0 9px 9px 0; }
         .nk3-qty span { text-align: center; border-top: 1px solid #d6d6cf; border-bottom: 1px solid #d6d6cf; min-height: 38px; display: grid; place-items: center; }
-        .nk3-cart-quantity-row { display: grid; grid-template-columns: 48px minmax(64px, 1fr) 48px auto; gap: 8px; align-items: center; }
+        .nk3-cart-quantity-row { display: grid; grid-template-columns: 48px minmax(64px, 1fr) 48px auto; gap: 12px; align-items: center; }
         .nk3-quantity-input { min-height: 48px; font-size: 18px; font-weight: 600; text-align: center; }
         .nk3-quantity-step { min-width: 44px; min-height: 48px; color: #063c28 !important; background: #fffdf5 !important; opacity: 1 !important; }
         .nk3-quantity-step:disabled { color: #063c28 !important; opacity: 1 !important; }
         .nk3-cart-button { white-space: nowrap; min-height: 48px; }
         .nk3-sambal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .nk3-addons-shortcut { grid-column: 1 / -1; justify-self: center; width: min(70%, 280px); min-height: 58px; padding: 12px 6px; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
+        .nk3-addons-shortcut { display: block; width: min(70%, 280px); min-height: 58px; margin: 14px auto 0; padding: 12px 10px; box-sizing: border-box; border: 1px solid #c9a441; border-radius: 12px; background: #fff8df; color: #123d2a; font-weight: 700; cursor: pointer; }
         .nk3-confirm-card { margin-top: 16px; overflow: hidden; border: 1px solid #d9d6c6; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px rgba(18,61,42,.08); }
         .nk3-confirm-title { margin: 0; padding: 14px 16px; background: #075537; color: #fff8e7; font-size: 20px; }
         .nk3-total-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f5f5ee; }
@@ -434,7 +434,7 @@ export default function Home() {
           .nk3-card { padding: 16px; }
         }
         @media (max-width: 480px) {
-          .nk3-cart-quantity-row { grid-template-columns: 44px minmax(64px, 1fr) 44px; gap: 8px; }
+          .nk3-cart-quantity-row { grid-template-columns: 44px minmax(64px, 1fr) 44px; gap: 10px; row-gap: 12px; }
           .nk3-cart-button { grid-column: 1 / -1; width: 100%; white-space: normal; }
           .nk3-quantity-input { min-width: 64px; font-size: 18px; }
         }
@@ -546,18 +546,19 @@ export default function Home() {
           {stage === "order" && (
             <section className="nk3-card">
               <h2 style={sectionTitleStyle}>🌶️ 4. {tr("Pilihan sambal", "Choose sambal")}</h2>
-              <div style={{ ...noticeStyle, marginBottom: 12, padding: "12px 14px", borderRadius: 12, fontSize: 13, lineHeight: 1.45 }}>
-                <strong>{tr("Campuran sambal", "Sambal combinations")}</strong>
-                <ul style={{ margin: "4px 0 10px", paddingLeft: 19 }}>
-                  <li>{tr("1 atau 2 jenis sambal: $1.00 sebungkus.", "1 or 2 sambal types: $1.00 per pack.")}</li>
-                  <li>{tr("3 jenis sambal atau lebih: caj tambahan $0.50 bagi setiap jenis selepas 2 pilihan.", "3 or more sambal types: $0.50 extra for each type after the first 2.")}</li>
+              <div style={{ ...noticeStyle, marginBottom: 12, padding: "10px 12px", borderRadius: 12, fontSize: 12, lineHeight: 1.4 }}>
+                <strong style={{ display: "block", marginBottom: 4 }}>{tr("CARA PILIH & CAMPUR SAMBAL", "HOW TO CHOOSE & MIX SAMBAL")}</strong>
+                <ul style={{ margin: "0 0 8px", paddingLeft: 18 }}>
+                  <li>{tr("Tekan sambal pilihan pertama.", "Tap your first sambal choice.")}</li>
+                  <li>{tr("Tekan sambal lain untuk campur dalam bungkus yang sama.", "Tap other sambal types to mix them in the same pack.")}</li>
+                  <li>{tr("Tekan sambal yang sama kali ke-2 untuk Extra Sambal (+$0.50).", "Tap the same sambal a 2nd time for Extra Sambal (+$0.50).")}</li>
+                  <li>{tr("Tekan kali ke-3 untuk membatalkan pilihan sambal itu.", "Tap a 3rd time to cancel that sambal choice.")}</li>
                 </ul>
-                <div style={{ borderTop: "1px solid #e6d58b", paddingTop: 8 }}>
-                  <strong style={{ display: "block", marginBottom: 4 }}>{tr("Cara memilih sambal", "How to choose sambal")}</strong>
-                  <ul style={{ margin: 0, paddingLeft: 19 }}>
-                    <li>{tr("Tekan 1 kali untuk memilih sambal.", "Tap once to choose a sambal.")}</li>
-                    <li>{tr("Tekan kali ke-2 untuk Extra Sambal (+$0.50).", "Tap a 2nd time for Extra Sambal (+$0.50).")}</li>
-                    <li>{tr("Tekan kali ke-3 untuk membatalkan sambal itu dan Extra Sambalnya. Kemudian, ulangi pilihan jika perlu.", "Tap a 3rd time to cancel that sambal and its Extra Sambal. Then choose again if needed.")}</li>
+                <div style={{ borderTop: "1px solid #e6d58b", paddingTop: 7 }}>
+                  <strong style={{ display: "block", marginBottom: 3 }}>{tr("HARGA CAMPURAN", "MIXED SAMBAL PRICES")}</strong>
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    <li>{tr("1–2 jenis sambal: $1.00 sebungkus.", "1–2 sambal types: $1.00 per pack.")}</li>
+                    <li>{tr("3 jenis atau lebih: +$0.50 bagi setiap jenis selepas 2 pilihan.", "3 or more types: +$0.50 for each type after the first 2.")}</li>
                   </ul>
                 </div>
               </div>
