@@ -140,12 +140,34 @@ export default function Home() {
       weekday: "short", timeZone: "Asia/Brunei",
     });
     const hours = operatingHours[selectedWeekday] ?? null;
-    const nowMinutes = bruneiHourMinute;
     const slots: string[] = [];
     if (!hours) return slots;
+
+    const isTodayOrder = todaySelected && selectedDate === bruneiToday;
+    if (isTodayOrder) {
+      // TODAY: first slot is exactly 30 minutes from the current Brunei time.
+      // Keep 30-minute intervals from that exact minute, with 4:00 PM as the hard final cutoff.
+      const earliestMinutes = bruneiHourMinute + 30;
+      const lastAvailableMinutes = Math.min(hours.close, 16 * 60);
+      if (earliestMinutes > lastAvailableMinutes) return slots;
+
+      for (let mins = earliestMinutes; mins <= lastAvailableMinutes; mins += 30) {
+        const hour = Math.floor(mins / 60);
+        const minute = mins % 60;
+        const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
+        const displayHour = hour % 12 || 12;
+        slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
+      }
+
+      // Always retain 4:00 PM as the final available pickup time when it is still valid.
+      if (lastAvailableMinutes === 16 * 60 && !slots.includes(isEnglish ? "4:00 PM" : "4:00 petang")) {
+        slots.push(isEnglish ? "4:00 PM" : "4:00 petang");
+      }
+      return slots;
+    }
+
+    // Advance-date orders keep the original branch operating-hour schedule.
     for (let mins = hours.open; mins <= hours.close; mins += 30) {
-      // For today's orders, show only pickup slots strictly later than the current Brunei time.
-      if (todaySelected && selectedDate === bruneiToday && mins <= nowMinutes) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -154,6 +176,11 @@ export default function Home() {
     }
     return slots;
   }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute, branch]);
+
+  useEffect(() => {
+    // Clear a TODAY pickup time automatically if it is no longer available.
+    if (todaySelected && time && !timeSlots.includes(time)) setTime("");
+  }, [todaySelected, time, timeSlots]);
 
   function toggleSambal(sambal: string) {
     setMessage("");
