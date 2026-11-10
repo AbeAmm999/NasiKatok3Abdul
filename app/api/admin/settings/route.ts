@@ -4,19 +4,19 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function authorize(request: Request) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const url = process.env.SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY;
   const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const admins = (process.env.ADMIN_EMAILS || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
   if (!token || !url || !secret || !publishable || !admins.length) return null;
-  const response = await fetch(`${url.replace(/\\/$/, "")}/auth/v1/user`, {
+  const response = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, {
     headers: { apikey: publishable, Authorization: `Bearer ${token}` }, cache: "no-store"
   });
   if (!response.ok) return null;
   const user = await response.json();
   if (typeof user.email !== "string" || !admins.includes(user.email.toLowerCase())) return null;
-  return { url: url.replace(/\\/$/, ""), secret, email: user.email };
+  return { url: url.replace(/\/$/, ""), secret, email: user.email };
 }
 const err=(message:string,status:number)=>NextResponse.json({ok:false,error:message},{status});
 
