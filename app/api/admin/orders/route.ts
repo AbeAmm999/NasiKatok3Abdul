@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   }
 
   const response = await fetch(`${auth.url}/rest/v1/orders?${query.toString()}`, {
-    headers: { apikey: auth.secret, Authorization: `Bearer ${auth.secret}` },
+    headers: { apikey: auth.secret },
     cache: "no-store",
   });
   const data = await response.json();
