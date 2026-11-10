@@ -197,8 +197,7 @@ export default function Home() {
     }
     if (selected.includes(NO_SAMBAL)) {
       setSelected([sambal]);
-      setSelectedExtraSambals([]);
-      return;
+      setSelectedExtraSambals([]);      return;
     }
     if (selected.includes(sambal)) {
       if (selectedExtraSambals.includes(sambal)) {
@@ -234,10 +233,22 @@ export default function Home() {
       setMessage(isEnglish ? "Enter a quantity between 1 and 100." : "Masukkan kuantiti antara 1 hingga 100.");
       return;
     }
-    setLines((current) => [
-      ...current,
-      { id: Date.now(), sambals: [...selected], extraSambals: [...selectedExtraSambals], quantity },
-    ]);
+    const newLine: OrderLine = {
+      id: Date.now(),
+      sambals: [...selected],
+      extraSambals: [...selectedExtraSambals],
+      quantity,
+    };
+    setLines((current) => {
+      const sameSelection = (line: OrderLine) =>
+        [...line.sambals].sort().join("|") === [...newLine.sambals].sort().join("|") &&
+        [...line.extraSambals].sort().join("|") === [...newLine.extraSambals].sort().join("|");
+      const existing = current.find(sameSelection);
+      if (!existing) return [...current, newLine];
+      return current.map((line) =>
+        line.id === existing.id ? { ...line, quantity: line.quantity + newLine.quantity } : line
+      );
+    });
     setSelected([]);
     setSelectedExtraSambals([]);
     setQuantity(1);
@@ -397,8 +408,7 @@ export default function Home() {
     background: "#fff",
   };
 
-  return (
-    <main className="nk3-page">
+  return (    <main className="nk3-page">
       <style>{`
         * { box-sizing: border-box; }
         body { margin: 0; background: #f8f7f0; }
@@ -597,8 +607,7 @@ export default function Home() {
                   return (
                     <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
-                      title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}
-                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
+                      title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
                       {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
                       {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra $0.50 ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra $0.50 ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
                     </button>
