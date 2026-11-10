@@ -139,7 +139,7 @@ export default function AdminPage() {
     <main className="admin-shell">
       <header className="topbar">
         <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>Admin Dashboard</h1></div></div>
-        <button className="logout" onClick={logout}>Log Keluar</button>
+        <div className="admin-actions"><a className="settings-link" href="/admin/settings">Website Control</a><button className="logout" onClick={logout}>Log Keluar</button></div>
       </header>
       <section className="stats">
         <article><span>Pesanan dipaparkan</span><strong>{counts.total}</strong></article>
@@ -207,6 +207,7 @@ const styles = `
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 auto 22px;max-width:1400px}
   .topbar>div{display:flex;align-items:center;gap:14px}.topbar .eyebrow{margin:0 0 4px}
   .logout{background:#fff;color:#17432f;border:1px solid #d7c17b}
+  .admin-actions{display:flex;align-items:center;gap:10px}.settings-link{margin:0;padding:11px 13px;border:1px solid #d7c17b;border-radius:10px;background:#075537;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
   .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1400px;margin:0 auto 16px}
   .stats article{background:#fff;border:1px solid #e2e6dd;border-radius:14px;padding:17px;display:grid;gap:8px}
   .stats span,.detail-pair span{font-size:12px;color:#758078}.stats strong{font-size:27px}
