@@ -6,7 +6,7 @@ export async function GET() {
   const secret=process.env.SUPABASE_SECRET_KEY;
   if(!url || !secret) return NextResponse.json({ok:false,error:"Tetapan tidak tersedia."},{status:503});
   const response=await fetch(`${url.replace(/\/$/,"")}/rest/v1/website_settings?id=eq.true&select=settings,updated_at`,{
-    headers:{apikey:secret,Authorization:`Bearer ${secret}`},cache:"no-store"
+    headers:{apikey:secret},cache:"no-store"
   });
   const rows=await response.json();
   if(!response.ok || !rows?.[0]) return NextResponse.json({ok:false,error:"Tetapan tidak tersedia."},{status:502});
