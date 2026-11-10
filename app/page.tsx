@@ -358,7 +358,6 @@ export default function Home() {
     ].join("\n");
 
     const whatsappNumber = branch === "Telisai" ? "6737141084" : "6738999443";
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}`;
     const whatsappWindow = window.open("about:blank", "_blank");
     const addons = [
       ...(chickenQuantity > 0 ? [{ type: "fried_chicken", name: "Ayam Goreng", quantity: chickenQuantity, unitPrice: 1 }] : []),
@@ -388,14 +387,19 @@ export default function Home() {
       if (!response.ok || !result.ok) {
         throw new Error(result.error || (isEnglish ? "Unable to save your order. Please try again." : "Pesanan tidak dapat disimpan. Sila cuba lagi."));
       }
+      const finalWhatsappText = messageText.replace(
+        "*NEW ORDER NASI KATOK 3 ABDUL*",
+        `*NEW ORDER NASI KATOK 3 ABDUL*\\n*No. Pesanan: ${result.orderNumber}*`
+      );
+      const finalWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalWhatsappText)}`;
       setMessage(isEnglish
         ? `Order ${result.orderNumber} has been recorded. Please send the WhatsApp message to complete your request.`
         : `Pesanan ${result.orderNumber} telah direkodkan. Sila hantar mesej WhatsApp untuk melengkapkan permintaan anda.`);
       setStage("done");
       if (whatsappWindow) {
-        whatsappWindow.location.href = whatsappUrl;
+        whatsappWindow.location.href = finalWhatsappUrl;
       } else {
-        window.location.href = whatsappUrl;
+        window.location.href = finalWhatsappUrl;
       }
     } catch (error) {
       if (whatsappWindow) whatsappWindow.close();
