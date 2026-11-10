@@ -10,7 +10,6 @@ const SAMBALS = new Set([
   "Udang Biasa",
   "Padas Manis",
   "Padas Padas",
-  "Lada Padi",
 ]);
 const NO_SAMBAL = "__NO_SAMBAL__";
 
