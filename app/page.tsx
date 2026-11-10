@@ -288,7 +288,7 @@ export default function Home() {
     setStage(next);
   }
 
-  function confirmOrder() {
+  async function confirmOrder() {
     if (!name.trim() || !time || (!todaySelected && !date)) {
       setShowPickupValidation(true);
       setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
@@ -357,11 +357,50 @@ export default function Home() {
       "*Please Confirm This Order. Thank You!*",
     ].join("\n");
 
-    setMessage(isEnglish ? "Order summary is ready. Send the WhatsApp message to complete your order." : "Ringkasan pesanan disediakan. Hantar mesej melalui WhatsApp untuk melengkapkan pesanan.");
-    setStage("done");
     const whatsappNumber = branch === "Telisai" ? "6737141084" : "6738999443";
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    const whatsappWindow = window.open("about:blank", "_blank");
+    const addons = [
+      ...(chickenQuantity > 0 ? [{ type: "fried_chicken", name: "Ayam Goreng", quantity: chickenQuantity, unitPrice: 1 }] : []),
+      ...(riceQuantity > 0 ? [{ type: "plain_rice", name: "Nasi Putih", quantity: riceQuantity, unitPrice: Number(riceUnitPrice) }] : []),
+      ...(addonSambalEnabled ? [{ type: "separate_sambal", name: addonSambalType, quantity: 1, unitPrice: Number(addonSambalPrice) }] : []),
+    ];
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: name.trim(),
+          branch,
+          pickupDate: todaySelected ? bruneiToday : date,
+          pickupTime: time,
+          specialNotes: specialNotes.trim(),
+          lines: lines.map((line) => ({
+            sambals: line.sambals,
+            extraSambals: line.extraSambals,
+            quantity: line.quantity,
+          })),
+          addons,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || (isEnglish ? "Unable to save your order. Please try again." : "Pesanan tidak dapat disimpan. Sila cuba lagi."));
+      }
+      setMessage(isEnglish
+        ? `Order ${result.orderNumber} has been recorded. Please send the WhatsApp message to complete your request.`
+        : `Pesanan ${result.orderNumber} telah direkodkan. Sila hantar mesej WhatsApp untuk melengkapkan permintaan anda.`);
+      setStage("done");
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
+    } catch (error) {
+      if (whatsappWindow) whatsappWindow.close();
+      setMessage(error instanceof Error ? error.message : (isEnglish ? "Unable to save your order." : "Pesanan tidak dapat disimpan."));
+    }
   }
 
   const sectionTitleStyle: React.CSSProperties = {
