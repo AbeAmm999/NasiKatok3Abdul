@@ -464,6 +464,9 @@ export default function Home() {
           color: #173326; background: #fffefa; min-height: 100vh;
           font-family: Arial, Helvetica, sans-serif;
         }
+        .nk3-language-admin-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(84px,.72fr);align-items:stretch;gap:8px;margin-bottom:8px;width:100%}
+        .nk3-admin-access{display:flex;align-items:center;justify-content:center;min-width:0;min-height:42px;padding:8px 7px;border:1px solid #e8c75c;border-radius:12px;background:linear-gradient(135deg,#e8c75c,#c99b28);color:#173326;text-decoration:none;font-size:clamp(11px,2.8vw,15px);font-weight:800;letter-spacing:.4px;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+        .nk3-admin-access:active{transform:translateY(1px)}
         .nk3-banner {
           display: block; width: 100%; height: auto; max-height: 270px;
           object-fit: cover; background: #003b24;
@@ -560,9 +563,10 @@ export default function Home() {
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
         <Photo src={imagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
         <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(135deg, #032f20, #075537 52%, #032f20)", borderTop: "2px solid #c9a441" }}>
-          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:8}}>
-            <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
-            <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,minHeight:38,padding:"7px 18px",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>
+          <div className="nk3-language-admin-row">
+            <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
+            <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>
+            <a href="/admin" className="nk3-admin-access" aria-label="Admin Dashboard">ADMIN ↗</a>
           </div>
           <strong style={{ fontSize: 22, letterSpacing: 2, color: "#e8c75c", fontFamily: "Georgia, Times New Roman, serif", textShadow: "0 2px 4px rgba(0,0,0,.3)" }}>NASI KATOK 3 ABDUL</strong>
           <p style={{ margin: "5px 0 0", fontSize: 13, color: "#f8e9b4" }}>{tr("Sila isi borang pesanan anda.","Please complete your order form.")}</p>
