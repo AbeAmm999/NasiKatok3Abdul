@@ -391,7 +391,7 @@ export default function Home() {
       if (!response.ok || !result.ok) {
         throw new Error(result.error || (isEnglish ? "Unable to save your order. Please try again." : "Pesanan tidak dapat disimpan. Sila cuba lagi."));
       }
-      const finalWhatsappText = `${messageText}\\n\\n*No. Pesanan: ${result.orderNumber}*`;
+      const finalWhatsappText = `${messageText}\n\n*No. Pesanan: ${result.orderNumber}*`;
       const finalWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalWhatsappText)}`;
       setMessage(isEnglish
         ? `Order ${result.orderNumber} has been recorded. Please send the WhatsApp message to complete your request.`
