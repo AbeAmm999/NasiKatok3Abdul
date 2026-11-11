@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { WebsiteSettingsPanel } from "./settings-panel";
 
 type Item = { id: string; sambals: string[]; extra_sambals: string[]; quantity: number; unit_price: number; line_total: number };
 type Order = {
@@ -25,6 +26,7 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<"orders" | "settings">("orders");
 
   useEffect(() => {
     const saved = sessionStorage.getItem("nk3_admin_access_token") || "";
@@ -139,8 +141,13 @@ export default function AdminPage() {
     <main className="admin-shell">
       <header className="topbar">
         <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>Admin Dashboard</h1></div></div>
-        <div className="admin-actions"><a className="settings-link" href="/admin/settings">Website Control</a><button className="logout" onClick={logout}>Log Keluar</button></div>
+        <div className="admin-actions"><a className="customer-link" href="/">Lihat Website</a><button className="logout" onClick={logout}>Log Keluar</button></div>
       </header>
+      <nav className="main-tabs" aria-label="Menu pengurusan">
+        <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ Pesanan & Dashboard</button>
+        <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ Website Control</button>
+      </nav>
+      {activeTab==="orders" && <>
       <section className="stats">
         <article><span>Pesanan dipaparkan</span><strong>{counts.total}</strong></article>
         <article><span>Pending</span><strong>{counts.pending}</strong></article>
@@ -185,6 +192,8 @@ export default function AdminPage() {
         </section>
       </div>
       <p className="footer-note">Data pesanan dipaparkan daripada Supabase. Semak semula status sebelum mengesahkan pesanan kepada pelanggan.</p>
+      </>}
+      {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}
       <style jsx>{styles}</style>
     </main>
   );
@@ -207,7 +216,10 @@ const styles = `
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 auto 22px;max-width:1400px}
   .topbar>div{display:flex;align-items:center;gap:14px}.topbar .eyebrow{margin:0 0 4px}
   .logout{background:#fff;color:#17432f;border:1px solid #d7c17b}
-  .admin-actions{display:flex;align-items:center;gap:10px}.settings-link{margin:0;padding:11px 13px;border:1px solid #d7c17b;border-radius:10px;background:#075537;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
+  .admin-actions{display:flex;align-items:center;gap:10px}.customer-link{margin:0;padding:11px 13px;border:1px solid #d7c17b;border-radius:10px;background:#075537;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
+  .main-tabs{display:flex;gap:9px;max-width:1400px;margin:0 auto 17px;padding:7px;background:#e8ece4;border:1px solid #dce3d9;border-radius:13px}
+  .tab{background:transparent;color:#315342;border:1px solid transparent;padding:12px 17px;border-radius:9px}
+  .tab.active{background:#075537;color:#f8d35a;border-color:#c9a441;box-shadow:0 3px 9px #123b2b1c}
   .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1400px;margin:0 auto 16px}
   .stats article{background:#fff;border:1px solid #e2e6dd;border-radius:14px;padding:17px;display:grid;gap:8px}
   .stats span,.detail-pair span{font-size:12px;color:#758078}.stats strong{font-size:27px}
@@ -229,5 +241,5 @@ const styles = `
   .notes{background:#fff9e8;border:1px solid #eee0b3;border-radius:10px;padding:12px;margin-top:15px}.notes p{margin:6px 0 0;white-space:pre-wrap}
   .totals{margin-top:15px;border-top:1px solid #e5e9e1;padding-top:10px}.totals>div{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:18px;border-top:1px solid #e5e9e1;margin-top:5px;padding-top:12px!important}
   .status-label{display:block;margin:18px 0 7px}.footer-note{max-width:1400px;margin:18px auto;color:#778078;font-size:12px}
-  @media(max-width:760px){.admin-shell{padding:13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
+  @media(max-width:760px){.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
 `;
