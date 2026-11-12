@@ -227,14 +227,15 @@ export default function Home() {
 
     const isTodayOrder = todaySelected && selectedDate === bruneiToday;
     if (isTodayOrder) {
-      // TODAY: first slot is exactly 30 minutes from the current Brunei time.
-      // Keep 30-minute intervals from that exact minute, with 4:00 PM as the hard final cutoff.
-      const earliestMinutes = bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 30);
-      const lastAvailableMinutes = Math.min(hours.close, Number(siteSettings?.orderRules?.maxSameDayHour ?? 16) * 60);
-      if (earliestMinutes > lastAvailableMinutes) return slots;
+      // TODAY: begin at least the configured lead time from now, rounded up to the next 10-minute slot.
+      // Pickup slots run on a fixed 10-minute clock grid and never go later than 4:30 PM.
+      const earliestMinutes = bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 10);
+      const firstSlotMinutes = Math.ceil(earliestMinutes / 10) * 10;
+      const lastAvailableMinutes = Math.min(hours.close, Number(siteSettings?.orderRules?.maxSameDayHour ?? 16.5) * 60, 16 * 60 + 30);
+      if (firstSlotMinutes > lastAvailableMinutes) return slots;
 
-      const slotInterval = Math.max(5, Number(siteSettings?.orderRules?.slotIntervalMinutes ?? 30));
-      for (let mins = earliestMinutes; mins <= lastAvailableMinutes; mins += slotInterval) {
+      const slotInterval = 10;
+      for (let mins = firstSlotMinutes; mins <= lastAvailableMinutes; mins += slotInterval) {
         const hour = Math.floor(mins / 60);
         const minute = mins % 60;
         const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -242,16 +243,13 @@ export default function Home() {
         slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
       }
 
-      // Always retain 4:00 PM as the final available pickup time when it is still valid.
-      if (lastAvailableMinutes === 16 * 60 && !slots.includes(isEnglish ? "4:00 PM" : "4:00 petang")) {
-        slots.push(isEnglish ? "4:00 PM" : "4:00 petang");
-      }
       return slots;
     }
 
-    // Advance-date orders keep the original branch operating-hour schedule.
-    const slotInterval = Math.max(5, Number(siteSettings?.orderRules?.slotIntervalMinutes ?? 30));
-    for (let mins = hours.open; mins <= hours.close; mins += slotInterval) {
+    // Advance-date orders follow branch opening hours, capped at 4:30 PM.
+    const lastAvailableMinutes = Math.min(hours.close, 16 * 60 + 30);
+    const slotInterval = 10;
+    for (let mins = hours.open; mins <= lastAvailableMinutes; mins += slotInterval) {
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
