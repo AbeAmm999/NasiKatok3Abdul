@@ -175,10 +175,10 @@ export default function Home() {
       }))
     : fallbackOperatingHours;
   const todayHours = operatingHours[bruneiWeekday] ?? null;
-  // TODAY starts at 6:00 AM and closes 20 minutes before this branch's closing time.
+  // Pickup choices stop 30 minutes before each branch's daily closing time.
   // Telisai is closed all day Sunday.
   const todayStartHour = Number(siteSettings?.orderRules?.todayStartHour ?? 6);
-  const todayCloseBuffer = Number(siteSettings?.orderRules?.todayCloseBufferMinutes ?? 20);
+  const todayCloseBuffer = 30;
   const todayButtonClosed = siteSettings?.orderRules?.todayEnabled === false || bruneiHourMinute < todayStartHour * 60 || !todayHours || bruneiHourMinute >= todayHours.close - todayCloseBuffer;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
@@ -228,10 +228,10 @@ export default function Home() {
     const isTodayOrder = todaySelected && selectedDate === bruneiToday;
     if (isTodayOrder) {
       // TODAY: begin at least the configured lead time from now, rounded up to the next 10-minute slot.
-      // Pickup slots run on a fixed 10-minute clock grid and never go later than 4:30 PM.
+      // The final pickup slot is 30 minutes before this branch's closing time.
       const earliestMinutes = bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 10);
       const firstSlotMinutes = Math.ceil(earliestMinutes / 10) * 10;
-      const lastAvailableMinutes = Math.min(hours.close, Number(siteSettings?.orderRules?.maxSameDayHour ?? 16.5) * 60, 16 * 60 + 30);
+      const lastAvailableMinutes = hours.close - 30;
       if (firstSlotMinutes > lastAvailableMinutes) return slots;
 
       const slotInterval = 10;
@@ -246,8 +246,8 @@ export default function Home() {
       return slots;
     }
 
-    // Advance-date orders follow branch opening hours, capped at 4:30 PM.
-    const lastAvailableMinutes = Math.min(hours.close, 16 * 60 + 30);
+    // Advance-date orders follow branch opening hours and stop 30 minutes before closing.
+    const lastAvailableMinutes = hours.close - 30;
     const slotInterval = 10;
     for (let mins = hours.open; mins <= lastAvailableMinutes; mins += slotInterval) {
       const hour = Math.floor(mins / 60);
