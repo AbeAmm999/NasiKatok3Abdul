@@ -356,7 +356,6 @@ export default function Home() {
     ].join("\n");
 
     const whatsappNumber = branch === "Telisai" ? "6737141084" : "6738999443";
-    const whatsappWindow = window.open("about:blank", "_blank");
     const addons = [
       ...(chickenQuantity > 0 ? [{ type: "fried_chicken", name: "Ayam Goreng", quantity: chickenQuantity, unitPrice: 1 }] : []),
       ...(riceQuantity > 0 ? [{ type: "plain_rice", name: "Nasi Putih", quantity: riceQuantity, unitPrice: Number(riceUnitPrice) }] : []),
@@ -391,13 +390,10 @@ export default function Home() {
         ? `Order ${result.orderNumber} has been recorded. Please send the WhatsApp message to complete your request.`
         : `Pesanan ${result.orderNumber} telah direkodkan. Sila hantar mesej WhatsApp untuk melengkapkan permintaan anda.`);
       setStage("done");
-      if (whatsappWindow) {
-        whatsappWindow.location.href = finalWhatsappUrl;
-      } else {
-        window.location.href = finalWhatsappUrl;
-      }
+      // Navigate the current tab directly to WhatsApp after the order is safely saved.
+      // This avoids opening an about:blank tab while the API request is processing.
+      window.location.assign(finalWhatsappUrl);
     } catch (error) {
-      if (whatsappWindow) whatsappWindow.close();
       setMessage(error instanceof Error ? error.message : (isEnglish ? "Unable to save your order." : "Pesanan tidak dapat disimpan."));
     }
   }
