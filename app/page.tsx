@@ -297,8 +297,7 @@ export default function Home() {
       setShowPickupValidation(true);
       setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
       return;
-    }    setShowPickupValidation(false);    if (lines.length === 0) {      setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");      return;    }
-    if (selected.length > 0) {
+    }    setShowPickupValidation(false);    if (lines.length === 0) {      setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");      return;    }    if (selected.length > 0) {
       setMessage(isEnglish ? "Please press Add first to include your current sambal selection." : "Sila tekan Tambah dahulu untuk memasukkan pilihan sambal semasa.");
       return;
     }
@@ -597,8 +596,7 @@ export default function Home() {
               ))}            </div>
           </section>
           <section className="nk3-card">            <h2 style={sectionTitleStyle}>🗓️ 2. {tr("Maklumat pelanggan & waktu ambil", "Customer details & pickup time")}</h2>
-            <div style={{ background: "#fffdf7", border: "1px solid #e2dcc5", borderRadius: 16, padding: 14, color: "#173f30" }}>
-              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>{tr("1. NAMA", "1. NAME")}</div>
+            <div style={{ background: "#fffdf7", border: "1px solid #e2dcc5", borderRadius: 16, padding: 14, color: "#173f30" }}>              <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>{tr("1. NAMA", "1. NAME")}</div>
               <input style={{ ...inputStyle, marginBottom: 20 }} value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Masukkan nama pelanggan", "Enter customer name")} />
               <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 12, fontSize: 18 }}>{tr("2. TARIKH AMBIL PESANAN", "2. PICKUP DATE")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 18 }}>
@@ -829,37 +827,37 @@ export default function Home() {
           <div style={{ padding: 16, textAlign: "center" }}>
             <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semula semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
             {stage !== "done" && <>
-              <div style={{ margin: "0 0 10px", overflow: "hidden", borderRadius: 11, border: "1px solid #d6b33f", background: "#fffefa", color: "#14251d", textAlign: "left" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "5px 8px", background: "linear-gradient(105deg,#00452b,#075537)", color: "#fffefa", borderBottom: "2px solid #d6b33f" }}>
-                  <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 24, height: 24, flex: "0 0 24px", borderRadius: "50%", background: "#f5d21b", color: "#07502f", fontSize: 17, fontWeight: 900, fontFamily: "Georgia,serif" }}>i</span>
-                  <span style={{ fontFamily: "Georgia,serif", fontWeight: 900, fontSize: 14, letterSpacing: 1 }}>{tr("MAKLUMAN", "NOTICE")}</span>
+              <div style={{ margin: "0 0 8px", overflow: "hidden", borderRadius: 9, border: "1px solid #d6b33f", background: "#fffefa", color: "#14251d", textAlign: "left" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "4px 7px", background: "linear-gradient(105deg,#00452b,#075537)", color: "#fffefa", borderBottom: "2px solid #d6b33f" }}>
+                  <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 21, height: 21, flex: "0 0 21px", borderRadius: "50%", background: "#f5d21b", color: "#07502f", fontSize: 15, fontWeight: 900, fontFamily: "Georgia,serif" }}>i</span>
+                  <span style={{ fontFamily: "Georgia,serif", fontWeight: 900, fontSize: 12, letterSpacing: .8 }}>{tr("MAKLUMAN", "NOTICE")}</span>
                 </div>
-                <div style={{ padding: "5px 7px 7px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "minmax(48px,58px) 2px minmax(0,1fr)", alignItems: "center", gap: 6, padding: "3px 0 6px", borderBottom: "1px solid #e9e3d1" }}>
-                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 42, color: "#087044" }}>
-                      <svg viewBox="0 0 100 90" style={{ width: "43px", height: "39px" }} fill="currentColor"><path d="M7 10h10l8 43a8 8 0 0 0 8 6h43a7 7 0 0 0 7-5l9-29H29l-2-10H7z"/><circle cx="39" cy="72" r="6"/><circle cx="74" cy="72" r="6"/><circle cx="76" cy="17" r="16" fill="#f4cc13"/><path d="m68 17 6 6 11-13" fill="none" stroke="#075537" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div style={{ padding: "4px 6px 6px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(40px,48px) 2px minmax(0,1fr)", alignItems: "center", gap: 5, padding: "2px 0 5px", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 34, color: "#087044" }}>
+                      <svg viewBox="0 0 100 90" style={{ width: "36px", height: "32px" }} fill="currentColor"><path d="M7 10h10l8 43a8 8 0 0 0 8 6h43a7 7 0 0 0 7-5l9-29H29l-2-10H7z"/><circle cx="39" cy="72" r="6"/><circle cx="74" cy="72" r="6"/><circle cx="76" cy="17" r="16" fill="#f4cc13"/><path d="m68 17 6 6 11-13" fill="none" stroke="#075537" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
-                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 34, background: "#e3bd30", borderRadius: 3 }} />
-                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.32 }}>{tr("Setelah selesai membuat pesanan, sila", "After completing your order, please")} <strong style={{ display: "inline", padding: "1px 3px", borderRadius: 4, background: "#ffe329", color: "#111" }}>{tr("tekan butang KUNING di bawah", "press the YELLOW button below")}</strong> {tr("untuk menghantar pesanan anda.", "to submit your order.")}</p>
+                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 28, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 11, lineHeight: 1.28 }}>{tr("Setelah selesai membuat pesanan, sila", "After completing your order, please")} <strong style={{ display: "inline", padding: "1px 3px", borderRadius: 4, background: "#ffe329", color: "#111" }}>{tr("tekan butang KUNING di bawah", "press the YELLOW button below")}</strong> {tr("untuk menghantar pesanan anda.", "to submit your order.")}</p>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "minmax(48px,58px) 2px minmax(0,1fr)", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid #e9e3d1" }}>
-                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 38 }}>
-                      <svg viewBox="0 0 100 78" style={{ width: "43px", height: "34px" }}><circle cx="39" cy="36" r="29" fill="#16b65a"/><path d="M18 62 22 49a25 25 0 1 1 9 10z" fill="#16b65a" stroke="#087044" strokeWidth="2"/><path d="M30 21c-3 2-5 7-2 13 5 11 14 17 22 18 4 0 8-4 8-7l-10-6-5 5c-5-2-9-6-11-11l4-4z" fill="#fff"/><path d="M60 51h25l-1-8 14 12-14 12 1-8H60z" fill="#efbf16"/></svg>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(40px,48px) 2px minmax(0,1fr)", alignItems: "center", gap: 5, padding: "5px 0", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 30 }}>
+                      <svg viewBox="0 0 100 78" style={{ width: "36px", height: "30px" }}><circle cx="39" cy="36" r="29" fill="#16b65a"/><path d="M18 62 22 49a25 25 0 1 1 9 10z" fill="#16b65a" stroke="#087044" strokeWidth="2"/><path d="M30 21c-3 2-5 7-2 13 5 11 14 17 22 18 4 0 8-4 8-7l-10-6-5 5c-5-2-9-6-11-11l4-4z" fill="#fff"/><path d="M60 51h25l-1-8 14 12-14 12 1-8H60z" fill="#efbf16"/></svg>
                     </div>
-                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 32, background: "#e3bd30", borderRadius: 3 }} />
-                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.32 }}>{tr("Sila tunggu sebentar sehingga anda dialihkan ke WhatsApp.", "Please wait a moment while you are redirected to WhatsApp.")}</p>
+                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 27, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 11, lineHeight: 1.28 }}>{tr("Sila tunggu sebentar sehingga anda dialihkan ke WhatsApp.", "Please wait a moment while you are redirected to WhatsApp.")}</p>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "minmax(48px,58px) 2px minmax(0,1fr)", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid #e9e3d1" }}>
-                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 42 }}>
-                      <svg viewBox="0 0 100 90" style={{ width: "43px", height: "39px" }} fill="#087044"><path d="M8 43 88 8 62 81 45 54 8 43zm38 7 12 17 8-32z"/><path d="m45 54 25-22" stroke="#fff" strokeWidth="3" fill="none"/><rect x="10" y="70" width="80" height="17" rx="8" fill="#087044"/><text x="50" y="82" fontSize="10" textAnchor="middle" fill="#fff">Hantar (Send)</text></svg>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(40px,48px) 2px minmax(0,1fr)", alignItems: "center", gap: 5, padding: "5px 0", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 34 }}>
+                      <svg viewBox="0 0 100 90" style={{ width: "36px", height: "32px" }} fill="#087044"><path d="M8 43 88 8 62 81 45 54 8 43zm38 7 12 17 8-32z"/><path d="m45 54 25-22" stroke="#fff" strokeWidth="3" fill="none"/><rect x="10" y="70" width="80" height="17" rx="8" fill="#087044"/><text x="50" y="82" fontSize="10" textAnchor="middle" fill="#fff">Hantar (Send)</text></svg>
                     </div>
-                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 36, background: "#e3bd30", borderRadius: 3 }} />
-                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.32 }}>{tr("Pastikan anda menekan butang", "Make sure you press the")} <strong style={{ display: "inline-block", padding: "1px 4px", borderRadius: 4, background: "#ffe329", color: "#111" }}>{tr("Hantar (Send)", "Send")}</strong> {tr("di WhatsApp supaya pesanan anda diterima oleh pihak kami.", "button in WhatsApp so our team receives your order.")}</p>
+                    <span aria-hidden="true" style={{ width: 2, height: "76%", minHeight: 30, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 11, lineHeight: 1.28 }}>{tr("Pastikan anda menekan butang", "Make sure you press the")} <strong style={{ display: "inline-block", padding: "1px 3px", borderRadius: 4, background: "#ffe329", color: "#111" }}>{tr("Hantar (Send)", "Send")}</strong> {tr("di WhatsApp supaya pesanan anda diterima oleh pihak kami.", "button in WhatsApp so our team receives your order.")}</p>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 6, padding: "6px 5px", borderRadius: 8, background: "#e5f2ce", color: "#06482e" }}>
-                    <span aria-hidden="true" style={{ fontSize: 16 }}>🤝</span>
-                    <span style={{ width: 2, height: 18, background: "#075537" }} />
-                    <strong style={{ fontSize: 12, fontStyle: "italic", lineHeight: 1.25 }}>{tr("Terima kasih atas pesanan anda!", "Thank you for your order!")}</strong>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 5, padding: "5px 4px", borderRadius: 7, background: "#e5f2ce", color: "#06482e" }}>
+                    <span aria-hidden="true" style={{ fontSize: 14 }}>🤝</span>
+                    <span style={{ width: 2, height: 16, background: "#075537" }} />
+                    <strong style={{ fontSize: 11, fontStyle: "italic", lineHeight: 1.2 }}>{tr("Terima kasih atas pesanan anda!", "Thank you for your order!")}</strong>
                   </div>
                 </div>
               </div>
