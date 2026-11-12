@@ -50,11 +50,28 @@ export async function POST(request: Request) {
       return jsonError("Sistem pesanan belum dikonfigurasi. Sila hubungi pengusaha.", 503);
     }
 
+    const baseUrl = supabaseUrl.replace(/\\/$/, "");
+    const settingsResponse = await fetch(`${baseUrl}/rest/v1/website_settings?id=eq.true&select=settings`, {
+      headers: { apikey: secretKey }, cache: "no-store",
+    });
+    const settingsRows = await settingsResponse.json();
+    if (!settingsResponse.ok || !settingsRows?.[0]?.settings) return jsonError("Tetapan pesanan tidak dapat dimuatkan. Sila cuba sebentar lagi.", 503);
+    const settings = settingsRows[0].settings;
+    if (settings.siteEnabled === false || settings.orderingEnabled === false) return jsonError("Pesanan ditutup buat sementara waktu.", 403);
+    const branchSettings = settings.branches || {};
+    const sambalSettings = Array.isArray(settings.sambals) ? settings.sambals : [];
+    const enabledSambals = new Set(sambalSettings.filter((item: any) => item.enabled).map((item: any) => item.name).filter((name: any) => typeof name === "string"));
+    const basePackPrice = Number(settings.prices?.basePack ?? 1);
+    const extraSambalPrice = Number(settings.prices?.extraSambal ?? 0.5);
+    const chickenPrice = Number(settings.prices?.friedChicken ?? 1);
+    const ricePrices = [Number(settings.prices?.riceSmall ?? 0.5), Number(settings.prices?.riceLarge ?? 1)];
+
     const body = await request.json();
     if (typeof body.customerName !== "string" || !body.customerName.trim() || body.customerName.trim().length > 80) {
       return jsonError("Nama pelanggan diperlukan.");
     }
     if (!["Rimba", "Telisai"].includes(body.branch)) return jsonError("Cawangan tidak sah.");
+    if (branchSettings?.[body.branch]?.enabled === false) return jsonError("Cawangan ini tidak menerima pesanan buat masa ini.", 403);
     if (!isDate(body.pickupDate)) return jsonError("Tarikh pengambilan tidak sah.");
     if (typeof body.pickupTime !== "string" || body.pickupTime.length > 40 || !body.pickupTime.trim()) {
       return jsonError("Waktu pengambilan diperlukan.");
@@ -74,7 +91,7 @@ export async function POST(request: Request) {
       }
       const sambals = raw.sambals as string[];
       const noSambal = sambals.length === 1 && sambals[0] === NO_SAMBAL;
-      if (!noSambal && (!sambals.every((item) => typeof item === "string" && SAMBALS.has(item)) || new Set(sambals).size !== sambals.length)) {
+      if (!noSambal && (!sambals.every((item) => typeof item === "string" && (sambalSettings.length ? enabledSambals.has(item) : SAMBALS.has(item))) || new Set(sambals).size !== sambals.length)) {
         return jsonError("Pilihan sambal tidak sah.");
       }
       if (!Array.isArray(raw.extraSambals) || raw.extraSambals.length > 7) return jsonError("Extra Sambal tidak sah.");
@@ -86,7 +103,7 @@ export async function POST(request: Request) {
       if (!Number.isInteger(raw.quantity) || Number(raw.quantity) < 1 || Number(raw.quantity) > 100) {
         return jsonError("Kuantiti mestilah antara 1 hingga 100.");
       }
-      const unitPrice = noSambal ? 1 : 1 + Math.max(0, sambals.length - 2) * 0.5 + extraSambals.length * 0.5;
+      const unitPrice = noSambal ? basePackPrice : basePackPrice + Math.max(0, sambals.length - 2) * extraSambalPrice + extraSambals.length * extraSambalPrice;
       const lineTotal = roundMoney(unitPrice * Number(raw.quantity));
       subtotal += lineTotal;
       itemRows.push({
@@ -108,11 +125,11 @@ export async function POST(request: Request) {
       const unitPrice = Number(raw.unitPrice);
       if (!Number.isFinite(unitPrice) || unitPrice < 0 || unitPrice > 100) return jsonError("Harga add-on tidak sah.");
       if (raw.type === "fried_chicken") {
-        if (raw.name !== "Ayam Goreng" || unitPrice !== 1) return jsonError("Harga ayam goreng tidak sah.");
+        if (settings.addons?.friedChicken === false || raw.name !== "Ayam Goreng" || unitPrice !== chickenPrice) return jsonError("Harga ayam goreng tidak sah.");
       } else if (raw.type === "plain_rice") {
-        if (raw.name !== "Nasi Putih" || ![0.5, 1].includes(unitPrice)) return jsonError("Harga nasi putih tidak sah.");
+        if (settings.addons?.plainRice === false || raw.name !== "Nasi Putih" || !ricePrices.includes(unitPrice)) return jsonError("Harga nasi putih tidak sah.");
       } else if (raw.type === "separate_sambal") {
-        if (typeof raw.name !== "string" || !SAMBALS.has(raw.name) || raw.name === "Lada Padi" || Number(raw.quantity) !== 1 || unitPrice < 0.5 || unitPrice > 5 || unitPrice % 0.5 !== 0) {
+        if (settings.addons?.separateSambal === false || typeof raw.name !== "string" || !(sambalSettings.length ? enabledSambals.has(raw.name) : SAMBALS.has(raw.name)) || raw.name === "Lada Padi" || Number(raw.quantity) !== 1 || unitPrice < 0.5 || unitPrice > 5 || unitPrice % 0.5 !== 0) {
           return jsonError("Pilihan Extra Sambal tidak sah.");
         }
       } else {
