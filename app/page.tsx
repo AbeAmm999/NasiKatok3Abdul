@@ -28,11 +28,11 @@ function displaySambals(sambals: string[], extraSambals: string[], isEnglish: bo
   return `${main} (${isEnglish ? "Extra Sambal" : "Extra Sambal"} ${extras})`;
 }
 
-function pricePerPack(sambals: string[], extraSambals: string[] = []) {
+function pricePerPack(sambals: string[], extraSambals: string[] = [], basePrice = 1, extraPrice = 0.5) {
   if (sambals.includes(NO_SAMBAL)) return 1;
   const mainCount = sambals.length;
-  const mainPrice = 1 + Math.max(0, mainCount - 2) * 0.5;
-  return mainPrice + extraSambals.length * 0.5;
+  const mainPrice = basePrice + Math.max(0, mainCount - 2) * extraPrice;
+  return mainPrice + extraSambals.length * extraPrice;
 }
 
 const imagePaths = {
