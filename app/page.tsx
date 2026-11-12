@@ -68,11 +68,43 @@ function Photo({
 
 export default function Home() {
   const [language, setLanguage] = useState<"bm" | "en">("bm");
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/site-settings", { cache: "no-store" }).then(async response => {
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "Tetapan website tidak dapat dimuatkan.");
+      if (active) {
+        setSiteSettings(data.settings);
+        const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
+        const chosen = data.settings?.language?.[preferred] !== false ? preferred : (data.settings?.language?.bm !== false ? "bm" : "en");
+        setLanguage(chosen);
+      }
+    }).catch(error => console.error("Website settings load failed:", error))
+      .finally(() => { if (active) setSettingsLoaded(true); });
+    return () => { active = false; };
+  }, []);
   const [adminSessionActive, setAdminSessionActive] = useState(false);
   useEffect(() => {
     setAdminSessionActive(Boolean(sessionStorage.getItem("nk3_admin_access_token")));
   }, []);
   const isEnglish = language === "en";
+  const availableSambals: string[] = (siteSettings?.sambals || SAMBALS.map(name => ({ name, enabled: name !== "Lada Padi" }))).filter((item: any) => item.enabled).map((item: any) => item.name);
+  const activeImagePaths = { ...imagePaths, ...(siteSettings?.images || {}) };
+  const basePackPrice = Number(siteSettings?.prices?.basePack ?? 1);
+  const extraSambalUnitPrice = Number(siteSettings?.prices?.extraSambal ?? 0.5);
+  const chickenUnitPrice = Number(siteSettings?.prices?.friedChicken ?? 1);
+  const riceSmallPrice = Number(siteSettings?.prices?.riceSmall ?? 0.5);
+  const riceLargePrice = Number(siteSettings?.prices?.riceLarge ?? 1);
+  const calculatePackPrice = (sambals: string[], extras: string[] = []) => pricePerPack(sambals, extras, basePackPrice, extraSambalUnitPrice);
+  const siteEnabled = siteSettings?.siteEnabled !== false;
+  const orderingEnabled = siteSettings?.orderingEnabled !== false;
+  const branchConfig = siteSettings?.branches || {};
+  const branchWhatsApp = branchConfig?.[branch]?.whatsapp || (branch === "Telisai" ? "6737141084" : "6738999443");
+  const showChickenAddon = siteSettings?.addons?.friedChicken !== false;
+  const showRiceAddon = siteSettings?.addons?.plainRice !== false;
+  const showSeparateSambalAddon = siteSettings?.addons?.separateSambal !== false;
   const tr = (bm: string, en: string) => isEnglish ? en : bm;
   const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
@@ -108,11 +140,21 @@ export default function Home() {
     Fri: { open: 570, close: 1140 }, Sat: { open: 570, close: 1140 },
     Sun: null,
   };
-  const operatingHours = branch === "Telisai" ? telisaiOperatingHours : rimbaOperatingHours;
+  const fallbackOperatingHours = branch === "Telisai" ? telisaiOperatingHours : rimbaOperatingHours;
+  const branchHoursSettings = siteSettings?.hours?.[branch];
+  const toMinutes = (value: string) => { const [h, m] = value.split(":").map(Number); return h * 60 + m; };
+  const operatingHours: Record<string, { open: number; close: number } | null> = branchHoursSettings
+    ? Object.fromEntries(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day => {
+        const value = branchHoursSettings[day];
+        return [day, Array.isArray(value) && value.length === 2 ? { open: toMinutes(value[0]), close: toMinutes(value[1]) } : null];
+      }))
+    : fallbackOperatingHours;
   const todayHours = operatingHours[bruneiWeekday] ?? null;
   // TODAY starts at 6:00 AM and closes 20 minutes before this branch's closing time.
   // Telisai is closed all day Sunday.
-  const todayButtonClosed = bruneiHourMinute < 360 || !todayHours || bruneiHourMinute >= todayHours.close - 20;
+  const todayStartHour = Number(siteSettings?.orderRules?.todayStartHour ?? 6);
+  const todayCloseBuffer = Number(siteSettings?.orderRules?.todayCloseBufferMinutes ?? 20);
+  const todayButtonClosed = siteSettings?.orderRules?.todayEnabled === false || bruneiHourMinute < todayStartHour * 60 || !todayHours || bruneiHourMinute >= todayHours.close - todayCloseBuffer;
   const [date, setDate] = useState(tomorrowDate);
   const [time, setTime] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -129,11 +171,11 @@ export default function Home() {
   const [addonSambalPrice, setAddonSambalPrice] = useState("0.50");
 
   const subtotal = useMemo(
-    () => lines.reduce((sum, line) => sum + line.quantity * pricePerPack(line.sambals, line.extraSambals), 0),
+    () => lines.reduce((sum, line) => sum + line.quantity * calculatePackPrice(line.sambals, line.extraSambals), 0),
     [lines]
   );
   const addonTotal =
-    chickenQuantity +
+    chickenQuantity * chickenUnitPrice +
     riceQuantity * Number(riceUnitPrice) +
     (addonSambalEnabled ? Number(addonSambalPrice) : 0);
   const total = subtotal + addonTotal;
@@ -152,11 +194,12 @@ export default function Home() {
     if (isTodayOrder) {
       // TODAY: first slot is exactly 30 minutes from the current Brunei time.
       // Keep 30-minute intervals from that exact minute, with 4:00 PM as the hard final cutoff.
-      const earliestMinutes = bruneiHourMinute + 30;
-      const lastAvailableMinutes = Math.min(hours.close, 16 * 60);
+      const earliestMinutes = bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 30);
+      const lastAvailableMinutes = Math.min(hours.close, Number(siteSettings?.orderRules?.maxSameDayHour ?? 16) * 60);
       if (earliestMinutes > lastAvailableMinutes) return slots;
 
-      for (let mins = earliestMinutes; mins <= lastAvailableMinutes; mins += 30) {
+      const slotInterval = Math.max(5, Number(siteSettings?.orderRules?.slotIntervalMinutes ?? 30));
+      for (let mins = earliestMinutes; mins <= lastAvailableMinutes; mins += slotInterval) {
         const hour = Math.floor(mins / 60);
         const minute = mins % 60;
         const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -172,7 +215,8 @@ export default function Home() {
     }
 
     // Advance-date orders keep the original branch operating-hour schedule.
-    for (let mins = hours.open; mins <= hours.close; mins += 30) {
+    const slotInterval = Math.max(5, Number(siteSettings?.orderRules?.slotIntervalMinutes ?? 30));
+    for (let mins = hours.open; mins <= hours.close; mins += slotInterval) {
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const suffix = isEnglish ? (hour < 12 ? "AM" : "PM") : (hour < 12 ? "pagi" : "petang");
@@ -180,7 +224,7 @@ export default function Home() {
       slots.push(`${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`);
     }
     return slots;
-  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute, branch]);
+  }, [isEnglish, todaySelected, bruneiToday, date, bruneiHourMinute, branch, siteSettings]);
 
   useEffect(() => {
     // Clear a TODAY pickup time automatically if it is no longer available.
@@ -213,7 +257,7 @@ export default function Home() {
       }
       return;
     }
-    if (selected.length >= SAMBALS.length) {
+    if (selected.length >= availableSambals.length) {
       return;
     }
     setSelected((current) => [...current, sambal]);
@@ -307,12 +351,12 @@ export default function Home() {
     const orderLines = lines.map(
       (line, index) =>
         `${index + 1}. ${displaySambals(line.sambals, line.extraSambals, isEnglish)} × ${line.quantity} — ${money(
-          line.quantity * pricePerPack(line.sambals, line.extraSambals)
+          line.quantity * calculatePackPrice(line.sambals, line.extraSambals)
         )}`
     );
     const addonLines = [
       ...(chickenQuantity > 0
-        ? [`${isEnglish ? "Fried chicken" : "Ayam Goreng"} × ${chickenQuantity} — ${money(chickenQuantity)}`]
+        ? [`${isEnglish ? "Fried chicken" : "Ayam Goreng"} × ${chickenQuantity} — ${money(chickenQuantity * chickenUnitPrice)}`]
         : []),
       ...(riceQuantity > 0
         ? [
@@ -358,9 +402,9 @@ export default function Home() {
       "*Please Confirm This Order. Thank You!*",
     ].join("\n");
 
-    const whatsappNumber = branch === "Telisai" ? "6737141084" : "6738999443";
+    const whatsappNumber = branchWhatsApp;
     const addons = [
-      ...(chickenQuantity > 0 ? [{ type: "fried_chicken", name: "Ayam Goreng", quantity: chickenQuantity, unitPrice: 1 }] : []),
+      ...(chickenQuantity > 0 ? [{ type: "fried_chicken", name: "Ayam Goreng", quantity: chickenQuantity, unitPrice: chickenUnitPrice }] : []),
       ...(riceQuantity > 0 ? [{ type: "plain_rice", name: "Nasi Putih", quantity: riceQuantity, unitPrice: Number(riceUnitPrice) }] : []),
       ...(addonSambalEnabled ? [{ type: "separate_sambal", name: addonSambalType, quantity: 1, unitPrice: Number(addonSambalPrice) }] : []),
     ];
@@ -557,7 +601,7 @@ export default function Home() {
       `}</style>
 
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
-        <Photo src={imagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
+        <Photo src={activeImagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
         <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(135deg, #032f20, #075537 52%, #032f20)", borderTop: "2px solid #c9a441" }}>
           <div className="nk3-language-admin-row">
             <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
@@ -575,9 +619,9 @@ export default function Home() {
             <h2 style={sectionTitleStyle}>📍 1. {tr("Pilih cawangan", "Choose branch")}</h2>
             <div className="nk3-branch-grid">
               {([
-                { name: "Rimba", src: imagePaths.rimba },
-                { name: "Telisai", src: imagePaths.telisai },
-              ] as const).map((item) => (
+                { name: "Rimba", src: activeImagePaths.rimba },
+                { name: "Telisai", src: activeImagePaths.telisai },
+              ] as const).filter(item => branchConfig[item.name]?.enabled !== false).map((item) => (
                 <button
                   type="button"
                   key={item.name}
@@ -637,10 +681,10 @@ export default function Home() {
                 </div>
               </div>
               <div className="nk3-sambal-grid">
-                {SAMBALS.map((sambal) => {
+                {availableSambals.map((sambal: string) => {
                   const isSelected = selected.includes(sambal);
                   const extraCount = selectedExtraSambals.filter((item) => item === sambal).length;
-                  const isUnavailable = sambal === "Lada Padi";
+                  const isUnavailable = false;
                   return (
                     <button key={sambal} type="button" aria-pressed={isSelected} disabled={isUnavailable}
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
@@ -718,7 +762,7 @@ export default function Home() {
               <h2 style={sectionTitleStyle}>🛍️ 5. {tr("Add On's", "Add-ons")}</h2>
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.chicken} alt={tr("Ayam goreng", "Fried chicken")} className="nk3-addon-photo" />
+                <Photo src={activeImagePaths.chicken} alt={tr("Ayam goreng", "Fried chicken")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>{tr("Ayam Goreng", "Fried chicken")}</strong><strong>$1.00</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
@@ -733,7 +777,7 @@ export default function Home() {
               </div>
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.rice} alt={tr("Nasi putih", "Plain rice")} className="nk3-addon-photo" />
+                <Photo src={activeImagePaths.rice} alt={tr("Nasi putih", "Plain rice")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>{tr("Nasi Putih", "Plain rice")}</strong><strong>{money(Number(riceUnitPrice))}</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
@@ -751,14 +795,14 @@ export default function Home() {
 
 
               <div className="nk3-addon">
-                <Photo src={imagePaths.sambal} alt={tr("Sambal tambahan berasingan", "Separate extra sambal") } className="nk3-addon-photo" />
+                <Photo src={activeImagePaths.sambal} alt={tr("Sambal tambahan berasingan", "Separate extra sambal") } className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{addonSambalEnabled ? money(Number(addonSambalPrice)) : tr("Pilihan", "Optional")}</strong></div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0", fontSize: 14 }}>
                     <input type="checkbox" checked={addonSambalEnabled} onChange={(e) => setAddonSambalEnabled(e.target.checked)} /> {tr("Tambah sambal berasingan", "Add sambal separately")}
                   </label>
                   <select aria-label={tr("Jenis Add On sambal", "Add-on sambal type")} style={{ ...inputStyle, padding: "8px", fontSize: 14, marginBottom: 7, width: "100%" }} value={addonSambalType} onChange={(e) => setAddonSambalType(e.target.value)}>
-                    {SAMBALS.map((item) => <option key={item} value={item} disabled={item === "Lada Padi"}>{item === "Lada Padi" ? tr("Lada Padi (Tidak tersedia)", "Lada Padi (Unavailable)") : item}</option>)}
+                    {availableSambals.map((item: string) => <option key={item} value={item}>{item}</option>)}
                   </select>
                   <select aria-label={tr("Harga Add On sambal", "Add-on sambal price")} style={{ ...inputStyle, padding: "8px", fontSize: 14, width: "100%" }} value={addonSambalPrice} onChange={(e) => setAddonSambalPrice(e.target.value)}>
                     {Array.from({ length: 10 }, (_, i) => ((i + 1) * 0.5).toFixed(2)).map((price) => <option key={price} value={price}>{money(Number(price))}</option>)}
