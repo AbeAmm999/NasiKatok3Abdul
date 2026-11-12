@@ -288,7 +288,7 @@ export default function AdminPage() {
       </div>
       <p className="footer-note">{t("New orders are received automatically. Update preparation status when needed.", "Pesanan baharu diterima secara automatik. Kemaskini status penyediaan apabila diperlukan.")}</p>
       </>}
-      {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}
+      {activeTab==="settings" && <WebsiteSettingsPanel token={token} language={adminLanguage}/ >}
       {activeTab==="security" && <section className="security-panel"><h2>Keselamatan Akaun Admin</h2><p className="muted">Perubahan e-mel memerlukan pengesahan melalui e-mel. Kata laluan tidak disimpan di website.</p><form onSubmit={updateAdminAccount}><label>E-mel baharu (biarkan kosong jika tidak ditukar)</label><input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder="E-mel baharu"/><label>Kata laluan semasa</label><input type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} placeholder="Diperlukan untuk tukar kata laluan"/><label>Kata laluan baharu</label><input type="password" autoComplete="new-password" minLength={8} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="Sekurang-kurangnya 8 aksara"/><button disabled={busy}>{busy?"Menyimpan...":"Simpan perubahan akaun"}</button></form>{message&&<p className="notice">{message}</p>}</section>}
       <style jsx>{styles}</style>
     </main>
