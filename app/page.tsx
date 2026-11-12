@@ -68,6 +68,8 @@ function Photo({
 
 export default function Home() {
   const [language, setLanguage] = useState<"bm" | "en">("bm");
+  const [branch, setBranch] = useState("Rimba");
+
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   useEffect(() => {
@@ -77,6 +79,7 @@ export default function Home() {
       if (!response.ok || !data.ok) throw new Error(data.error || "Tetapan website tidak dapat dimuatkan.");
       if (active) {
         setSiteSettings(data.settings);
+        if (data.settings?.branches?.Rimba?.enabled === false && data.settings?.branches?.Telisai?.enabled !== false) setBranch("Telisai");
         const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
         const chosen = data.settings?.language?.[preferred] !== false ? preferred : (data.settings?.language?.bm !== false ? "bm" : "en");
         setLanguage(chosen);
@@ -106,7 +109,6 @@ export default function Home() {
   const showRiceAddon = siteSettings?.addons?.plainRice !== false;
   const showSeparateSambalAddon = siteSettings?.addons?.separateSambal !== false;
   const tr = (bm: string, en: string) => isEnglish ? en : bm;
-  const [branch, setBranch] = useState("Rimba");
   const [name, setName] = useState("");
   const [specialNotes, setSpecialNotes] = useState("");
   const [showPickupValidation, setShowPickupValidation] = useState(false);
@@ -169,6 +171,16 @@ export default function Home() {
   const [addonSambalEnabled, setAddonSambalEnabled] = useState(false);
   const [addonSambalType, setAddonSambalType] = useState("Tahai Biasa");
   const [addonSambalPrice, setAddonSambalPrice] = useState("0.50");
+  useEffect(() => {
+    if (siteSettings?.prices?.riceSmall != null) setRiceUnitPrice(String(siteSettings.prices.riceSmall));
+    if (siteSettings?.prices?.extraSambal != null) setAddonSambalPrice(String(siteSettings.prices.extraSambal));
+  }, [siteSettings]);
+  useEffect(() => {
+    if (siteSettings?.branches?.[branch]?.enabled === false) {
+      const alternative = branch === "Rimba" ? "Telisai" : "Rimba";
+      if (siteSettings?.branches?.[alternative]?.enabled !== false) { setBranch(alternative); setTime(""); }
+    }
+  }, [siteSettings, branch]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * calculatePackPrice(line.sambals, line.extraSambals), 0),
@@ -230,6 +242,10 @@ export default function Home() {
     // Clear a TODAY pickup time automatically if it is no longer available.
     if (todaySelected && time && !timeSlots.includes(time)) setTime("");
   }, [todaySelected, time, timeSlots]);
+
+  if (settingsLoaded && siteSettings && !siteEnabled) {
+    return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f8f7f0", color: "#173326", textAlign: "center", fontFamily: "Arial, sans-serif" }}><div><h1>NASI KATOK 3 ABDUL</h1><h2>{isEnglish ? "Website temporarily unavailable" : "Website Ditutup Sementara"}</h2><p>{isEnglish ? "Please check back later. Thank you." : "Sila datang semula sebentar lagi. Terima kasih."}</p></div></main>;
+  }
 
   function toggleSambal(sambal: string) {
     setMessage("");
@@ -602,6 +618,7 @@ export default function Home() {
 
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
         <Photo src={activeImagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
+        {siteSettings?.announcement?.enabled && (siteSettings.announcement.textBm || siteSettings.announcement.textEn) && <div role="status" style={{ padding: "9px 12px", background: "#fff4c7", color: "#173f30", borderBottom: "1px solid #d6b33f", fontSize: 13, fontWeight: 700 }}>{isEnglish ? (siteSettings.announcement.textEn || siteSettings.announcement.textBm) : (siteSettings.announcement.textBm || siteSettings.announcement.textEn)}</div>}
         <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(135deg, #032f20, #075537 52%, #032f20)", borderTop: "2px solid #c9a441" }}>
           <div className="nk3-language-admin-row">
             <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
@@ -724,7 +741,7 @@ export default function Home() {
               )}
 
               <div className="nk3-total-box">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(pricePerPack(selected, selectedExtraSambals))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(calculatePackPrice(selected, selectedExtraSambals))}</strong></div>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected, selectedExtraSambals))}</strong></div>
               </div>
 
@@ -733,7 +750,7 @@ export default function Home() {
                 {lines.length === 0 ? <p style={{ margin: "8px 0", color: "#68756d" }}>{tr("Belum ada pesanan.", "No items added yet.")}</p> : lines.map((line, index) => (
                   <div key={line.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #eee" }}>
                     <span style={{ flex: "1 1 auto", minWidth: 0, overflowWrap: "anywhere" }}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity}</span>
-                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</strong>
+                    <strong style={{ whiteSpace: "nowrap" }}>{money(line.quantity * calculatePackPrice(line.sambals, line.extraSambals))}</strong>
                     <button type="button" aria-label={tr("Hapus seluruh pesanan", "Delete entire order")} title={tr("Hapus seluruh pilihan pesanan", "Delete entire selected order")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))} style={{ ...buttonStyle, padding: "7px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto", fontSize: 12 }}>{tr("Hapus", "Delete")}</button>
                     {line.extraSambals.length > 0 && <button type="button" onClick={() => removeLineExtraSambal(line.id, line.extraSambals.length - 1)} style={{ ...buttonStyle, padding: "6px 8px", fontSize: 11, color: "#a33a32", borderColor: "#d9aaa6", background: "#fff", flex: "0 0 auto" }}>{tr("Buang Extra", "Remove Extra")}</button>}
                   </div>
@@ -764,7 +781,7 @@ export default function Home() {
               <div className="nk3-addon">
                 <Photo src={activeImagePaths.chicken} alt={tr("Ayam goreng", "Fried chicken")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
-                  <div className="nk3-addon-row"><strong>{tr("Ayam Goreng", "Fried chicken")}</strong><strong>$1.00</strong></div>
+                  <div className="nk3-addon-row"><strong>{tr("Ayam Goreng", "Fried chicken")}</strong><strong>{money(chickenUnitPrice)}</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
                     <span style={{ color: "#68756d", fontSize: 13 }}>{tr("Kuantiti", "Quantity")}</span>
                     <div className="nk3-qty">
@@ -906,7 +923,7 @@ export default function Home() {
                 </div>
               </div>
               {showPickupValidation && (!name.trim() || (!todaySelected && !date) || !time) && <p role="alert" style={{ margin: "0 0 14px", padding: "12px 14px", borderRadius: 12, border: "1px solid #d9a39a", background: "#fff0ed", color: "#a33b2b", fontWeight: 700, lineHeight: 1.45, textAlign: "left" }}>{tr("Sila isi nama, tarikh dan waktu ambil.", "Please enter your name, pickup date and pickup time.")}</p>}
-              <button type="button" onClick={confirmOrder} disabled={isSubmittingOrder} aria-busy={isSubmittingOrder} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px", background: "linear-gradient(135deg,#ffd633,#f2b900 55%,#ffda43)", color: "#10150e", border: "2px solid #d4a521", boxShadow: "0 6px 14px rgba(125,91,8,.25)", fontWeight: 900 }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{isSubmittingOrder ? tr("Sila Tunggu Sebentar ⏳", "Please Wait ⏳") : tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} {!isSubmittingOrder && "↗"}</span></button>
+              <button type="button" onClick={confirmOrder} disabled={isSubmittingOrder || !orderingEnabled} aria-busy={isSubmittingOrder || !orderingEnabled} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px", background: "linear-gradient(135deg,#ffd633,#f2b900 55%,#ffda43)", color: "#10150e", border: "2px solid #d4a521", boxShadow: "0 6px 14px rgba(125,91,8,.25)", fontWeight: 900 }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{!orderingEnabled ? tr("PESANAN DITUTUP SEMENTARA", "ORDERING TEMPORARILY CLOSED") : isSubmittingOrder ? tr("Sila Tunggu Sebentar ⏳", "Please Wait ⏳") : tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} {orderingEnabled && !isSubmittingOrder && "↗"}</span></button>
             </>}
             {stage === "done" && <p role="status" style={{ margin: 0, color: "#087447", fontWeight: 700 }}>{message}</p>}
           </div>
