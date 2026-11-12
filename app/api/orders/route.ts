@@ -152,7 +152,6 @@ export async function POST(request: Request) {
       addons,
     };
 
-    const baseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
     const headers = {
       apikey: secretKey,
       Authorization: `Bearer ${secretKey}`,
