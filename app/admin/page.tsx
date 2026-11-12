@@ -10,7 +10,7 @@ type Order = {
   total: number; special_notes: string | null; addons: { type: string; name: string; quantity: number; unitPrice: number }[];
   created_at: string; order_items: Item[];
 };
-const statuses = ["pending", "accepted", "preparing", "ready", "completed", "rejected", "cancelled"];
+const statuses = ["accepted", "preparing", "ready", "completed", "rejected", "cancelled"];
 const labels: Record<string,string> = { pending:"Pending", accepted:"Accepted", preparing:"Preparing", ready:"Ready", completed:"Completed", rejected:"Rejected", cancelled:"Cancelled" };
 const money = (n: number | string) => `BND $${Number(n || 0).toFixed(2)}`;
 
