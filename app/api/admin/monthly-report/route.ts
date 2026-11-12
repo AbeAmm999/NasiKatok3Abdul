@@ -3,22 +3,20 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const includedStatuses = ["accepted", "preparing", "ready", "completed"];
-
 async function authorize(request: Request) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const url = process.env.SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY;
   const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const admins = (process.env.ADMIN_EMAILS || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
   if (!token || !url || !secret || !publishable || admins.length === 0) return null;
-  const response = await fetch(`${url.replace(/\\/$/, "")}/auth/v1/user`, {
+  const response = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, {
     headers: { apikey: publishable, Authorization: `Bearer ${token}` }, cache: "no-store",
   });
   if (!response.ok) return null;
   const user = await response.json();
   if (typeof user.email !== "string" || !admins.includes(user.email.toLowerCase())) return null;
-  return { url: url.replace(/\\/$/, ""), secret };
+  return { url: url.replace(/\/$/, ""), secret };
 }
 
 function error(message: string, status: number) {
@@ -26,10 +24,10 @@ function error(message: string, status: number) {
 }
 
 function ascii(value: unknown) {
-  return String(value ?? "").normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^\\x20-\\x7E]/g, "?");
+  return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, "?");
 }
 function pdfText(value: unknown) {
-  return ascii(value).replace(/\\\\/g, "\\\\\\\\").replace(/\\(/g, "\\\\(").replace(/\\)/g, "\\\\)");
+  return ascii(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 function money(value: number) { return `BND $${value.toFixed(2)}`; }
 
@@ -71,21 +69,21 @@ function makePdf(month: string, rows: any[], totalPax: number, revenue: number) 
       lines.push("0.88 0.90 0.87 RG 40 " + (y+10) + " 515 0.5 re S");
     }
     draw(500, 25, 8, `Halaman ${p+1}/${pages}`);
-    const stream = lines.join("\\n");
-    objects[contentId] = `<< /Length ${Buffer.byteLength(stream, "ascii")} >>\\nstream\\n${stream}\\nendstream`;
+    const stream = lines.join("\n");
+    objects[contentId] = `<< /Length ${Buffer.byteLength(stream, "ascii")} >>\nstream\n${stream}\nendstream`;
     objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`;
   }
   objects[2] = `<< /Type /Pages /Kids [${pageObjectIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pages} >>`;
-  let pdf = "%PDF-1.4\\n";
+  let pdf = "%PDF-1.4\n";
   const offsets = [0];
   for (let i = 1; i < objects.length; i++) {
     offsets[i] = Buffer.byteLength(pdf, "ascii");
-    pdf += `${i} 0 obj\\n${objects[i]}\\nendobj\\n`;
+    pdf += `${i} 0 obj\n${objects[i]}\nendobj\n`;
   }
   const xref = Buffer.byteLength(pdf, "ascii");
-  pdf += `xref\\n0 ${objects.length}\\n0000000000 65535 f \\n`;
-  for (let i = 1; i < objects.length; i++) pdf += `${String(offsets[i]).padStart(10,"0")} 00000 n \\n`;
-  pdf += `trailer\\n<< /Size ${objects.length} /Root 1 0 R >>\\nstartxref\\n${xref}\\n%%EOF`;
+  pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+  for (let i = 1; i < objects.length; i++) pdf += `${String(offsets[i]).padStart(10,"0")} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
   return Buffer.from(pdf, "ascii");
 }
 
@@ -94,13 +92,12 @@ export async function GET(request: Request) {
   if (!auth) return error("Akses admin tidak dibenarkan. Sila log masuk semula.", 401);
   const params = new URL(request.url).searchParams;
   const month = params.get("month") || "";
-  if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(month)) return error("Bulan invoice tidak sah.", 400);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return error("Bulan invoice tidak sah.", 400);
   const start = new Date(`${month}-01T00:00:00+08:00`);
   const [year, mon] = month.split("-").map(Number);
   const end = new Date(Date.UTC(year, mon, 1) - 8 * 60 * 60 * 1000);
   const query = new URLSearchParams({
     select: "id,order_number,customer_name,branch,total,status,created_at,order_items(quantity)",
-    created_at: `gte.${start.toISOString()}`,
     order: "created_at.asc",
     limit: "1000",
     status: "in.(accepted,preparing,ready,completed)",
@@ -109,10 +106,8 @@ export async function GET(request: Request) {
   let offset = 0;
   while (true) {
     query.set("offset", String(offset));
-    query.set("created_at", `gte.${start.toISOString()}`);
     const pageQuery = new URLSearchParams(query);
-    pageQuery.set("created_at", `gte.${start.toISOString()}`);
-    pageQuery.append("created_at", `lt.${end.toISOString()}`);
+    pageQuery.set("and", `(created_at.gte.${start.toISOString()},created_at.lt.${end.toISOString()})`);
     const response = await fetch(`${auth.url}/rest/v1/orders?${pageQuery.toString()}`, {
       headers: { apikey: auth.secret, Authorization: `Bearer ${auth.secret}` }, cache: "no-store",
     });
