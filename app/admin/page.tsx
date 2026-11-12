@@ -34,6 +34,10 @@ export default function AdminPage() {
   const [invoiceMonth, setInvoiceMonth] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit" }).format(new Date()).slice(0, 7));
   const [monthlyStats, setMonthlyStats] = useState({ totalOrders: 0, totalPax: 0, revenue: 0 });
   const [invoiceBusy, setInvoiceBusy] = useState(false);
+  const [adminLanguage, setAdminLanguage] = useState<"en" | "bm">("en");
+  const isBm = adminLanguage === "bm";
+  const t = (en: string, bm: string) => isBm ? bm : en;
+
 
   useEffect(() => {
     const saved = sessionStorage.getItem("nk3_admin_access_token") || "";
@@ -53,11 +57,11 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store",
       });
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || "Tidak dapat memuatkan pesanan.");
+      if (!response.ok || !data.ok) throw new Error(data.error || t("Unable to load orders.", "Tidak dapat memuatkan pesanan."));
       setOrders(data.orders || []);
       setSelected((current) => current ? (data.orders || []).find((o: Order) => o.id === current.id) || null : null);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Ralat tidak diketahui.");
+      setMessage(e instanceof Error ? e.message : t("Unknown error.", "Ralat tidak diketahui."));
       if (e instanceof Error && e.message.toLowerCase().includes("log masuk")) {
         sessionStorage.removeItem("nk3_admin_access_token");
         setToken("");
@@ -76,9 +80,9 @@ export default function AdminPage() {
       headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
     }).then(async response => {
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || "Tidak dapat memuatkan ringkasan bulanan.");
+      if (!response.ok || !data.ok) throw new Error(data.error || t("Unable to load monthly summary.", "Tidak dapat memuatkan ringkasan bulanan."));
       if (!cancelled) setMonthlyStats({ totalOrders: data.totalOrders, totalPax: data.totalPax, revenue: data.revenue });
-    }).catch(error => { if (!cancelled) setMessage(error instanceof Error ? error.message : "Ralat ringkasan bulanan."); });
+    }).catch(error => { if (!cancelled) setMessage(error instanceof Error ? error.message : t("Monthly summary error.", "Ralat ringkasan bulanan.")); });
     return () => { cancelled = true; };
   }, [token, invoiceMonth]);
 
@@ -90,7 +94,7 @@ export default function AdminPage() {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Invoice tidak dapat dimuat turun.");
+        throw new Error(data.error || t("Unable to download invoice.", "Invoice tidak dapat dimuat turun."));
       }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -100,7 +104,7 @@ export default function AdminPage() {
       URL.revokeObjectURL(url);
       setMessage(`Invoice ${invoiceMonth} berjaya dimuat turun.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invoice gagal dimuat turun.");
+      setMessage(error instanceof Error ? error.message : t("Invoice download failed.", "Invoice gagal dimuat turun."));
     } finally { setInvoiceBusy(false); }
   }
 
@@ -122,28 +126,28 @@ export default function AdminPage() {
         anchor.href = url; anchor.download = file.name;
         document.body.appendChild(anchor); anchor.click(); anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-        setMessage("Telefon atau pelayar tidak menyokong perkongsian PDF terus. Invoice dimuat turun; sila lampirkan PDF itu dalam WhatsApp.");
+        setMessage(t("This device or browser does not support direct PDF sharing. The invoice was downloaded; attach it in WhatsApp.", "Telefon atau pelayar tidak menyokong perkongsian PDF terus. Invoice dimuat turun; sila lampirkan PDF itu dalam WhatsApp."));
         return;
       }
-      await navigator.share({ files: [file], title: `Invoice NK3A ${invoiceMonth}`, text: `Invoice bulanan Nasi Katok 3 Abdul - ${invoiceMonth}` });
-      setMessage("Menu perkongsian dibuka. Pilih WhatsApp dan chat anda sendiri untuk menghantar invoice.");
+      await navigator.share({ files: [file], title: `Invoice NK3A ${invoiceMonth}`, text: `{t("Monthly Invoice", "Invoice Bulanan")} Nasi Katok 3 Abdul - ${invoiceMonth}` });
+      setMessage(t("The share menu is open. Choose WhatsApp and your chat to send the invoice.", "Menu perkongsian dibuka. Pilih WhatsApp dan chat anda sendiri untuk menghantar invoice."));
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        setMessage("Perkongsian dibatalkan. Invoice belum dihantar.");
+        setMessage(t("Sharing cancelled. The invoice has not been sent.", "Perkongsian dibatalkan. Invoice belum dihantar."));
       } else {
-        setMessage(error instanceof Error ? error.message : "Invoice gagal dikongsi.");
+        setMessage(error instanceof Error ? error.message : t("Invoice sharing failed.", "Invoice gagal dikongsi."));
       }
     } finally { setInvoiceBusy(false); }
   }
 
   async function requestPasswordReset(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
-    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error("Tetapan Supabase belum lengkap."); const response=await fetch(`${(url.endsWith("/") ? url.slice(0, -1) : url)}/auth/v1/recover?redirect_to=${encodeURIComponent(`${window.location.origin}/admin/reset-password`)}`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key},body:JSON.stringify({email:resetEmail.trim()})}); if(!response.ok) throw new Error("Permintaan reset gagal. Semak e-mel atau cuba sebentar lagi."); setMessage("Jika e-mel berdaftar, pautan reset akan dihantar. Semak Inbox dan Spam."); } catch(e){setMessage(e instanceof Error?e.message:"Permintaan gagal.");} finally{setBusy(false);}
+    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error(t("Supabase configuration is incomplete.", "Tetapan Supabase belum lengkap.")); const response=await fetch(`${(url.endsWith("/") ? url.slice(0, -1) : url)}/auth/v1/recover?redirect_to=${encodeURIComponent(`${window.location.origin}/admin/reset-password`)}`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key},body:JSON.stringify({email:resetEmail.trim()})}); if(!response.ok) throw new Error(t("Password reset request failed. Check the email address or try again.", "Permintaan reset gagal. Semak e-mel atau cuba sebentar lagi.")); setMessage(t("If the email is registered, a reset link will be sent. Check Inbox and Spam.", "Jika e-mel berdaftar, pautan reset akan dihantar. Semak Inbox dan Spam.")); } catch(e){setMessage(e instanceof Error?e.message:"Permintaan gagal.");} finally{setBusy(false);}
   }
 
   async function updateAdminAccount(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
-    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error("Tetapan Supabase belum lengkap."); const body:any={}; if(newEmail.trim()) body.email=newEmail.trim(); if(newPassword) { if(!currentPassword) throw new Error("Masukkan kata laluan semasa untuk menukar kata laluan."); body.password=newPassword; body.current_password=currentPassword; } if(!Object.keys(body).length) throw new Error("Masukkan e-mel baharu atau kata laluan baharu."); const response=await fetch(`${(url.endsWith("/") ? url.slice(0, -1) : url)}/auth/v1/user`,{method:"PUT",headers:{"Content-Type":"application/json",apikey:key,Authorization:`Bearer ${token}`},body:JSON.stringify(body)}); const data=await response.json(); if(!response.ok) throw new Error(data.message||data.msg||"Kemaskini akaun gagal."); setNewEmail("");setCurrentPassword("");setNewPassword("");setMessage(body.email?"Permintaan tukar e-mel dihantar. Sahkan melalui pautan dalam e-mel baharu.":"Kata laluan berjaya dikemaskini."); } catch(e){setMessage(e instanceof Error?e.message:"Kemaskini gagal.");} finally{setBusy(false);}
+    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error(t("Supabase configuration is incomplete.", "Tetapan Supabase belum lengkap.")); const body:any={}; if(newEmail.trim()) body.email=newEmail.trim(); if(newPassword) { if(!currentPassword) throw new Error(t("Enter your current password to change it.", "Masukkan kata laluan semasa untuk menukar kata laluan.")); body.password=newPassword; body.current_password=currentPassword; } if(!Object.keys(body).length) throw new Error(t("Enter a new email or a new password.", "Masukkan e-mel baharu atau kata laluan baharu.")); const response=await fetch(`${(url.endsWith("/") ? url.slice(0, -1) : url)}/auth/v1/user`,{method:"PUT",headers:{"Content-Type":"application/json",apikey:key,Authorization:`Bearer ${token}`},body:JSON.stringify(body)}); const data=await response.json(); if(!response.ok) throw new Error(data.message||data.msg||t("Account update failed.", "Kemaskini akaun gagal.")); setNewEmail("");setCurrentPassword("");setNewPassword("");setMessage(body.email?t("Email change requested. Confirm using the link sent to the new email address.", "Permintaan tukar e-mel dihantar. Sahkan melalui pautan dalam e-mel baharu."):t("Password updated successfully.", "Kata laluan berjaya dikemaskini.")); } catch(e){setMessage(e instanceof Error?e.message:"Kemaskini gagal.");} finally{setBusy(false);}
   }
 
   async function login(event: React.FormEvent) {
@@ -152,19 +156,19 @@ export default function AdminPage() {
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-      if (!url || !key) throw new Error("Tetapan Supabase belum lengkap.");
+      if (!url || !key) throw new Error(t("Supabase configuration is incomplete.", "Tetapan Supabase belum lengkap."));
       const response = await fetch(`${url.replace(/\/$/, "")}/auth/v1/token?grant_type=password`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: key },
         body: JSON.stringify({ email: email.trim(), password }),
       });
       const data = await response.json();
-      if (!response.ok || !data.access_token) throw new Error("Log masuk gagal. Semak e-mel dan kata laluan.");
+      if (!response.ok || !data.access_token) throw new Error(t("Login failed. Check your email and password.", "Log masuk gagal. Semak e-mel dan kata laluan."));
       sessionStorage.setItem("nk3_admin_access_token", data.access_token);
       setPassword("");
       setToken(data.access_token);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Log masuk gagal.");
+      setMessage(e instanceof Error ? e.message : t("Login failed.", "Log masuk gagal."));
     } finally { setBusy(false); }
   }
 
@@ -197,7 +201,7 @@ export default function AdminPage() {
     ready: orders.filter(o => o.status === "ready").length,
   }), [orders]);
 
-  if (!ready) return <main className="admin-shell"><p>Memuatkan...</p></main>;
+  if (!ready) return <main className="admin-shell"><p>{t("Loading...", "Memuatkan...")}</p></main>;
 
   if (!token) return (
     <main className="admin-shell">
@@ -215,7 +219,7 @@ export default function AdminPage() {
         </form>
         {message && <p className="notice error">{message}</p>}
         <details className="forgot-box"><summary>Lupa kata laluan?</summary><form onSubmit={requestPasswordReset}><label>E-mel akaun admin</label><input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder="Masukkan e-mel berdaftar"/><button disabled={busy}>{busy?"Menghantar...":"Hantar pautan reset"}</button></form></details>
-        <p className="small muted">Akses hanya diberikan kepada akaun yang disenaraikan sebagai admin.</p>
+        <p className="small muted">{t("Access is limited to accounts approved as administrators.", "Akses hanya diberikan kepada akaun yang disenaraikan sebagai admin.")}</p>
         <a href="/">← Kembali ke halaman pesanan</a>
       </section>
       <style jsx>{styles}</style>
@@ -224,39 +228,39 @@ export default function AdminPage() {
 
   return (
     <main className="admin-shell">
-      <header className="topbar">
-        <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>Admin Dashboard</h1></div></div>
-        <div className="admin-actions"><a className="customer-link" href="/">Lihat Website</a><button className="logout" onClick={logout}>Log Keluar</button></div>
+      <header className="topbar">\n        <div className="language-switch" aria-label="Admin language"><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div>
+        <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>{t("Admin Dashboard", "Dashboard Admin")}</h1></div></div>
+        <div className="admin-actions"><a className="customer-link" href="/">{t("View Website", "Lihat Website")}</a><button className="logout" onClick={logout}>{t("Log Out", "Log Keluar")}</button></div>
       </header>
       <nav className="main-tabs" aria-label="Menu pengurusan">
-        <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ Pesanan & Dashboard</button>
-        <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ Website Control</button>
-        <button className={activeTab==="security"?"tab active":"tab"} onClick={()=>setActiveTab("security")}>🔐 Keselamatan Akaun</button>
+        <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ {t("Orders & Dashboard", "Pesanan & Dashboard")}</button>
+        <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ {t("Website Control", "Kawalan Website")}</button>
+        <button className={activeTab==="security"?"tab active":"tab"} onClick={()=>setActiveTab("security")}>🔐 {t("Account Security", "Keselamatan Akaun")}</button>
       </nav>
       {activeTab==="orders" && <>
       <section className="monthly-tools">
         <div><label htmlFor="invoice-month">Invoice bulanan</label><input id="invoice-month" type="month" value={invoiceMonth} onChange={e=>setInvoiceMonth(e.target.value)} /></div>
         <div className="invoice-buttons">
-          <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : "↓ Download Invoice PDF"}</button>
-          <button className="share-invoice" onClick={()=>void shareMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Sila tunggu..." : "↗ Hantar Invoice ke WhatsApp"}</button>
+          <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : "↓ {t("Download Invoice PDF", "Muat Turun Invoice PDF")}"}</button>
+          <button className="share-invoice" onClick={()=>void shareMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Sila tunggu..." : "↗ {t("Share Invoice via WhatsApp", "Hantar Invoice ke WhatsApp")}"}</button>
         </div>
       </section>
       <section className="stats">
-        <article><span>Total Pax · {invoiceMonth}</span><strong>{monthlyStats.totalPax}</strong><small>{monthlyStats.totalOrders} pesanan</small></article>
-        <article><span>Total Hasil Jualan · {invoiceMonth}</span><strong>{money(monthlyStats.revenue)}</strong><small>Jumlah jualan bulanan</small></article>
+        <article><span>{t("Total Pax", "Jumlah Pax")} · {invoiceMonth}</span><strong>{monthlyStats.totalPax}</strong><small>{monthlyStats.totalOrders} pesanan</small></article>
+        <article><span>{t("Total Sales", "Jumlah Jualan")} · {invoiceMonth}</span><strong>{money(monthlyStats.revenue)}</strong><small>{t("Monthly sales total", "Jumlah jualan bulanan")}</small></article>
       </section>
       <section className="filters">
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari nombor pesanan atau nama..."/>
-        <select value={branch} onChange={e=>setBranch(e.target.value)}><option value="">Semua cawangan</option><option>Rimba</option><option>Telisai</option></select>
-        <select value={status} onChange={e=>setStatus(e.target.value)}><option value="">Semua status</option>{statuses.map(s=><option key={s} value={s}>{labels[s]}</option>)}</select>
-        <button className="refresh" onClick={()=>void loadOrders(token)} disabled={busy}>↻ Muat semula</button>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="{t("Search order number or customer name...", "Cari nombor pesanan atau nama...")}"/>
+        <select value={branch} onChange={e=>setBranch(e.target.value)}><option value="">{t("All branches", "Semua cawangan")}</option><option>Rimba</option><option>Telisai</option></select>
+        <select value={status} onChange={e=>setStatus(e.target.value)}><option value="">{t("All statuses", "Semua status")}</option>{statuses.map(s=><option key={s} value={s}>{labels[s]}</option>)}</select>
+        <button className="refresh" onClick={()=>void loadOrders(token)} disabled={busy}>↻ {t("Refresh", "Muat semula")}</button>
       </section>
       {message && <p className="notice">{message}</p>}
       <div className="dashboard-grid">
         <section className="orders-panel">
-          <div className="panel-heading"><h2>Senarai Pesanan</h2><span>{orders.length} rekod terakhir</span></div>
+          <div className="panel-heading"><h2>{t("Orders", "Senarai Pesanan")}</h2><span>{orders.length} {t("recent records", "rekod terakhir")}</span></div>
           {busy && <p className="muted">Memuatkan...</p>}
-          {!busy && orders.length===0 && <p className="empty">Tiada pesanan ditemui.</p>}
+          {!busy && orders.length===0 && <p className="empty">{t("No orders found.", "Tiada pesanan ditemui.")}</p>}
           {orders.map(order=>(
             <button key={order.id} className={`order-row ${selected?.id===order.id?"active":""}`} onClick={()=>setSelected(order)}>
               <div className="row-main"><strong>{order.order_number}</strong><span className={`status ${order.status}`}>{labels[order.status] || order.status}</span></div>
@@ -266,23 +270,23 @@ export default function AdminPage() {
           ))}
         </section>
         <section className="detail-panel">
-          {!selected ? <div className="empty detail-empty">Pilih pesanan untuk melihat butiran.</div> : <>
-            <div className="panel-heading"><div><p className="eyebrow">BUTIRAN PESANAN</p><h2>{selected.order_number}</h2></div><span className={`status ${selected.status}`}>{labels[selected.status]}</span></div>
-            <div className="detail-pair"><span>Nama pelanggan</span><strong>{selected.customer_name}</strong></div>
-            <div className="detail-pair"><span>Cawangan</span><strong>{selected.branch}</strong></div>
-            <div className="detail-pair"><span>Tarikh ambil</span><strong>{selected.pickup_date}</strong></div>
-            <div className="detail-pair"><span>Waktu ambil</span><strong>{selected.pickup_time}</strong></div>
-            <h3>Senarai item</h3>
+          {!selected ? <div className="empty detail-empty">{t("Select an order to view its details.", "Pilih pesanan untuk melihat butiran.")}</div> : <>
+            <div className="panel-heading"><div><p className="eyebrow">{t("ORDER DETAILS", "BUTIRAN PESANAN")}</p><h2>{selected.order_number}</h2></div><span className={`status ${selected.status}`}>{labels[selected.status]}</span></div>
+            <div className="detail-pair"><span>{t("Customer name", "Nama pelanggan")}</span><strong>{selected.customer_name}</strong></div>
+            <div className="detail-pair"><span>{t("Branch", "Cawangan")}</span><strong>{selected.branch}</strong></div>
+            <div className="detail-pair"><span>{t("Pickup date", "Tarikh ambil")}</span><strong>{selected.pickup_date}</strong></div>
+            <div className="detail-pair"><span>{t("Pickup time", "Waktu ambil")}</span><strong>{selected.pickup_time}</strong></div>
+            <h3>{t("Order items", "Senarai item")}</h3>
             {(selected.order_items || []).map((item,i)=><div className="item-line" key={item.id}><div><strong>{i+1}. {(item.sambals || []).join(" + ") || "Item"}</strong><small>Kuantiti: {item.quantity}{item.extra_sambals?.length ? ` · Extra: ${item.extra_sambals.join(", ")}` : ""}</small></div><strong>{money(item.line_total)}</strong></div>)}
             {(selected.addons || []).length>0 && <><h3>Add On's</h3>{selected.addons.map((a,i)=><div className="item-line" key={i}><span>{a.name} × {a.quantity}</span><strong>{money(a.unitPrice*a.quantity)}</strong></div>)}</>}
-            {selected.special_notes && <div className="notes"><strong>Catatan</strong><p>{selected.special_notes}</p></div>}
+            {selected.special_notes && <div className="notes"><strong>{t("Notes", "Catatan")}</strong><p>{selected.special_notes}</p></div>}
             <div className="totals"><div><span>Subtotal</span><strong>{money(selected.subtotal)}</strong></div><div><span>Add On's</span><strong>{money(selected.addon_total)}</strong></div><div className="grand"><span>Jumlah</span><strong>{money(selected.total)}</strong></div></div>
-            <label className="status-label">Kemaskini status</label>
+            <label className="status-label">{t("Update status", "Kemaskini status")}</label>
             <select value={selected.status} onChange={e=>void updateStatus(selected,e.target.value)} disabled={busy}>{statuses.map(s=><option key={s} value={s}>{labels[s]}</option>)}</select>
           </>}
         </section>
       </div>
-      <p className="footer-note">Pesanan baharu diterima secara automatik. Kemaskini status penyediaan apabila diperlukan.</p>
+      <p className="footer-note">{t("New orders are received automatically. Update preparation status when needed.", "Pesanan baharu diterima secara automatik. Kemaskini status penyediaan apabila diperlukan.")}</p>
       </>}
       {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}
       {activeTab==="security" && <section className="security-panel"><h2>Keselamatan Akaun Admin</h2><p className="muted">Perubahan e-mel memerlukan pengesahan melalui e-mel. Kata laluan tidak disimpan di website.</p><form onSubmit={updateAdminAccount}><label>E-mel baharu (biarkan kosong jika tidak ditukar)</label><input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder="E-mel baharu"/><label>Kata laluan semasa</label><input type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} placeholder="Diperlukan untuk tukar kata laluan"/><label>Kata laluan baharu</label><input type="password" autoComplete="new-password" minLength={8} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="Sekurang-kurangnya 8 aksara"/><button disabled={busy}>{busy?"Menyimpan...":"Simpan perubahan akaun"}</button></form>{message&&<p className="notice">{message}</p>}</section>}
@@ -292,7 +296,7 @@ export default function AdminPage() {
 }
 
 const styles = `
-  .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+  .language-switch{display:flex;gap:4px;justify-content:flex-end;margin:0 auto 12px;max-width:1400px}.language-switch button{background:#fff;color:#17432f;border:1px solid #d7c17b;padding:8px 13px}.language-switch button.active{background:#075537;color:#f8d35a}\n  .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
   .forgot-box{margin-top:14px;font-size:13px}.forgot-box summary{cursor:pointer;color:#075537;font-weight:700}.forgot-box form{margin-top:12px}
   .security-panel{max-width:700px;margin:20px auto;background:#fff;border:1px solid #d7c17b;border-radius:16px;padding:22px}.security-panel form{display:grid;gap:10px}.security-panel button{margin-top:8px}
   .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
