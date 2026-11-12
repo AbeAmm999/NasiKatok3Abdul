@@ -27,7 +27,7 @@ function ascii(value: unknown) {
   return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, "?");
 }
 function pdfText(value: unknown) {
-  return ascii(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  return ascii(value).split("\\").join("\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
 }
 function money(value: number) { return `BND $${value.toFixed(2)}`; }
 
@@ -61,7 +61,7 @@ function makePdf(month: string, rows: any[], totalPax: number, revenue: number) 
     for (const row of rows.slice(p*pageRows, (p+1)*pageRows)) {
       const pax = (row.order_items || []).reduce((sum:number, item:any) => sum + Number(item.quantity || 0), 0);
       draw(42,y,8,row.order_number);
-      draw(145,y,8,String(row.created_at || "").slice(0,10));
+      draw(145,y,8,new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Brunei", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(row.created_at)));
       draw(215,y,8,`${ascii(row.customer_name).slice(0,22)} / ${row.branch}`);
       draw(445,y,8,String(pax));
       draw(485,y,8,money(Number(row.total || 0)));
