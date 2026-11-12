@@ -297,8 +297,7 @@ export default function Home() {
       setShowPickupValidation(true);
       setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
       return;
-    }    setShowPickupValidation(false);    if (lines.length === 0) {
-      setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");
+    }    setShowPickupValidation(false);    if (lines.length === 0) {      setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");
       return;
     }
     if (selected.length > 0) {
@@ -597,8 +596,7 @@ export default function Home() {
                   }}
                 >                  <Photo src={item.src} alt={tr(`Kedai Nasi Katok 3 Abdul ${item.name}`, `Nasi Katok 3 Abdul ${item.name} branch`)} className="nk3-branch-photo" />
                   <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>                </button>
-              ))}
-            </div>
+              ))}            </div>
           </section>
 
           <section className="nk3-card">
@@ -835,15 +833,39 @@ export default function Home() {
           <div style={{ padding: 16, textAlign: "center" }}>
             <p style={{ margin: "0 0 14px", lineHeight: 1.5 }}>{tr("Sila semak semula semua maklumat pesanan anda sebelum menghantar ke WhatsApp.", "Please review all your order details before sending to WhatsApp.")}</p>
             {stage !== "done" && <>
-              <div style={{ margin: "0 0 14px", padding: "12px 14px", borderRadius: 14, border: "1px solid #e4bd36", background: "linear-gradient(135deg,#fff8df,#fff0b5)", color: "#153c2c", lineHeight: 1.5, textAlign: "left", fontSize: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, color: "#075537", fontWeight: 900, fontSize: 15 }}>
-                  <span aria-hidden="true">📢</span>
-                  <span>{tr("MAKLUMAN", "NOTICE")}</span>
+              <div style={{ margin: "0 0 14px", overflow: "hidden", borderRadius: 18, border: "2px solid #d6b33f", background: "#fffefa", boxShadow: "0 4px 12px rgba(93,72,18,.08)", color: "#14251d", textAlign: "left" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 14px", background: "linear-gradient(105deg,#00452b,#075537)", color: "#fffefa", borderBottom: "4px solid #d6b33f" }}>
+                  <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 42, height: 42, flex: "0 0 42px", borderRadius: "50%", background: "#f5d21b", color: "#07502f", fontSize: 29, fontWeight: 900, fontFamily: "Georgia,serif" }}>i</span>
+                  <span style={{ fontFamily: "Georgia,serif", fontWeight: 900, fontSize: 23, letterSpacing: 2 }}>{tr("MAKLUMAN", "NOTICE")}</span>
                 </div>
-                <p style={{ margin: "0 0 7px" }}>{tr("Setelah selesai membuat pesanan, sila tekan butang di bawah untuk menghantar pesanan anda.", "Once you have completed your order, please press the button below to submit your order.")}</p>
-                <p style={{ margin: "0 0 7px" }}>{tr("Sila tunggu sebentar sehingga anda dialihkan ke WhatsApp. Pastikan anda menekan butang", "Please wait while you are redirected to WhatsApp. Make sure you press the")} <strong style={{ display: "inline-block", padding: "1px 6px", borderRadius: 6, background: "#ffe16a", color: "#123d2a" }}>{tr("Hantar (Send)", "Send")}</strong> {tr("di WhatsApp supaya pesanan anda diterima oleh pihak kami.", "button in WhatsApp so our team receives your order.")}</p>
-                <p style={{ margin: "0 0 7px", fontWeight: 900, color: "#9a6800" }}>{tr("Tekan butang KUNING di bawah untuk meneruskan.", "Press the YELLOW button below to continue.")}</p>
-                <p style={{ margin: 0, fontWeight: 700, color: "#075537" }}>{tr("Terima kasih atas pesanan anda!", "Thank you for your order!")}</p>
+                <div style={{ padding: "12px 14px 14px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(92px,112px) 3px minmax(0,1fr)", alignItems: "center", gap: 12, padding: "5px 0 12px", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 82, color: "#087044", position: "relative" }}>
+                      <svg viewBox="0 0 100 90" style={{ width: "82px", height: "76px" }} fill="currentColor"><path d="M7 10h10l8 43a8 8 0 0 0 8 6h43a7 7 0 0 0 7-5l9-29H29l-2-10H7z"/><circle cx="39" cy="72" r="6"/><circle cx="74" cy="72" r="6"/><circle cx="76" cy="17" r="16" fill="#f4cc13"/><path d="m68 17 6 6 11-13" fill="none" stroke="#075537" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span aria-hidden="true" style={{ width: 3, height: "76%", minHeight: 66, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.42 }}>{tr("Setelah selesai membuat pesanan, sila", "After completing your order, please")} <strong style={{ display: "inline", padding: "1px 5px", borderRadius: 6, background: "#ffe329", color: "#111" }}>{tr("tekan butang KUNING di bawah", "press the YELLOW button below")}</strong> {tr("untuk menghantar pesanan anda.", "to submit your order.")}</p>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(92px,112px) 3px minmax(0,1fr)", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 66 }}>
+                      <svg viewBox="0 0 100 78" style={{ width: "82px", height: "66px" }}><circle cx="39" cy="36" r="29" fill="#16b65a"/><path d="M18 62 22 49a25 25 0 1 1 9 10z" fill="#16b65a" stroke="#087044" strokeWidth="2"/><path d="M30 21c-3 2-5 7-2 13 5 11 14 17 22 18 4 0 8-4 8-7l-10-6-5 5c-5-2-9-6-11-11l4-4z" fill="#fff"/><path d="M60 51h25l-1-8 14 12-14 12 1-8H60z" fill="#efbf16"/></svg>
+                    </div>
+                    <span aria-hidden="true" style={{ width: 3, height: "76%", minHeight: 56, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.42 }}>{tr("Sila tunggu sebentar sehingga anda dialihkan ke WhatsApp.", "Please wait a moment while you are redirected to WhatsApp.")}</p>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(92px,112px) 3px minmax(0,1fr)", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #e9e3d1" }}>
+                    <div aria-hidden="true" style={{ display: "grid", placeItems: "center", minHeight: 82 }}>
+                      <svg viewBox="0 0 100 90" style={{ width: "82px", height: "76px" }} fill="#087044"><path d="M8 43 88 8 62 81 45 54 8 43zm38 7 12 17 8-32z"/><path d="m45 54 25-22" stroke="#fff" strokeWidth="3" fill="none"/><rect x="10" y="70" width="80" height="17" rx="8" fill="#087044"/><text x="50" y="82" fontSize="10" textAnchor="middle" fill="#fff">Hantar (Send)</text></svg>
+                    </div>
+                    <span aria-hidden="true" style={{ width: 3, height: "76%", minHeight: 68, background: "#e3bd30", borderRadius: 3 }} />
+                    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.42 }}>{tr("Pastikan anda menekan butang", "Make sure you press the")} <strong style={{ display: "inline-block", padding: "1px 6px", borderRadius: 6, background: "#ffe329", color: "#111" }}>{tr("Hantar (Send)", "Send")}</strong> {tr("di WhatsApp supaya pesanan anda diterima oleh pihak kami.", "button in WhatsApp so our team receives your order.")}</p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 12, padding: "12px 8px", borderRadius: 13, background: "#e5f2ce", color: "#06482e" }}>
+                    <span aria-hidden="true" style={{ fontSize: 27 }}>🤝</span>
+                    <span style={{ width: 3, height: 28, background: "#075537" }} />
+                    <strong style={{ fontSize: 15, fontStyle: "italic", lineHeight: 1.3 }}>{tr("Terima kasih atas pesanan anda!", "Thank you for your order!")}</strong>
+                  </div>
+                </div>
               </div>
               {showPickupValidation && (!name.trim() || (!todaySelected && !date) || !time) && <p role="alert" style={{ margin: "0 0 14px", padding: "12px 14px", borderRadius: 12, border: "1px solid #d9a39a", background: "#fff0ed", color: "#a33b2b", fontWeight: 700, lineHeight: 1.45, textAlign: "left" }}>{tr("Sila isi nama, tarikh dan waktu ambil.", "Please enter your name, pickup date and pickup time.")}</p>}
               <button type="button" onClick={confirmOrder} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px", background: "linear-gradient(135deg,#ffd633,#f2b900 55%,#ffda43)", color: "#10150e", border: "2px solid #d4a521", boxShadow: "0 6px 14px rgba(125,91,8,.25)", fontWeight: 900 }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</span></button>
