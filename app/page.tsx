@@ -79,25 +79,28 @@ export default function Home() {
         const response = await fetch("/api/site-settings", { cache: "no-store" });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || "Tetapan website tidak dapat dimuatkan.");
-        if (active) {
-          setSiteSettings(data.settings);
-          const branchSettings = data.settings?.branches || {};
-          setBranch(current => branchSettings[current]?.enabled !== false
-            ? current
-            : branchSettings.Rimba?.enabled !== false ? "Rimba"
-            : branchSettings.Telisai?.enabled !== false ? "Telisai" : current);
-          const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
-          const chosen = data.settings?.language?.[preferred] !== false ? preferred : (data.settings?.language?.bm !== false ? "bm" : "en");
-          setLanguage(chosen);
-          setSettingsLoaded(true);
-        }
+        if (!active) return;
+        setSiteSettings(data.settings);
+        const branches = data.settings?.branches || {};
+        setBranch(current => branches[current]?.enabled !== false
+          ? current
+          : branches.Rimba?.enabled !== false ? "Rimba"
+          : branches.Telisai?.enabled !== false ? "Telisai" : current);
+        const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
+        const chosen = data.settings?.language?.[preferred] !== false
+          ? preferred
+          : (data.settings?.language?.bm !== false ? "bm" : "en");
+        setLanguage(chosen);
+        setSettingsLoaded(true);
       } catch (error) {
         console.error("Website settings load failed:", error);
         if (active) setSettingsLoaded(true);
       }
     };
     void loadSettings();
-    const refresh = () => { if (document.visibilityState === "visible") void loadSettings(); };
+    const refresh = () => {
+      if (document.visibilityState === "visible") void loadSettings();
+    };
     const timer = window.setInterval(refresh, 10000);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
