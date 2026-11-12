@@ -228,7 +228,8 @@ export default function AdminPage() {
 
   return (
     <main className="admin-shell">
-      <header className="topbar">\n        <div className="language-switch" aria-label="Admin language"><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div>
+      <header className="topbar">
+        <div className="language-switch" aria-label="Admin language"><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div>
         <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>{t("Admin Dashboard", "Dashboard Admin")}</h1></div></div>
         <div className="admin-actions"><a className="customer-link" href="/">{t("View Website", "Lihat Website")}</a><button className="logout" onClick={logout}>{t("Log Out", "Log Keluar")}</button></div>
       </header>
