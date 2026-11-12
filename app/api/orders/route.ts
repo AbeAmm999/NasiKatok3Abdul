@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       branch: body.branch,
       pickup_date: body.pickupDate,
       pickup_time: body.pickupTime.trim(),
-      status: "pending",
+      status: "accepted",
       subtotal: roundMoney(subtotal),
       addon_total: roundMoney(addonTotal),
       total: roundMoney(subtotal + addonTotal),
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
       orderId: createdOrder.id,
       orderNumber: createdOrder.order_number,
       total: orderPayload.total,
-      status: "pending",
+      status: "accepted",
     }, { status: 201 });
   } catch (error) {
     console.error("Order API error:", error);
