@@ -228,10 +228,10 @@ export default function Home() {
 
     const isTodayOrder = todaySelected && selectedDate === bruneiToday;
     if (isTodayOrder) {
-      // Keep today's full schedule visible, but disable times that have passed
-      // or are inside the configured preparation lead time in the picker.
+      // Hide pickup times that have passed or fall inside the preparation lead time.
       // The final pickup slot is 30 minutes before this branch's closing time.
-      const firstSlotMinutes = Math.ceil(hours.open / 10) * 10;
+      const earliestMinutes = bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 10);
+      const firstSlotMinutes = Math.max(Math.ceil(hours.open / 10) * 10, Math.ceil(earliestMinutes / 10) * 10);
       const lastAvailableMinutes = hours.close - 30;
       if (firstSlotMinutes > lastAvailableMinutes) return slots;
 
@@ -702,7 +702,7 @@ export default function Home() {
               </div>
               <div style={{ color: "#c9a441", fontWeight: 800, letterSpacing: 2, marginBottom: 8, fontSize:18 }}>{tr("3. WAKTU AMBIL", "3. PICKUP TIME")}</div>
               <div style={{ color:"#7a7d78", fontSize:13, letterSpacing:1, marginBottom:10 }}>{tr("PILIH WAKTU AMBIL YANG TERSEDIA", "SELECT AN AVAILABLE PICKUP TIME")}</div>
-              <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => { const [clock, period] = slot.split(" "); const [h, m] = clock.split(":").map(Number); const minuteOfDay = (h % 12) * 60 + m + (period === "petang" || period === "PM" ? 720 : 0); const unavailableToday = todaySelected && minuteOfDay < bruneiHourMinute + Number(siteSettings?.orderRules?.todayLeadMinutes ?? 10); return <option key={slot} value={slot} disabled={unavailableToday}>{slot}{unavailableToday ? (isEnglish ? " — unavailable" : " — sudah lepas") : ""}</option>; })}</select></label>
+              <label style={{display:"block"}}><select style={{ ...inputStyle, border:"2px solid #c9a441", background:"#fff", minHeight:60 }} value={time} onChange={(e) => setTime(e.target.value)}><option value="">{tr("Pilih waktu", "Choose a time")}</option>{timeSlots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}</select></label>
             </div>
           </section>
 
