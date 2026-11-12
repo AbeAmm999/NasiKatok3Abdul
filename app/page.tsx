@@ -101,7 +101,8 @@ export default function Home() {
     const refresh = () => {
       if (document.visibilityState === "visible") void loadSettings();
     };
-    const timer = window.setInterval(refresh, 10000);
+    // Keep customer pages in near-real-time sync with confirmed Website Control changes.
+    const timer = window.setInterval(refresh, 2000);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
