@@ -619,10 +619,11 @@ export default function Home() {
       <header style={{ overflow: "hidden", borderRadius: 16, border: "2px solid #c9a441", background: "#003b24", color: "#fff8e7", marginBottom: 16, boxShadow: "0 5px 18px rgba(0,59,36,.12)" }}>
         <Photo src={activeImagePaths.banner} alt="Banner Nasi Katok 3 Abdul" className="nk3-banner" />
         {siteSettings?.announcement?.enabled && (siteSettings.announcement.textBm || siteSettings.announcement.textEn) && <div role="status" style={{ padding: "9px 12px", background: "#fff4c7", color: "#173f30", borderBottom: "1px solid #d6b33f", fontSize: 13, fontWeight: 700 }}>{isEnglish ? (siteSettings.announcement.textEn || siteSettings.announcement.textBm) : (siteSettings.announcement.textBm || siteSettings.announcement.textEn)}</div>}
+        {siteSettings?.announcement?.enabled && (siteSettings.announcement.textBm || siteSettings.announcement.textEn) && <div role="status" style={{ padding: "9px 12px", background: "#fff4c7", color: "#173f30", borderBottom: "1px solid #d6b33f", fontSize: 13, fontWeight: 700 }}>{isEnglish ? (siteSettings.announcement.textEn || siteSettings.announcement.textBm) : (siteSettings.announcement.textBm || siteSettings.announcement.textEn)}</div>}
         <div style={{ padding: "10px 12px", textAlign: "center", background: "linear-gradient(135deg, #032f20, #075537 52%, #032f20)", borderTop: "2px solid #c9a441" }}>
           <div className="nk3-language-admin-row">
-            <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>
-            <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>
+            {siteSettings?.language?.bm !== false && <button type="button" onClick={() => setLanguage("bm")} aria-pressed={!isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:!isEnglish?"#e8c75c":"transparent",color:!isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>BM · Bahasa Melayu</button>}
+            {siteSettings?.language?.en !== false && <button type="button" onClick={() => setLanguage("en")} aria-pressed={isEnglish} style={{...buttonStyle,width:"100%",minWidth:0,minHeight:42,padding:"8px 5px",fontSize:"clamp(11px, 2.8vw, 15px)",whiteSpace:"nowrap",background:isEnglish?"#e8c75c":"transparent",color:isEnglish?"#173326":"#fff8e7",borderColor:"#c9a441"}}>EN · English</button>}
             {adminSessionActive ? <a href="/admin" className="nk3-admin-access" aria-label="Admin Dashboard">ADMIN ↗</a> : <button type="button" className="nk3-admin-access nk3-admin-disabled" disabled aria-label="Admin access locked" title="Akses admin hanya selepas log masuk admin">ADMIN 🔒</button>}
           </div>
           <strong style={{ fontSize: 22, letterSpacing: 2, color: "#e8c75c", fontFamily: "Georgia, Times New Roman, serif", textShadow: "0 2px 4px rgba(0,0,0,.3)" }}>NASI KATOK 3 ABDUL</strong>
@@ -778,7 +779,7 @@ export default function Home() {
             <section className="nk3-card">
               <h2 style={sectionTitleStyle}>🛍️ 5. {tr("Add On's", "Add-ons")}</h2>
 
-              <div className="nk3-addon">
+              {showChickenAddon && (<div className="nk3-addon">
                 <Photo src={activeImagePaths.chicken} alt={tr("Ayam goreng", "Fried chicken")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>{tr("Ayam Goreng", "Fried chicken")}</strong><strong>{money(chickenUnitPrice)}</strong></div>
@@ -793,13 +794,15 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="nk3-addon">
+              )}
+
+              {showRiceAddon && (<div className="nk3-addon">
                 <Photo src={activeImagePaths.rice} alt={tr("Nasi putih", "Plain rice")} className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>{tr("Nasi Putih", "Plain rice")}</strong><strong>{money(Number(riceUnitPrice))}</strong></div>
                   <div className="nk3-addon-row" style={{ marginTop: 8 }}>
                     <select aria-label={tr("Harga nasi putih", "Rice price")} style={{ ...inputStyle, padding: "8px 5px", fontSize: 14, maxWidth: 104 }} value={riceUnitPrice} onChange={(e) => setRiceUnitPrice(e.target.value)}>
-                      <option value="0.50">$0.50</option><option value="1.00">$1.00</option>
+                      <option value={String(riceSmallPrice)}>{money(riceSmallPrice)}</option><option value={String(riceLargePrice)}>{money(riceLargePrice)}</option>
                     </select>
                     <div className="nk3-qty">
                       <button type="button" aria-label={tr("Kurangkan nasi", "Decrease rice")} onClick={() => setRiceQuantity((q) => Math.max(0, q - 1))}>−</button>
@@ -811,7 +814,9 @@ export default function Home() {
               </div>
 
 
-              <div className="nk3-addon">
+              )}
+
+              {showSeparateSambalAddon && (<div className="nk3-addon">
                 <Photo src={activeImagePaths.sambal} alt={tr("Sambal tambahan berasingan", "Separate extra sambal") } className="nk3-addon-photo" />
                 <div className="nk3-addon-content">
                   <div className="nk3-addon-row"><strong>Extra Sambal</strong><strong>{addonSambalEnabled ? money(Number(addonSambalPrice)) : tr("Pilihan", "Optional")}</strong></div>
@@ -826,6 +831,8 @@ export default function Home() {
                   </select>
                 </div>
               </div>
+
+              )}
 
               <div className="nk3-total-box" style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                 <strong>{tr("Jumlah Add On's", "Add-ons total")}</strong><strong>{money(addonTotal)}</strong>
