@@ -129,7 +129,7 @@ export default function AdminPage() {
         setMessage(t("This device or browser does not support direct PDF sharing. The invoice was downloaded; attach it in WhatsApp.", "Telefon atau pelayar tidak menyokong perkongsian PDF terus. Invoice dimuat turun; sila lampirkan PDF itu dalam WhatsApp."));
         return;
       }
-      await navigator.share({ files: [file], title: `Invoice NK3A ${invoiceMonth}`, text: `{t("Monthly Invoice", "Invoice Bulanan")} Nasi Katok 3 Abdul - ${invoiceMonth}` });
+      await navigator.share({ files: [file], title: `Invoice NK3A ${invoiceMonth}`, text: `${t("Monthly Invoice", "Invoice Bulanan")} Nasi Katok 3 Abdul - ${invoiceMonth}` });
       setMessage(t("The share menu is open. Choose WhatsApp and your chat to send the invoice.", "Menu perkongsian dibuka. Pilih WhatsApp dan chat anda sendiri untuk menghantar invoice."));
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -242,8 +242,8 @@ export default function AdminPage() {
       <section className="monthly-tools">
         <div><label htmlFor="invoice-month">Invoice bulanan</label><input id="invoice-month" type="month" value={invoiceMonth} onChange={e=>setInvoiceMonth(e.target.value)} /></div>
         <div className="invoice-buttons">
-          <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : "↓ {t("Download Invoice PDF", "Muat Turun Invoice PDF")}"}</button>
-          <button className="share-invoice" onClick={()=>void shareMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Sila tunggu..." : "↗ {t("Share Invoice via WhatsApp", "Hantar Invoice ke WhatsApp")}"}</button>
+          <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : <>↓ {t("Download Invoice PDF", "Muat Turun Invoice PDF")}</>}</button>
+          <button className="share-invoice" onClick={()=>void shareMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Sila tunggu..." : <>↗ {t("Share Invoice via WhatsApp", "Hantar Invoice ke WhatsApp")}</>}</button>
         </div>
       </section>
       <section className="stats">
@@ -251,7 +251,7 @@ export default function AdminPage() {
         <article><span>{t("Total Sales", "Jumlah Jualan")} · {invoiceMonth}</span><strong>{money(monthlyStats.revenue)}</strong><small>{t("Monthly sales total", "Jumlah jualan bulanan")}</small></article>
       </section>
       <section className="filters">
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="{t("Search order number or customer name...", "Cari nombor pesanan atau nama...")}"/>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("Search order number or customer name...", "Cari nombor pesanan atau nama...")}/>
         <select value={branch} onChange={e=>setBranch(e.target.value)}><option value="">{t("All branches", "Semua cawangan")}</option><option>Rimba</option><option>Telisai</option></select>
         <select value={status} onChange={e=>setStatus(e.target.value)}><option value="">{t("All statuses", "Semua status")}</option>{statuses.map(s=><option key={s} value={s}>{labels[s]}</option>)}</select>
         <button className="refresh" onClick={()=>void loadOrders(token)} disabled={busy}>↻ {t("Refresh", "Muat semula")}</button>
