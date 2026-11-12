@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       return jsonError("Sistem pesanan belum dikonfigurasi. Sila hubungi pengusaha.", 503);
     }
 
-    const baseUrl = supabaseUrl.replace(/\\/$/, "");
+    const baseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
     const settingsResponse = await fetch(`${baseUrl}/rest/v1/website_settings?id=eq.true&select=settings`, {
       headers: { apikey: secretKey }, cache: "no-store",
     });
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       addons,
     };
 
-    const baseUrl = supabaseUrl.replace(/\/$/, "");
+    const baseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
     const headers = {
       apikey: secretKey,
       Authorization: `Bearer ${secretKey}`,
