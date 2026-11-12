@@ -710,14 +710,14 @@ export default function Home() {
                 <ul style={{ margin: "0 0 8px", paddingLeft: 18 }}>
                   <li>{tr("Tekan sambal pilihan pertama.", "Tap your first sambal choice.")}</li>
                   <li>{tr("Tekan sambal lain untuk campur dalam bungkus yang sama.", "Tap other sambal types to mix them in the same pack.")}</li>
-                  <li>{tr("Tekan sambal yang sama kali ke-2 untuk Extra Sambal (+${money(extraSambalUnitPrice)}).", "Tap the same sambal a 2nd time for Extra Sambal (+${money(extraSambalUnitPrice)}).")}</li>
+                  <li>{tr(`Tekan sambal yang sama kali ke-2 untuk Extra Sambal (+${money(extraSambalUnitPrice)}).`, `Tap the same sambal a 2nd time for Extra Sambal (+${money(extraSambalUnitPrice)}).`)}</li>
                   <li>{tr("Tekan kali ke-3 untuk membatalkan pilihan sambal itu.", "Tap a 3rd time to cancel that sambal choice.")}</li>
                 </ul>
                 <div style={{ borderTop: "1px solid #e6d58b", paddingTop: 7 }}>
                   <strong style={{ display: "block", marginBottom: 3 }}>{tr("HARGA CAMPURAN", "MIXED SAMBAL PRICES")}</strong>
                   <ul style={{ margin: 0, paddingLeft: 18 }}>
-                    <li>{tr("1–2 jenis sambal: ${money(basePackPrice)} sebungkus.", "1–2 sambal types: ${money(basePackPrice)} per pack.")}</li>
-                    <li>{tr("3 jenis atau lebih: +${money(extraSambalUnitPrice)} bagi setiap jenis selepas 2 pilihan.", "3 or more types: +${money(extraSambalUnitPrice)} for each type after the first 2.")}</li>
+                    <li>{tr(`1–2 jenis sambal: ${money(basePackPrice)} sebungkus.`, `1–2 sambal types: ${money(basePackPrice)} per pack.`)}</li>
+                    <li>{tr(`3 jenis atau lebih: +${money(extraSambalUnitPrice)} bagi setiap jenis selepas 2 pilihan.`, `3 or more types: +${money(extraSambalUnitPrice)} for each type after the first 2.`)}</li>
                   </ul>
                 </div>
               </div>
@@ -731,7 +731,7 @@ export default function Home() {
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
                       {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
-                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra ${money(extraSambalUnitPrice)} ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra ${money(extraSambalUnitPrice)} ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+${money(extraSambalUnitPrice)})", "Tap again for Extra Sambal (+${money(extraSambalUnitPrice)})")}</span>}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr(`( Extra ${money(extraSambalUnitPrice)} ✅ ) Tekan lagi untuk batalkan pilihan`, `( Extra ${money(extraSambalUnitPrice)} ✅ ) Tap again to cancel`) : tr(`Tekan lagi untuk Extra Sambal (+${money(extraSambalUnitPrice)})`, `Tap again for Extra Sambal (+${money(extraSambalUnitPrice)})`)}</span>}
                     </button>
                   );
                 })}
