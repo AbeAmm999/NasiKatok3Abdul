@@ -18,6 +18,10 @@ export default function AdminPage() {
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [selected, setSelected] = useState<Order | null>(null);
   const [branch, setBranch] = useState("");
@@ -26,7 +30,7 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
-  const [activeTab, setActiveTab] = useState<"orders" | "settings">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "settings" | "security">("orders");
   const [invoiceMonth, setInvoiceMonth] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit" }).format(new Date()).slice(0, 7));
   const [monthlyStats, setMonthlyStats] = useState({ totalOrders: 0, totalPax: 0, revenue: 0 });
   const [invoiceBusy, setInvoiceBusy] = useState(false);
@@ -132,7 +136,7 @@ export default function AdminPage() {
     } finally { setInvoiceBusy(false); }
   }
 
-  async function login(event: React.FormEvent) {
+  async function requestPasswordReset(event: React.FormEvent) {\n    event.preventDefault(); setBusy(true); setMessage("");\n    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error("Tetapan Supabase belum lengkap."); const response=await fetch(`${url.replace(/\\/$/, "")}/auth/v1/recover?redirect_to=${encodeURIComponent(`${window.location.origin}/admin/reset-password`)}`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key},body:JSON.stringify({email:resetEmail.trim()})}); if(!response.ok) throw new Error("Permintaan reset gagal. Semak e-mel atau cuba sebentar lagi."); setMessage("Jika e-mel berdaftar, pautan reset akan dihantar. Semak Inbox dan Spam."); } catch(e){setMessage(e instanceof Error?e.message:"Permintaan gagal.");} finally{setBusy(false);}\n  }\n\n  async function updateAdminAccount(event: React.FormEvent) {\n    event.preventDefault(); setBusy(true); setMessage("");\n    try { const url=process.env.NEXT_PUBLIC_SUPABASE_URL; const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; if(!url||!key) throw new Error("Tetapan Supabase belum lengkap."); const body:any={}; if(newEmail.trim()) body.email=newEmail.trim(); if(newPassword) { if(!currentPassword) throw new Error("Masukkan kata laluan semasa untuk menukar kata laluan."); body.password=newPassword; body.current_password=currentPassword; } if(!Object.keys(body).length) throw new Error("Masukkan e-mel baharu atau kata laluan baharu."); const response=await fetch(`${url.replace(/\\/$/, "")}/auth/v1/user`,{method:"PUT",headers:{"Content-Type":"application/json",apikey:key,Authorization:`Bearer ${token}`},body:JSON.stringify(body)}); const data=await response.json(); if(!response.ok) throw new Error(data.message||data.msg||"Kemaskini akaun gagal."); setNewEmail("");setCurrentPassword("");setNewPassword("");setMessage(body.email?"Permintaan tukar e-mel dihantar. Sahkan melalui pautan dalam e-mel baharu.":"Kata laluan berjaya dikemaskini."); } catch(e){setMessage(e instanceof Error?e.message:"Kemaskini gagal.");} finally{setBusy(false);}\n  }\n\n  async function login(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true); setMessage("");
     try {
@@ -200,6 +204,7 @@ export default function AdminPage() {
           <button disabled={busy}>{busy ? "Sedang log masuk..." : "Log Masuk"}</button>
         </form>
         {message && <p className="notice error">{message}</p>}
+        <details className="forgot-box"><summary>Lupa kata laluan?</summary><form onSubmit={requestPasswordReset}><label>E-mel akaun admin</label><input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder="Masukkan e-mel berdaftar"/><button disabled={busy}>{busy?"Menghantar...":"Hantar pautan reset"}</button></form></details>
         <p className="small muted">Akses hanya diberikan kepada akaun yang disenaraikan sebagai admin.</p>
         <a href="/">← Kembali ke halaman pesanan</a>
       </section>
@@ -215,7 +220,7 @@ export default function AdminPage() {
       </header>
       <nav className="main-tabs" aria-label="Menu pengurusan">
         <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ Pesanan & Dashboard</button>
-        <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ Website Control</button>
+        <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ Website Control</button>\n        <button className={activeTab==="security"?"tab active":"tab"} onClick={()=>setActiveTab("security")}>🔐 Keselamatan Akaun</button>
       </nav>
       {activeTab==="orders" && <>
       <section className="monthly-tools">
@@ -268,7 +273,7 @@ export default function AdminPage() {
       </div>
       <p className="footer-note">Pesanan baharu diterima secara automatik. Kemaskini status penyediaan apabila diperlukan.</p>
       </>}
-      {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}
+      {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}\n      {activeTab==="security" && <section className="security-panel"><h2>Keselamatan Akaun Admin</h2><p className="muted">Perubahan e-mel memerlukan pengesahan melalui e-mel. Kata laluan tidak disimpan di website.</p><form onSubmit={updateAdminAccount}><label>E-mel baharu (biarkan kosong jika tidak ditukar)</label><input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder="E-mel baharu"/><label>Kata laluan semasa</label><input type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} placeholder="Diperlukan untuk tukar kata laluan"/><label>Kata laluan baharu</label><input type="password" autoComplete="new-password" minLength={8} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="Sekurang-kurangnya 8 aksara"/><button disabled={busy}>{busy?"Menyimpan...":"Simpan perubahan akaun"}</button></form>{message&&<p className="notice">{message}</p>}</section>}
       <style jsx>{styles}</style>
     </main>
   );
@@ -276,7 +281,7 @@ export default function AdminPage() {
 
 const styles = `
   .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-  .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
+  .forgot-box{margin-top:14px;font-size:13px}.forgot-box summary{cursor:pointer;color:#075537;font-weight:700}.forgot-box form{margin-top:12px}\n  .security-panel{max-width:700px;margin:20px auto;background:#fff;border:1px solid #d7c17b;border-radius:16px;padding:22px}.security-panel form{display:grid;gap:10px}.security-panel button{margin-top:8px}\n  .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
   .brand-mark{display:inline-grid;place-items:center;background:#075537;color:#f8d35a;border:2px solid #c9a441;border-radius:13px;padding:10px 16px;font-weight:900;letter-spacing:1px}
   .small-mark{font-size:14px;padding:8px 11px}
   .eyebrow{font-size:11px;letter-spacing:1.8px;font-weight:800;color:#9b7924;margin:15px 0 5px}
