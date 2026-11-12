@@ -29,7 +29,7 @@ function displaySambals(sambals: string[], extraSambals: string[], isEnglish: bo
 }
 
 function pricePerPack(sambals: string[], extraSambals: string[] = [], basePrice = 1, extraPrice = 0.5) {
-  if (sambals.includes(NO_SAMBAL)) return 1;
+  if (sambals.includes(NO_SAMBAL)) return basePrice;
   const mainCount = sambals.length;
   const mainPrice = basePrice + Math.max(0, mainCount - 2) * extraPrice;
   return mainPrice + extraSambals.length * extraPrice;
