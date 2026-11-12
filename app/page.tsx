@@ -78,6 +78,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [specialNotes, setSpecialNotes] = useState("");
   const [showPickupValidation, setShowPickupValidation] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const bruneiToday = (() => { const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00"; return `${get("year")}-${get("month")}-${get("day")}`; })();
   const tomorrowDate = (() => { const d = new Date(`${bruneiToday}T12:00:00+08:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
   const [todaySelected, setTodaySelected] = useState(false);
@@ -301,6 +302,8 @@ export default function Home() {
       setMessage(isEnglish ? "Please press Add first to include your current sambal selection." : "Sila tekan Tambah dahulu untuk memasukkan pilihan sambal semasa.");
       return;
     }
+    if (isSubmittingOrder) return;
+    setIsSubmittingOrder(true);
     const orderLines = lines.map(
       (line, index) =>
         `${index + 1}. ${displaySambals(line.sambals, line.extraSambals, isEnglish)} × ${line.quantity} — ${money(
@@ -394,6 +397,7 @@ export default function Home() {
       // This avoids opening an about:blank tab while the API request is processing.
       window.location.assign(finalWhatsappUrl);
     } catch (error) {
+      setIsSubmittingOrder(false);
       setMessage(error instanceof Error ? error.message : (isEnglish ? "Unable to save your order." : "Pesanan tidak dapat disimpan."));
     }
   }
@@ -858,7 +862,7 @@ export default function Home() {
                 </div>
               </div>
               {showPickupValidation && (!name.trim() || (!todaySelected && !date) || !time) && <p role="alert" style={{ margin: "0 0 14px", padding: "12px 14px", borderRadius: 12, border: "1px solid #d9a39a", background: "#fff0ed", color: "#a33b2b", fontWeight: 700, lineHeight: 1.45, textAlign: "left" }}>{tr("Sila isi nama, tarikh dan waktu ambil.", "Please enter your name, pickup date and pickup time.")}</p>}
-              <button type="button" onClick={confirmOrder} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px", background: "linear-gradient(135deg,#ffd633,#f2b900 55%,#ffda43)", color: "#10150e", border: "2px solid #d4a521", boxShadow: "0 6px 14px rgba(125,91,8,.25)", fontWeight: 900 }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} ↗</span></button>
+              <button type="button" onClick={confirmOrder} disabled={isSubmittingOrder} aria-busy={isSubmittingOrder} className="nk3-confirm-button" style={{ ...buttonStyle, width: "100%", padding: "18px 14px", background: "linear-gradient(135deg,#ffd633,#f2b900 55%,#ffda43)", color: "#10150e", border: "2px solid #d4a521", boxShadow: "0 6px 14px rgba(125,91,8,.25)", fontWeight: 900 }}><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M16 2.5A13.2 13.2 0 0 0 4.7 22.5L3 29l6.7-1.7A13.2 13.2 0 1 0 16 2.5Zm0 23.9a10.7 10.7 0 0 1-5.4-1.5l-.4-.2-4 .9 1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.4Zm5.9-8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4s-.3-.3-.6-.4Z"/></svg><span>{isSubmittingOrder ? tr("Sila Tunggu Sebentar ⏳", "Please Wait ⏳") : tr("SAHKAN PESANAN & HANTAR KE WHATSAPP", "CONFIRM ORDER & SEND TO WHATSAPP")} {!isSubmittingOrder && "↗"}</span></button>
             </>}
             {stage === "done" && <p role="status" style={{ margin: 0, color: "#087447", fontWeight: 700 }}>{message}</p>}
           </div>
