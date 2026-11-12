@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const allowedStatuses = new Set(["pending", "accepted", "preparing", "ready", "completed", "rejected", "cancelled"]);
+const allowedStatuses = new Set(["accepted", "preparing", "ready", "completed", "rejected", "cancelled"]);
 
 async function authorize(request: Request) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
