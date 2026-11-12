@@ -74,19 +74,39 @@ export default function Home() {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   useEffect(() => {
     let active = true;
-    fetch("/api/site-settings", { cache: "no-store" }).then(async response => {
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || "Tetapan website tidak dapat dimuatkan.");
-      if (active) {
-        setSiteSettings(data.settings);
-        if (data.settings?.branches?.Rimba?.enabled === false && data.settings?.branches?.Telisai?.enabled !== false) setBranch("Telisai");
-        const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
-        const chosen = data.settings?.language?.[preferred] !== false ? preferred : (data.settings?.language?.bm !== false ? "bm" : "en");
-        setLanguage(chosen);
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/site-settings", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Tetapan website tidak dapat dimuatkan.");
+        if (active) {
+          setSiteSettings(data.settings);
+          const branchSettings = data.settings?.branches || {};
+          setBranch(current => branchSettings[current]?.enabled !== false
+            ? current
+            : branchSettings.Rimba?.enabled !== false ? "Rimba"
+            : branchSettings.Telisai?.enabled !== false ? "Telisai" : current);
+          const preferred = data.settings?.language?.default === "en" ? "en" : "bm";
+          const chosen = data.settings?.language?.[preferred] !== false ? preferred : (data.settings?.language?.bm !== false ? "bm" : "en");
+          setLanguage(chosen);
+          setSettingsLoaded(true);
+        }
+      } catch (error) {
+        console.error("Website settings load failed:", error);
+        if (active) setSettingsLoaded(true);
       }
-    }).catch(error => console.error("Website settings load failed:", error))
-      .finally(() => { if (active) setSettingsLoaded(true); });
-    return () => { active = false; };
+    };
+    void loadSettings();
+    const refresh = () => { if (document.visibilityState === "visible") void loadSettings(); };
+    const timer = window.setInterval(refresh, 10000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, []);
   const [adminSessionActive, setAdminSessionActive] = useState(false);
   useEffect(() => {
@@ -687,14 +707,14 @@ export default function Home() {
                 <ul style={{ margin: "0 0 8px", paddingLeft: 18 }}>
                   <li>{tr("Tekan sambal pilihan pertama.", "Tap your first sambal choice.")}</li>
                   <li>{tr("Tekan sambal lain untuk campur dalam bungkus yang sama.", "Tap other sambal types to mix them in the same pack.")}</li>
-                  <li>{tr("Tekan sambal yang sama kali ke-2 untuk Extra Sambal (+$0.50).", "Tap the same sambal a 2nd time for Extra Sambal (+$0.50).")}</li>
+                  <li>{tr("Tekan sambal yang sama kali ke-2 untuk Extra Sambal (+${money(extraSambalUnitPrice)}).", "Tap the same sambal a 2nd time for Extra Sambal (+${money(extraSambalUnitPrice)}).")}</li>
                   <li>{tr("Tekan kali ke-3 untuk membatalkan pilihan sambal itu.", "Tap a 3rd time to cancel that sambal choice.")}</li>
                 </ul>
                 <div style={{ borderTop: "1px solid #e6d58b", paddingTop: 7 }}>
                   <strong style={{ display: "block", marginBottom: 3 }}>{tr("HARGA CAMPURAN", "MIXED SAMBAL PRICES")}</strong>
                   <ul style={{ margin: 0, paddingLeft: 18 }}>
-                    <li>{tr("1–2 jenis sambal: $1.00 sebungkus.", "1–2 sambal types: $1.00 per pack.")}</li>
-                    <li>{tr("3 jenis atau lebih: +$0.50 bagi setiap jenis selepas 2 pilihan.", "3 or more types: +$0.50 for each type after the first 2.")}</li>
+                    <li>{tr("1–2 jenis sambal: ${money(basePackPrice)} sebungkus.", "1–2 sambal types: ${money(basePackPrice)} per pack.")}</li>
+                    <li>{tr("3 jenis atau lebih: +${money(extraSambalUnitPrice)} bagi setiap jenis selepas 2 pilihan.", "3 or more types: +${money(extraSambalUnitPrice)} for each type after the first 2.")}</li>
                   </ul>
                 </div>
               </div>
@@ -708,7 +728,7 @@ export default function Home() {
                       onClick={() => { if (!isUnavailable) toggleSambal(sambal); }}
                       title={isUnavailable ? tr("Lada Padi buat masa ini tidak tersedia", "Lada Padi is temporarily unavailable") : undefined}                      style={{ ...buttonStyle, minHeight: 58, padding: "12px 6px", border: isSelected ? "2px solid #c9a441" : isUnavailable ? "1px dashed #b8b8b0" : "1px solid #d8d8d2", background: isSelected ? "#075537" : isUnavailable ? "#eeeeea" : "#fff", color: isSelected ? "#fff8e7" : isUnavailable ? "#8b8b84" : "#123d2a", fontWeight: isSelected ? 700 : 500, overflowWrap: "anywhere", cursor: isUnavailable ? "not-allowed" : "pointer", opacity: isUnavailable ? 0.75 : 1 }}>
                       {isSelected ? "✓ " : ""}{sambal}{extraCount > 0 ? ` · ${tr("Extra", "Extra")} ×${extraCount}` : ""}{isUnavailable ? tr(" (Tidak tersedia)", " (Temporarily unavailable)") : ""}
-                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra $0.50 ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra $0.50 ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+$0.50)", "Tap again for Extra Sambal (+$0.50)")}</span>}
+                      {isSelected && <span style={{ display: "block", marginTop: 5, fontSize: 11, lineHeight: 1.3, fontWeight: 500 }}>{extraCount > 0 ? tr("( Extra ${money(extraSambalUnitPrice)} ✅ ) Tekan lagi untuk batalkan pilihan", "( Extra ${money(extraSambalUnitPrice)} ✅ ) Tap again to cancel") : tr("Tekan lagi untuk Extra Sambal (+${money(extraSambalUnitPrice)})", "Tap again for Extra Sambal (+${money(extraSambalUnitPrice)})")}</span>}
                     </button>
                   );
                 })}
@@ -734,7 +754,7 @@ export default function Home() {
                   <strong>{tr("Extra Sambal dipilih", "Selected Extra Sambal")}</strong>
                   {selectedExtraSambals.map((extra, index) => (
                     <div key={`${extra}-${index}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8 }}>
-                      <span>{extra} — $0.50</span>
+                      <span>{extra} — {money(extraSambalUnitPrice)}</span>
                       <button type="button" onClick={() => removeSelectedExtraSambal(index)} style={{ ...buttonStyle, padding: "6px 10px", color: "#a33a32", borderColor: "#d9aaa6", background: "#fff" }}>{tr("Buang Extra Sambal", "Remove Extra Sambal")}</button>
                     </div>
                   ))}
@@ -743,7 +763,7 @@ export default function Home() {
 
               <div className="nk3-total-box">
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Harga sebungkus", "Price per pack")}</span><strong>{money(calculatePackPrice(selected, selectedExtraSambals))}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * pricePerPack(selected, selectedExtraSambals))}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8 }}><span>{tr("Jumlah pilihan semasa", "Current selection total")}</span><strong>{money(quantity * calculatePackPrice(selected, selectedExtraSambals))}</strong></div>
               </div>
 
               <div style={{ marginTop: 16, borderTop: "1px solid #e6e9e7", paddingTop: 12 }}>
@@ -870,7 +890,7 @@ export default function Home() {
               <p><strong>{tr("Tarikh ambil:", "Pickup date:")}</strong> {date}</p>
               <p><strong>{tr(isEnglish ? "Pickup time:" : "Waktu ambil:", "Pickup time:")}</strong> {time}</p>
               <h3>{tr("Pesanan", "Order")}</h3>
-              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity} — {money(line.quantity * pricePerPack(line.sambals, line.extraSambals))}</p>)}
+              {lines.map((line, index) => <p key={line.id}>{index + 1}. {displaySambals(line.sambals, line.extraSambals, isEnglish)} × {line.quantity} — {money(line.quantity * calculatePackPrice(line.sambals, line.extraSambals))}</p>)}
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{tr("Subtotal", "Subtotal")}</span><strong>{money(subtotal)}</strong></div>
               <div style={{ marginTop: 10 }}>
                 <strong>{tr("Add On's", "Add-ons")}</strong>
