@@ -297,8 +297,7 @@ export default function Home() {
       setShowPickupValidation(true);
       setMessage(isEnglish ? "Please enter your name, pickup date and pickup time." : "Sila isi nama, tarikh dan waktu ambil.");
       return;
-    }    setShowPickupValidation(false);
-    if (lines.length === 0) {
+    }    setShowPickupValidation(false);    if (lines.length === 0) {
       setMessage(isEnglish ? "Please add at least one sambal order before confirming." : "Sila tambah sekurang-kurangnya satu pesanan sambal sebelum mengesahkan.");
       return;
     }
@@ -597,8 +596,7 @@ export default function Home() {
                     }
                   }}
                 >                  <Photo src={item.src} alt={tr(`Kedai Nasi Katok 3 Abdul ${item.name}`, `Nasi Katok 3 Abdul ${item.name} branch`)} className="nk3-branch-photo" />
-                  <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>
-                </button>
+                  <span className="nk3-branch-name">{branch === item.name ? "✓ " : ""}{item.name}</span>                </button>
               ))}
             </div>
           </section>
@@ -844,6 +842,7 @@ export default function Home() {
                 </div>
                 <p style={{ margin: "0 0 7px" }}>{tr("Setelah selesai membuat pesanan, sila tekan butang di bawah untuk menghantar pesanan anda.", "Once you have completed your order, please press the button below to submit your order.")}</p>
                 <p style={{ margin: "0 0 7px" }}>{tr("Sila tunggu sebentar sehingga anda dialihkan ke WhatsApp. Pastikan anda menekan butang", "Please wait while you are redirected to WhatsApp. Make sure you press the")} <strong style={{ display: "inline-block", padding: "1px 6px", borderRadius: 6, background: "#ffe16a", color: "#123d2a" }}>{tr("Hantar (Send)", "Send")}</strong> {tr("di WhatsApp supaya pesanan anda diterima oleh pihak kami.", "button in WhatsApp so our team receives your order.")}</p>
+                <p style={{ margin: "0 0 7px", fontWeight: 900, color: "#9a6800" }}>{tr("Tekan butang KUNING di bawah untuk meneruskan.", "Press the YELLOW button below to continue.")}</p>
                 <p style={{ margin: 0, fontWeight: 700, color: "#075537" }}>{tr("Terima kasih atas pesanan anda!", "Thank you for your order!")}</p>
               </div>
               {showPickupValidation && (!name.trim() || (!todaySelected && !date) || !time) && <p role="alert" style={{ margin: "0 0 14px", padding: "12px 14px", borderRadius: 12, border: "1px solid #d9a39a", background: "#fff0ed", color: "#a33b2b", fontWeight: 700, lineHeight: 1.45, textAlign: "left" }}>{tr("Sila isi nama, tarikh dan waktu ambil.", "Please enter your name, pickup date and pickup time.")}</p>}
