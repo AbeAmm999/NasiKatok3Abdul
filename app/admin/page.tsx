@@ -108,7 +108,7 @@ export default function AdminPage() {
 
   const counts = useMemo(() => ({
     total: orders.length,
-    pending: orders.filter(o => o.status === "pending").length,
+    accepted: orders.filter(o => o.status === "accepted").length,
     preparing: orders.filter(o => o.status === "preparing").length,
     ready: orders.filter(o => o.status === "ready").length,
   }), [orders]);
@@ -150,7 +150,7 @@ export default function AdminPage() {
       {activeTab==="orders" && <>
       <section className="stats">
         <article><span>Pesanan dipaparkan</span><strong>{counts.total}</strong></article>
-        <article><span>Pending</span><strong>{counts.pending}</strong></article>
+        <article><span>Accepted</span><strong>{counts.accepted}</strong></article>
         <article><span>Preparing</span><strong>{counts.preparing}</strong></article>
         <article><span>Ready</span><strong>{counts.ready}</strong></article>
       </section>
@@ -191,7 +191,7 @@ export default function AdminPage() {
           </>}
         </section>
       </div>
-      <p className="footer-note">Data pesanan dipaparkan daripada Supabase. Semak semula status sebelum mengesahkan pesanan kepada pelanggan.</p>
+      <p className="footer-note">Pesanan baharu diterima secara automatik. Kemaskini status penyediaan apabila diperlukan.</p>
       </>}
       {activeTab==="settings" && <WebsiteSettingsPanel token={token}/ >}
       <style jsx>{styles}</style>
