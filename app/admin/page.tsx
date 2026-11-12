@@ -27,6 +27,9 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<"orders" | "settings">("orders");
+  const [invoiceMonth, setInvoiceMonth] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Brunei", year: "numeric", month: "2-digit" }).format(new Date()).slice(0, 7));
+  const [monthlyStats, setMonthlyStats] = useState({ totalOrders: 0, totalPax: 0, revenue: 0 });
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("nk3_admin_access_token") || "";
@@ -61,6 +64,41 @@ export default function AdminPage() {
   useEffect(() => {
     if (token) void loadOrders(token);
   }, [token, loadOrders]);
+
+  useEffect(() => {
+    if (!token || !invoiceMonth) return;
+    let cancelled = false;
+    fetch(`/api/admin/monthly-report?month=${encodeURIComponent(invoiceMonth)}`, {
+      headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+    }).then(async response => {
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "Tidak dapat memuatkan ringkasan bulanan.");
+      if (!cancelled) setMonthlyStats({ totalOrders: data.totalOrders, totalPax: data.totalPax, revenue: data.revenue });
+    }).catch(error => { if (!cancelled) setMessage(error instanceof Error ? error.message : "Ralat ringkasan bulanan."); });
+    return () => { cancelled = true; };
+  }, [token, invoiceMonth]);
+
+  async function downloadMonthlyInvoice() {
+    setInvoiceBusy(true); setMessage("");
+    try {
+      const response = await fetch(`/api/admin/monthly-report?month=${encodeURIComponent(invoiceMonth)}&format=pdf`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Invoice tidak dapat dimuat turun.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = `NK3A-Invoice-${invoiceMonth}.pdf`;
+      document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      URL.revokeObjectURL(url);
+      setMessage(`Invoice ${invoiceMonth} berjaya dimuat turun.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Invoice gagal dimuat turun.");
+    } finally { setInvoiceBusy(false); }
+  }
 
   async function login(event: React.FormEvent) {
     event.preventDefault();
@@ -148,11 +186,13 @@ export default function AdminPage() {
         <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ Website Control</button>
       </nav>
       {activeTab==="orders" && <>
+      <section className="monthly-tools">
+        <div><label htmlFor="invoice-month">Invoice bulanan</label><input id="invoice-month" type="month" value={invoiceMonth} onChange={e=>setInvoiceMonth(e.target.value)} /></div>
+        <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : "↓ Download Invoice PDF"}</button>
+      </section>
       <section className="stats">
-        <article><span>Pesanan dipaparkan</span><strong>{counts.total}</strong></article>
-        <article><span>Accepted</span><strong>{counts.accepted}</strong></article>
-        <article><span>Preparing</span><strong>{counts.preparing}</strong></article>
-        <article><span>Ready</span><strong>{counts.ready}</strong></article>
+        <article><span>Total Pax · {invoiceMonth}</span><strong>{monthlyStats.totalPax}</strong><small>{monthlyStats.totalOrders} pesanan</small></article>
+        <article><span>Total Hasil Jualan · {invoiceMonth}</span><strong>{money(monthlyStats.revenue)}</strong><small>Jumlah jualan bulanan</small></article>
       </section>
       <section className="filters">
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari nombor pesanan atau nama..."/>
@@ -220,7 +260,7 @@ const styles = `
   .main-tabs{display:flex;gap:9px;max-width:1400px;margin:0 auto 17px;padding:7px;background:#e8ece4;border:1px solid #dce3d9;border-radius:13px}
   .tab{background:transparent;color:#315342;border:1px solid transparent;padding:12px 17px;border-radius:9px}
   .tab.active{background:#075537;color:#f8d35a;border-color:#c9a441;box-shadow:0 3px 9px #123b2b1c}
-  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1400px;margin:0 auto 16px}
+  .monthly-tools{display:flex;align-items:end;justify-content:space-between;gap:12px;max-width:1400px;margin:0 auto 12px}.monthly-tools>div{display:grid;gap:6px;max-width:240px;flex:1}.monthly-tools input{min-height:44px}.download-invoice{min-height:44px;background:#075537;border:1px solid #c9a441;white-space:nowrap}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:1400px;margin:0 auto 16px}.stats small{font-size:11px;color:#778078}
   .stats article{background:#fff;border:1px solid #e2e6dd;border-radius:14px;padding:17px;display:grid;gap:8px}
   .stats span,.detail-pair span{font-size:12px;color:#758078}.stats strong{font-size:27px}
   .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;max-width:1400px;margin:0 auto 16px}
@@ -241,5 +281,5 @@ const styles = `
   .notes{background:#fff9e8;border:1px solid #eee0b3;border-radius:10px;padding:12px;margin-top:15px}.notes p{margin:6px 0 0;white-space:pre-wrap}
   .totals{margin-top:15px;border-top:1px solid #e5e9e1;padding-top:10px}.totals>div{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:18px;border-top:1px solid #e5e9e1;margin-top:5px;padding-top:12px!important}
   .status-label{display:block;margin:18px 0 7px}.footer-note{max-width:1400px;margin:18px auto;color:#778078;font-size:12px}
-  @media(max-width:760px){.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
+  @media(max-width:760px){.monthly-tools{align-items:stretch;flex-direction:column}.monthly-tools>div{max-width:none}.download-invoice{width:100%}.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
 `;
