@@ -39,6 +39,10 @@ export default function AdminPage() {
   const t = (en: string, bm: string) => isBm ? bm : en;
 
 
+  useEffect(() => { const savedLanguage=localStorage.getItem("nk3_admin_language"); if(savedLanguage==="en"||savedLanguage==="bm") setAdminLanguage(savedLanguage); }, []);
+
+  function changeAdminLanguage(language:"en"|"bm") { setAdminLanguage(language); localStorage.setItem("nk3_admin_language",language); }
+
   useEffect(() => {
     const saved = sessionStorage.getItem("nk3_admin_access_token") || "";
     setToken(saved);
@@ -187,7 +191,7 @@ export default function AdminPage() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Kemaskini gagal.");
-      setMessage(`Status ${order.order_number} dikemaskini kepada ${labels[nextStatus]}.`);
+      setMessage(t(`Order ${order.order_number} updated to ${labels[nextStatus]}.`,`Status ${order.order_number} dikemaskini kepada ${labels[nextStatus]}.`));
       await loadOrders(token);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Kemaskini gagal.");
@@ -205,22 +209,23 @@ export default function AdminPage() {
 
   if (!token) return (
     <main className="admin-shell">
+      <div className="login-language"><span>{t("Language", "Bahasa")}</span><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>changeAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>changeAdminLanguage("bm")}>Melayu</button></div>
       <section className="login-card">
         <div className="brand-mark">NK3A</div>
-        <p className="eyebrow">PANEL PENGURUSAN</p>
+        <p className="eyebrow">{t("ADMINISTRATION", "PANEL PENGURUSAN")}</p>
         <h1>Admin Login</h1>
         <p className="muted">Nasi Katok 3 Abdul</p>
         <form onSubmit={login}>
-          <label>E-mel admin</label>
+          <label>{t("Admin email", "E-mel admin")}</label>
           <input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="admin@example.com"/>
           <label>Kata laluan</label>
-          <input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Kata laluan Supabase Auth"/>
-          <button disabled={busy}>{busy ? "Sedang log masuk..." : "Log Masuk"}</button>
+          <input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder={t("Supabase Auth password", "Kata laluan Supabase Auth")}/>
+          <button disabled={busy}>{busy ? t("Signing in...", "Sedang log masuk...") : t("Sign In", "Log Masuk")}</button>
         </form>
         {message && <p className="notice error">{message}</p>}
-        <details className="forgot-box"><summary>Lupa kata laluan?</summary><form onSubmit={requestPasswordReset}><label>E-mel akaun admin</label><input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder="Masukkan e-mel berdaftar"/><button disabled={busy}>{busy?"Menghantar...":"Hantar pautan reset"}</button></form></details>
+        <details className="forgot-box"><summary>{t("Forgot password?", "Lupa kata laluan?")}</summary><form onSubmit={requestPasswordReset}><label>{t("Admin account email", "E-mel akaun admin")}</label><input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder={t("Enter registered email", "Masukkan e-mel berdaftar")}/><button disabled={busy}>{busy?t("Sending...", "Menghantar..."):t("Send reset link", "Hantar pautan reset")}</button></form></details>
         <p className="small muted">{t("Access is limited to accounts approved as administrators.", "Akses hanya diberikan kepada akaun yang disenaraikan sebagai admin.")}</p>
-        <a href="/">← Kembali ke halaman pesanan</a>
+        <a href="/">{t("← Back to ordering page", "← Kembali ke halaman pesanan")}</a>
       </section>
       <style jsx>{styles}</style>
     </main>
@@ -228,7 +233,7 @@ export default function AdminPage() {
 
   return (
     <main className="admin-shell">
-      <div className="admin-toolbar"><div className="language-switch" aria-label="Admin language"><span>{t("Language", "Bahasa")}</span><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div></div>
+      <div className="admin-toolbar"><div className="language-switch" aria-label="Admin language"><span>{t("Language", "Bahasa")}</span><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>changeAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>changeAdminLanguage("bm")}>Melayu</button></div></div>
       <header className="topbar"><div className="admin-brand"><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">{t("ADMINISTRATION", "PANEL PENGURUSAN")}</p><h1>{t("Admin Dashboard", "Dashboard Admin")}</h1></div></div><div className="admin-actions"><a className="customer-link" href="/">{t("View Website", "Lihat Website")}</a><button className="logout" onClick={logout}>{t("Log Out", "Log Keluar")}</button></div></header>
       <nav className="main-tabs" aria-label="Menu pengurusan">
         <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ {t("Orders & Dashboard", "Pesanan & Dashboard")}</button>
@@ -237,14 +242,14 @@ export default function AdminPage() {
       </nav>
       {activeTab==="orders" && <>
       <section className="monthly-tools">
-        <div><label htmlFor="invoice-month">Invoice bulanan</label><input id="invoice-month" type="month" value={invoiceMonth} onChange={e=>setInvoiceMonth(e.target.value)} /></div>
+        <div><label htmlFor="invoice-month">{t("Monthly invoice", "Invoice bulanan")}</label><input id="invoice-month" type="month" value={invoiceMonth} onChange={e=>setInvoiceMonth(e.target.value)} /></div>
         <div className="invoice-buttons">
           <button className="download-invoice" onClick={()=>void downloadMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Menyediakan invoice..." : <>↓ {t("Download Invoice PDF", "Muat Turun Invoice PDF")}</>}</button>
           <button className="share-invoice" onClick={()=>void shareMonthlyInvoice()} disabled={invoiceBusy || !invoiceMonth}>{invoiceBusy ? "Sila tunggu..." : <>↗ {t("Share Invoice via WhatsApp", "Hantar Invoice ke WhatsApp")}</>}</button>
         </div>
       </section>
       <section className="stats">
-        <article><span>{t("Total Pax", "Jumlah Pax")} · {invoiceMonth}</span><strong>{monthlyStats.totalPax}</strong><small>{monthlyStats.totalOrders} pesanan</small></article>
+        <article><span>{t("Total Pax", "Jumlah Pax")} · {invoiceMonth}</span><strong>{monthlyStats.totalPax}</strong><small>{monthlyStats.totalOrders} {t("orders", "pesanan")}</small></article>
         <article><span>{t("Total Sales", "Jumlah Jualan")} · {invoiceMonth}</span><strong>{money(monthlyStats.revenue)}</strong><small>{t("Monthly sales total", "Jumlah jualan bulanan")}</small></article>
       </section>
       <section className="filters">
@@ -297,7 +302,7 @@ const styles = `
   .admin-toolbar{max-width:1400px;margin:0 auto 12px;display:flex;justify-content:flex-end}.language-switch{display:flex;align-items:center;gap:6px;padding:5px;background:#e8ece4;border:1px solid #dce3d9;border-radius:12px}.language-switch span{font-size:12px;font-weight:700;color:#64746a;padding:0 7px}.language-switch button{background:transparent;color:#315342;border:1px solid transparent;padding:8px 13px;border-radius:8px}.language-switch button.active{background:#075537;color:#f8d35a;border-color:#c9a441}\n  .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
   .forgot-box{margin-top:14px;font-size:13px}.forgot-box summary{cursor:pointer;color:#075537;font-weight:700}.forgot-box form{margin-top:12px}
   .security-panel{max-width:700px;margin:20px auto;background:#fff;border:1px solid #d7c17b;border-radius:16px;padding:22px}.security-panel form{display:grid;gap:10px}.security-panel button{margin-top:8px}
-  .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
+  .login-language{max-width:430px;margin:7vh auto 0;display:flex;justify-content:flex-end;align-items:center;gap:6px}.login-language span{font-size:12px;color:#64746a;font-weight:700}.login-language button{background:#fff;color:#315342;border:1px solid #d7c17b;padding:8px 12px}.login-language button.active{background:#075537;color:#f8d35a}\n  .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
   .brand-mark{display:inline-grid;place-items:center;background:#075537;color:#f8d35a;border:2px solid #c9a441;border-radius:13px;padding:10px 16px;font-weight:900;letter-spacing:1px}
   .small-mark{font-size:14px;padding:8px 11px}
   .eyebrow{font-size:11px;letter-spacing:1.8px;font-weight:800;color:#9b7924;margin:15px 0 5px}
@@ -336,5 +341,5 @@ const styles = `
   .notes{background:#fff9e8;border:1px solid #eee0b3;border-radius:10px;padding:12px;margin-top:15px}.notes p{margin:6px 0 0;white-space:pre-wrap}
   .totals{margin-top:15px;border-top:1px solid #e5e9e1;padding-top:10px}.totals>div{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:18px;border-top:1px solid #e5e9e1;margin-top:5px;padding-top:12px!important}
   .status-label{display:block;margin:18px 0 7px}.footer-note{max-width:1400px;margin:18px auto;color:#778078;font-size:12px}
-  @media(max-width:760px){.admin-shell{padding:16px}.admin-toolbar{margin-bottom:10px}.topbar{display:grid;grid-template-columns:1fr;gap:14px;padding:16px;margin-bottom:14px}.admin-brand{gap:12px}.topbar h1{font-size:22px}.admin-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.admin-actions a,.admin-actions button{width:100%;text-align:center;box-sizing:border-box}.main-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:15px}.main-tabs .tab{min-height:44px;white-space:normal;line-height:1.25}.main-tabs .tab:last-child{grid-column:1/-1}.monthly-tools{align-items:stretch;flex-direction:column}.monthly-tools>div{max-width:none}.invoice-buttons{display:grid;grid-template-columns:1fr}.download-invoice,.share-invoice{width:100%}.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
+  @media(max-width:760px){.admin-shell{padding:16px}.admin-toolbar{margin-bottom:10px}.topbar{display:grid;grid-template-columns:1fr;gap:14px;padding:16px;margin-bottom:14px}.admin-brand{gap:12px}.topbar h1{font-size:22px}.admin-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.admin-actions a,.admin-actions button{width:100%;text-align:center;box-sizing:border-box}.main-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:15px}.main-tabs .tab{min-height:44px;white-space:normal;line-height:1.25}.main-tabs .tab:last-child{grid-column:1/-1}.monthly-tools{align-items:stretch;flex-direction:column}.monthly-tools>div{max-width:none}.invoice-buttons{display:grid;grid-template-columns:1fr}.download-invoice,.share-invoice{width:100%}.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px;margin:10px auto 7vh}.login-language{margin:5vh auto 0}}
 `;
