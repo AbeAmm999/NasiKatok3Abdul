@@ -10,7 +10,7 @@ async function authorize(request: Request) {
   const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const admins = (process.env.ADMIN_EMAILS || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
   if (!token || !url || !secret || !publishable || admins.length === 0) return null;
-  const response = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, {
+  const response = await fetch(url.replace(/\/$/, "") + "/auth/v1/user", {
     headers: { apikey: publishable, Authorization: `Bearer ${token}` }, cache: "no-store",
   });
   if (!response.ok) return null;
