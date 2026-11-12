@@ -228,11 +228,8 @@ export default function AdminPage() {
 
   return (
     <main className="admin-shell">
-      <header className="topbar">
-        <div className="language-switch" aria-label="Admin language"><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div>
-        <div><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">PANEL PENGURUSAN</p><h1>{t("Admin Dashboard", "Dashboard Admin")}</h1></div></div>
-        <div className="admin-actions"><a className="customer-link" href="/">{t("View Website", "Lihat Website")}</a><button className="logout" onClick={logout}>{t("Log Out", "Log Keluar")}</button></div>
-      </header>
+      <div className="admin-toolbar"><div className="language-switch" aria-label="Admin language"><span>{t("Language", "Bahasa")}</span><button type="button" className={adminLanguage==="en"?"active":""} onClick={()=>setAdminLanguage("en")}>English</button><button type="button" className={adminLanguage==="bm"?"active":""} onClick={()=>setAdminLanguage("bm")}>Melayu</button></div></div>
+      <header className="topbar"><div className="admin-brand"><div className="brand-mark small-mark">NK3A</div><div><p className="eyebrow">{t("ADMINISTRATION", "PANEL PENGURUSAN")}</p><h1>{t("Admin Dashboard", "Dashboard Admin")}</h1></div></div><div className="admin-actions"><a className="customer-link" href="/">{t("View Website", "Lihat Website")}</a><button className="logout" onClick={logout}>{t("Log Out", "Log Keluar")}</button></div></header>
       <nav className="main-tabs" aria-label="Menu pengurusan">
         <button className={activeTab==="orders"?"tab active":"tab"} onClick={()=>setActiveTab("orders")}>☷ {t("Orders & Dashboard", "Pesanan & Dashboard")}</button>
         <button className={activeTab==="settings"?"tab active":"tab"} onClick={()=>setActiveTab("settings")}>⚙ {t("Website Control", "Kawalan Website")}</button>
@@ -297,7 +294,7 @@ export default function AdminPage() {
 }
 
 const styles = `
-  .language-switch{display:flex;gap:4px;justify-content:flex-end;margin:0 auto 12px;max-width:1400px}.language-switch button{background:#fff;color:#17432f;border:1px solid #d7c17b;padding:8px 13px}.language-switch button.active{background:#075537;color:#f8d35a}\n  .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+  .admin-toolbar{max-width:1400px;margin:0 auto 12px;display:flex;justify-content:flex-end}.language-switch{display:flex;align-items:center;gap:6px;padding:5px;background:#e8ece4;border:1px solid #dce3d9;border-radius:12px}.language-switch span{font-size:12px;font-weight:700;color:#64746a;padding:0 7px}.language-switch button{background:transparent;color:#315342;border:1px solid transparent;padding:8px 13px;border-radius:8px}.language-switch button.active{background:#075537;color:#f8d35a;border-color:#c9a441}\n  .admin-shell{min-height:100vh;background:#f4f5ef;color:#153d2c;padding:22px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
   .forgot-box{margin-top:14px;font-size:13px}.forgot-box summary{cursor:pointer;color:#075537;font-weight:700}.forgot-box form{margin-top:12px}
   .security-panel{max-width:700px;margin:20px auto;background:#fff;border:1px solid #d7c17b;border-radius:16px;padding:22px}.security-panel form{display:grid;gap:10px}.security-panel button{margin-top:8px}
   .login-card{max-width:430px;margin:7vh auto;background:#fff;border:1px solid #d7c17b;border-radius:20px;padding:30px;box-shadow:0 14px 38px #163b2514}
@@ -312,8 +309,7 @@ const styles = `
   button:disabled{opacity:.6;cursor:wait}
   form button{margin-top:8px;background:#075537;border:1px solid #c9a441}
   a{display:inline-block;margin-top:18px;color:#075537;font-weight:700;text-decoration:none}
-  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 auto 22px;max-width:1400px}
-  .topbar>div{display:flex;align-items:center;gap:14px}.topbar .eyebrow{margin:0 0 4px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 auto 20px;max-width:1400px;padding:18px 20px;background:#fff;border:1px solid #e1e6dc;border-radius:16px;box-shadow:0 4px 16px #153d2c08}.admin-brand{display:flex;align-items:center;gap:15px;min-width:0}.topbar .eyebrow{margin:0 0 5px}.topbar h1{font-size:25px;line-height:1.15}
   .logout{background:#fff;color:#17432f;border:1px solid #d7c17b}
   .admin-actions{display:flex;align-items:center;gap:10px}.customer-link{margin:0;padding:11px 13px;border:1px solid #d7c17b;border-radius:10px;background:#075537;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
   .main-tabs{display:flex;gap:9px;max-width:1400px;margin:0 auto 17px;padding:7px;background:#e8ece4;border:1px solid #dce3d9;border-radius:13px}
@@ -340,5 +336,5 @@ const styles = `
   .notes{background:#fff9e8;border:1px solid #eee0b3;border-radius:10px;padding:12px;margin-top:15px}.notes p{margin:6px 0 0;white-space:pre-wrap}
   .totals{margin-top:15px;border-top:1px solid #e5e9e1;padding-top:10px}.totals>div{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:18px;border-top:1px solid #e5e9e1;margin-top:5px;padding-top:12px!important}
   .status-label{display:block;margin:18px 0 7px}.footer-note{max-width:1400px;margin:18px auto;color:#778078;font-size:12px}
-  @media(max-width:760px){.monthly-tools{align-items:stretch;flex-direction:column}.monthly-tools>div{max-width:none}.invoice-buttons{display:grid;grid-template-columns:1fr}.download-invoice,.share-invoice{width:100%}.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
+  @media(max-width:760px){.admin-shell{padding:16px}.admin-toolbar{margin-bottom:10px}.topbar{display:grid;grid-template-columns:1fr;gap:14px;padding:16px;margin-bottom:14px}.admin-brand{gap:12px}.topbar h1{font-size:22px}.admin-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.admin-actions a,.admin-actions button{width:100%;text-align:center;box-sizing:border-box}.main-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:15px}.main-tabs .tab{min-height:44px;white-space:normal;line-height:1.25}.main-tabs .tab:last-child{grid-column:1/-1}.monthly-tools{align-items:stretch;flex-direction:column}.monthly-tools>div{max-width:none}.invoice-buttons{display:grid;grid-template-columns:1fr}.download-invoice,.share-invoice{width:100%}.admin-shell{padding:13px}.main-tabs{display:grid;grid-template-columns:1fr 1fr}.tab{padding:11px 7px;font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.refresh{grid-column:1/-1}.dashboard-grid{grid-template-columns:1fr}.topbar h1{font-size:21px}.login-card{padding:22px}}
 `;
